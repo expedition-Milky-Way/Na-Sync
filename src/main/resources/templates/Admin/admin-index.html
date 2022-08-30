@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- 引入 layui.css -->
+    <link rel="stylesheet" href="//unpkg.com/layui@2.6.8/dist/css/layui.css">
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+        <!-- 引入 layui.js -->
+        <script src="//unpkg.com/layui@2.6.8/dist/layui.js"></script>
+</head>
+<script>
+    function submitForm(){
+
+    }
+</script>
+<body>
+<div class="layui-row">
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>选择路径</span>
+    </div>
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>选择时间</span>
+    </div>
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>选择加密方式</span>
+    </div>
+</div>
+<div class="layui-row">
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>填写加密密码:&nbsp;</span>
+        <input id="password" type="text" value="">
+    </div>
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>确认加密密码:&nbsp;</span>
+        <input id="password_confim" type="text" value="">
+    </div>
+</div>
+<div class="layui-row">
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>百度网盘AppId:&nbsp;</span>
+        <input name="AppId" id="app-id" value="">
+    </div>
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>百度网盘AppKey:&nbsp;</span>
+        <input name="appKey" id="app-key" value="">
+    </div>
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>百度网盘SecretKey:&nbsp;</span>
+        <input name="SecretKey" id="secret-key" value="">
+    </div>
+    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
+        <span>百度网盘SignKey:&nbsp;</span>
+        <input name="SignKey" id="sign-key" value="">
+    </div>
+</div>
+<div class="layui-footer">
+    <button class="layui-btn" id="submit_btn" onclick="submitForm()"></button>
+</div>
+
+
+</body>
+</html>
