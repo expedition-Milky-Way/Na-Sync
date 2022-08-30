@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 
 @Controller
 public class AdminController {
@@ -39,6 +40,11 @@ public class AdminController {
 
     @RequestMapping("/adminIndex")
     public String adminIndex(HttpServletRequest request, ModelMap modelMap){
+        //1.获取所有目录
+        File dir = new File("/");
+        String[] dirList = dir.list();
+        modelMap.put("dirList",dirList);
+        //2.获取
         return "Admin/admin-index";
     }
 

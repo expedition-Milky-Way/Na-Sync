@@ -9,16 +9,20 @@
 </head>
 <script>
    function login(){
-       let user = $("user").val();
-       let password = $("password").val()
-       $.ajax("/doLogin",{
+       let user = $("#user").val();
+       let password = $("#password").val()
+       $.ajax({
+           type:'POST',
+           url:"/doLogin",
            data:{
-               'user':user,
-               'password':password
+               account:user,
+               password:password
            },
-           dataType:'JSON',
-           complete:res=>{
-
+           dataType:"JSON",
+           success:res=>{
+                if (res.code === 200){
+                    window.location.href = "/adminIndex"
+                }
            }
        })
 

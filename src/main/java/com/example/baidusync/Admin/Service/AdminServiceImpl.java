@@ -7,13 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 @Service
 public class AdminServiceImpl implements AdminService{
 
     @Value("${custom-servicePass}")
     String servicePass;
-    @Value("${custom-serviceUser")
+    @Value("${custom-serveiceUser}")
     String serviceUser;
     @Value("${custom-serviceToken}")
     String token;
@@ -21,7 +22,7 @@ public class AdminServiceImpl implements AdminService{
     @Override
     public ResponseData login(UserEntity user) {
         if(ObjectUtil.isNotNull(user)){
-            if (user.getAccount() != serviceUser && user.getPassword() != servicePass){
+            if (!Objects.equals(user.getAccount(), serviceUser) && !Objects.equals(user.getPassword(), servicePass)){
                 return new ResponseData(false,ResponseData.DEFAULT_ERROR_CODE,
                         ResponseData.DEFAULT_ERROR_MESSAGE,null);
             }else{

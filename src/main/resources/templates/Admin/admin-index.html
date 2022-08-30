@@ -12,9 +12,16 @@
     function submitForm(){
 
     }
+
 </script>
 <body>
+
+<div th:each="item :${dirList}">
+
+    <span th:text="${item}"></span>
+</div>
 <div class="layui-row">
+
     <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
         <span>选择路径</span>
     </div>
