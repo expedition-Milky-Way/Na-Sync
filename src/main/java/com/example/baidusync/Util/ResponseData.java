@@ -25,5 +25,9 @@ public class ResponseData {
         this.data = data;
     }
 
-
+    public ResponseData() {
+        this.success = true;
+        this.code= DEFAULT_SUCCESS_CODE;
+        this.message=DEFAULT_SUCCESS_MESSAGE;
+    }
 }

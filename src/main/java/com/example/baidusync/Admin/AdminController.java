@@ -24,30 +24,26 @@ public class AdminController {
     private AdminService service;
 
     @RequestMapping("/")
-    public String index(){
-        return "index";
-    }
-
-    @PostMapping("/doLogin")
-    @ResponseBody
-    public ResponseData  doLogin(UserEntity user, HttpServletResponse response){
-        ResponseData data = service.login(user);
-        if (data.success){
-            LocalCache.putContext(user.getAccount(), user.getPassword());
+    public String index(HttpServletRequest request, ModelMap modelMap){
+        File file = new File("D:/");
+        for (String s : file.list()) {
+            System.out.println(s);
         }
-        return data;
-    }
-
-    @RequestMapping("/adminIndex")
-    public String adminIndex(HttpServletRequest request, ModelMap modelMap){
-        //1.获取所有目录
-        File dir = new File("/");
-        String[] dirList = dir.list();
-        modelMap.put("dirList",dirList);
-        //2.获取
         return "Admin/admin-index";
     }
 
+    @PostMapping("/add")
+    public ResponseData submit(String filePath,String dateTime,Integer encryption,
+                               String pass,String confirmPass,String appId,String appKey,
+                               String secretKey,String signKey)
+    {
+        File file = new File(filePath);
+        for (String s : file.list()) {
+            System.out.println(s);
+        }
+        return new ResponseData();
 
+    }
+    
 
 }
