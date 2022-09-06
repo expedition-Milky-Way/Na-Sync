@@ -25,7 +25,7 @@ public class AdminController {
 
     @RequestMapping("/")
     public String index(HttpServletRequest request, ModelMap modelMap){
-        new Thread(()->  read(new File("D:/JavaWorkSpace/g/"))).start();
+
 
         return "Admin/admin-index";
     }

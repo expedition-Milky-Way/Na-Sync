@@ -7,5 +7,5 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface AdminService {
 
-    ResponseData login(UserEntity user);
+
 }

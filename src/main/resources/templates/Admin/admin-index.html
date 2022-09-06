@@ -30,7 +30,7 @@
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
-                    <span style="size: 20px">选择路径:</span>
+                    <span style="font-size: 16px">填写文件路径:</span>
                 </div>
                 <div class="layui-col-md9">
                     <input name="dirList" class="layui-input custom_input" style="width: 300px" id="dirList" value="">
@@ -38,7 +38,7 @@
             </div>
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
-                    <span style="size: 20px">选择时间</span>
+                    <span style="font-size: 16px">选择时间</span>
                 </div>
                 <div class="layui-col-md9">
                     <input name="time" id="time" class="layui-input custom_input" style="width: 300px" value="">
@@ -48,18 +48,28 @@
         </div>
 
         <div class="layui-row layui-col-space2">
-            <div class="layui-col-md3">
-                <span style="size: 20px">选择加密方式</span>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">选择加密方式</span>
+                </div>
+                <div class="layui-col-md9">
+                    <select name="encryption" id="encryption" class="layui-select" style="width: 300px">
+                        <option  value="">选择加密方式</option>
+                        <option th:each="item : ${encryptionList}" th:value="${item.id}" th:text="${itme.name}"
+                                th:selected="${item.id == encryption.id}" selected></option>
+                    </select>
+                </div>
             </div>
-            <div class="layui-col-md9">
-                <select name="encryption" id="encryption" >
-                    <option value="">选择加密方式</option>
-                    <option th:each="item : ${encryptionList}" th:value="${item.id}" th:text="${itme.name}"
-                            th:selected="${item.id == encryption.id}" selected></option>
-                </select>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">填写缓存路径</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input class="layui-input" name="cachePath" id="cachePath" th:value="${cachePath}">
+                </div>
             </div>
         </div>
-        <div class="layui-row layui-col-space2">
+        <div class="layui-row layui-col-space2 ">
 
             <div class="layui-col-md5">
                 <div class=" layui-col-md3">
@@ -72,7 +82,7 @@
             </div>
             <div class="layui-col-md5">
                 <div class=" layui-col-md3">
-                    <span>确认加密密码:&nbsp;</span>
+                    <span style="font-size: 16px">确认加密密码:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
                     <input id="password_confim" class="layui-input custom_input"
@@ -84,7 +94,7 @@
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
-                    <span>百度网盘AppId:&nbsp;</span>
+                    <span style="font-size: 16px">百度网盘AppId:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
                     <input name="AppId" class="layui-input custom_input"
@@ -93,7 +103,7 @@
             </div>
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
-                    <span>百度网盘AppKey:&nbsp;</span>
+                    <span style="font-size: 16px">百度网盘AppKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
                     <input name="appKey" class="layui-input custom_input"
@@ -106,7 +116,7 @@
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
-                    <span>百度网盘SecretKey:&nbsp;</span>
+                    <span style="font-size: 16px">百度网盘SecretKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
                     <input name="SecretKey" class="layui-input custom_input" style=" width: 300px" id="secret-key" th:value="${secretKey}">
@@ -114,7 +124,7 @@
             </div>
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
-                    <span>百度网盘SignKey:&nbsp;</span>
+                    <span style="font-size: 16px">百度网盘SignKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
                     <input name="SignKey" class="layui-input custom_input" style=" width: 300px" id="sign-key" th:value="${signKey}">
