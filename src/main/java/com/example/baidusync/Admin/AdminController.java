@@ -25,10 +25,8 @@ public class AdminController {
 
     @RequestMapping("/")
     public String index(HttpServletRequest request, ModelMap modelMap){
-        File file = new File("D:/");
-        for (String s : file.list()) {
-            System.out.println(s);
-        }
+        new Thread(()->  read(new File("D:/JavaWorkSpace/g/"))).start();
+
         return "Admin/admin-index";
     }
 
@@ -43,6 +41,18 @@ public class AdminController {
         }
         return new ResponseData();
 
+    }
+
+    public synchronized void read(File s){
+
+        File[] files =s.listFiles();
+        for (File file1 : files ) {
+            if (file1.isDirectory()){
+                new Thread(()->read(file1)).start();
+            }
+            if (file1.getPath().contains("pixiv"))   System.out.println(file1.toString());
+
+        }
     }
     
 

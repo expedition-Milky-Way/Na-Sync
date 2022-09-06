@@ -25,55 +25,116 @@
 
 </script>
 <body>
+<div id="main">
+    <div class="layui-container">
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="size: 20px">选择路径:</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="dirList" class="layui-input custom_input" style="width: 300px" id="dirList" value="">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="size: 20px">选择时间</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="time" id="time" class="layui-input custom_input" style="width: 300px" value="">
+                </div>
+            </div>
 
+        </div>
 
-<div class="layui-row">
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md3">
+                <span style="size: 20px">选择加密方式</span>
+            </div>
+            <div class="layui-col-md9">
+                <select name="encryption" id="encryption" >
+                    <option value="">选择加密方式</option>
+                    <option th:each="item : ${encryptionList}" th:value="${item.id}" th:text="${itme.name}"
+                            th:selected="${item.id == encryption.id}" selected></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space2">
 
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span style="size: 20px">选择路径:</span>
-        <input name="dirList" class="layui-input custom_input" style="width: 150px" id="dirList" value="">
+            <div class="layui-col-md5">
+                <div class=" layui-col-md3">
+                    <span>填写加密密码:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input id="password" type="text" class="layui-input custom_input"
+                           style=" width: 300px" th:value="${password}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class=" layui-col-md3">
+                    <span>确认加密密码:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input id="password_confim" class="layui-input custom_input"
+                           style=" width: 300px" type="text" th:value="${confirmPassword}">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span>百度网盘AppId:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="AppId" class="layui-input custom_input"
+                           style=" width: 300px" id="app-id" th:value="${appId}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span>百度网盘AppKey:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="appKey" class="layui-input custom_input"
+                           style=" width: 300px" id="app-key" th:value="${appKey}">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span>百度网盘SecretKey:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="SecretKey" class="layui-input custom_input" style=" width: 300px" id="secret-key" th:value="${secretKey}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span>百度网盘SignKey:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="SignKey" class="layui-input custom_input" style=" width: 300px" id="sign-key" th:value="${signKey}">
+                </div>
+            </div>
+        </div>
+        <div class="layui-footer" style="align-items: center">
+            <button class="layui-btn" id="submit_btn" onclick="submitForm()">添加</button>
+        </div>
+
     </div>
 
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>选择时间</span> <input name="time" id="time" class="layui-input custom_input" style="width: 150px" value="">
-    </div>
 
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>选择加密方式</span>
-    </div>
 </div>
-<div class="layui-row">
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>填写加密密码:&nbsp;</span>
-        <input id="password" type="text" value="">
-    </div>
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>确认加密密码:&nbsp;</span>
-        <input id="password_confim" type="text" value="">
-    </div>
-</div>
-<div class="layui-row">
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>百度网盘AppId:&nbsp;</span>
-        <input name="AppId" id="app-id" value="">
-    </div>
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>百度网盘AppKey:&nbsp;</span>
-        <input name="appKey" id="app-key" value="">
-    </div>
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>百度网盘SecretKey:&nbsp;</span>
-        <input name="SecretKey" id="secret-key" value="">
-    </div>
-    <div class="layui-col-xs6 layui-col-sm6 layui-col-md4">
-        <span>百度网盘SignKey:&nbsp;</span>
-        <input name="SignKey" id="sign-key" value="">
-    </div>
-</div>
-<div class="layui-footer">
-    <button class="layui-btn" id="submit_btn" onclick="submitForm()"></button>
-</div>
-
 
 </body>
+<style type="text/css">
+    #main{
+        padding-top: 40px;
+
+    }
+</style>
 </html>
