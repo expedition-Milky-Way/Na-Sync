@@ -20,7 +20,41 @@
     })
 
     function submitForm() {
-
+        let path = $("#dirList").val();
+        let time = $("#time").val()
+        let cachePath = $("#cachePath").val()
+        let password = $("#password").val()
+        let password2 = $("#password_confim").val()
+        let appId = $("#app-id").val()
+        let appKey = $("#app-key").val()
+        let secretKey = $("#secret-key").val()
+        let signKey = $("#sign-key").val()
+        console.log(path,time,cachePath,password,appKey,appId,secretKey,signKey)
+        if (password != password2){
+            alert("密码设置有误，两次密码不一样")
+        }
+        $.ajax("/add",{
+            data:{
+                "appId":appId,
+                "secretKey":secretKey,
+                "appKey":appKey,
+                "password":password,
+                "path":path,
+                "cachePath":cachePath,
+                "dateTime":time,
+                "signKey":signKey
+            },
+            header:{"Content-Type":"application/json"},
+            type: 'POST',
+            success:function (res) {
+                console.log(res)
+                if (res.data.code === 200){
+                    alert(res.data.message);
+                }else{
+                    alert(res.data.message)
+                }
+            }
+        })
     }
 
 </script>
@@ -33,7 +67,8 @@
                     <span style="font-size: 16px">填写文件路径:</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="dirList" class="layui-input custom_input" style="width: 300px" id="dirList" value="">
+                    <input name="dirList" class="layui-input custom_input" style="width: 300px"
+                           id="dirList" th:value="${path}">
                 </div>
             </div>
             <div class="layui-col-md5">
@@ -48,18 +83,6 @@
         </div>
 
         <div class="layui-row layui-col-space2">
-            <div class="layui-col-md5">
-                <div class="layui-col-md3">
-                    <span style="font-size: 16px">选择加密方式</span>
-                </div>
-                <div class="layui-col-md9">
-                    <select name="encryption" id="encryption" class="layui-select" style="width: 300px">
-                        <option  value="">选择加密方式</option>
-                        <option th:each="item : ${encryptionList}" th:value="${item.id}" th:text="${itme.name}"
-                                th:selected="${item.id == encryption.id}" selected></option>
-                    </select>
-                </div>
-            </div>
             <div class="layui-col-md5">
                 <div class="layui-col-md3">
                     <span style="font-size: 16px">填写缓存路径</span>
@@ -86,7 +109,7 @@
                 </div>
                 <div class="layui-col-md9">
                     <input id="password_confim" class="layui-input custom_input"
-                           style=" width: 300px" type="text" th:value="${confirmPassword}">
+                           style=" width: 300px" type="text" value="">
                 </div>
             </div>
 

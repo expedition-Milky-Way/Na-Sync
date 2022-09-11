@@ -1,8 +1,10 @@
 package com.example.baidusync.Admin.Service;
 
-import cn.hutool.core.util.ObjectUtil;
-import com.example.baidusync.Admin.Entity.UserEntity;
-import com.example.baidusync.Util.ResponseData;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.baidusync.Admin.Entity.FileSetting;
+import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -12,13 +14,11 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 @Service
-public class AdminServiceImpl implements AdminService{
+public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting> implements FileSettingService{
 
     @Value("${custom-servicePass}")
     String servicePass;
@@ -54,5 +54,27 @@ public class AdminServiceImpl implements AdminService{
         //开始压缩，参数1：对应的路径下,参数2：压缩配置
         zipFile.addFolder(new File(ZIP_PATH),zipParameters);
         return "success";
+    }
+
+
+    /**
+     * 设置fileSetting
+     */
+    @Override
+    public Object settingFile(FileSetting fileSetting){
+        baseMapper.insert(fileSetting);
+        return null;
+    }
+
+    /**
+     * 获取setting
+     */
+    @Override
+    public FileSetting getSetting(){
+        LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.isNotNull(true,FileSetting::getId)
+                .orderBy(true,false,FileSetting::getId).last("LIMIT 1");
+        FileSetting resultEntity = baseMapper.selectOne(lambdaQueryWrapper);
+        return resultEntity;
     }
 }
