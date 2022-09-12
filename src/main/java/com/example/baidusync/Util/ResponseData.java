@@ -1,5 +1,8 @@
 package com.example.baidusync.Util;
 
+import lombok.Data;
+
+@Data
 public class ResponseData {
 
     public static Integer DEFAULT_SUCCESS_CODE = 200;
@@ -29,5 +32,18 @@ public class ResponseData {
         this.success = true;
         this.code= DEFAULT_SUCCESS_CODE;
         this.message=DEFAULT_SUCCESS_MESSAGE;
+    }
+
+    public ResponseData(Object data){
+        this.success = true;
+        this.code = DEFAULT_SUCCESS_CODE;
+        this.message = DEFAULT_SUCCESS_MESSAGE;
+        this.data = data;
+    }
+
+    public ResponseData(String message){
+        this.success = false;
+        this.code = DEFAULT_ERROR_CODE;
+        this.message = message;
     }
 }

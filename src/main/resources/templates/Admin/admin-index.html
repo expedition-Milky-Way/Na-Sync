@@ -19,6 +19,7 @@
 
     })
 
+
     function submitForm() {
         let path = $("#dirList").val();
         let time = $("#time").val()
@@ -29,32 +30,41 @@
         let appKey = $("#app-key").val()
         let secretKey = $("#secret-key").val()
         let signKey = $("#sign-key").val()
-        console.log(path,time,cachePath,password,appKey,appId,secretKey,signKey)
-        if (password != password2){
+        console.log(path, time, cachePath, password, appKey, appId, secretKey, signKey)
+        if (password != password2) {
             alert("密码设置有误，两次密码不一样")
         }
-        $.ajax("/add",{
-            data:{
-                "appId":appId,
-                "secretKey":secretKey,
-                "appKey":appKey,
-                "password":password,
-                "path":path,
-                "cachePath":cachePath,
-                "dateTime":time,
-                "signKey":signKey
+        $.ajax("/add", {
+            data: {
+                "appId": appId,
+                "secretKey": secretKey,
+                "appKey": appKey,
+                "password": password,
+                "path": path,
+                "cachePath": cachePath,
+                "dateTime": time,
+                "signKey": signKey
             },
-            header:{"Content-Type":"application/json"},
             type: 'POST',
-            success:function (res) {
+            dataType: 'json',
+            success: function (res) {
                 console.log(res)
-                if (res.data.code === 200){
-                    alert(res.data.message);
-                }else{
-                    alert(res.data.message)
+                let code = res.code
+                let success = res.success
+                let message = res.message
+                let data = res.data
+                if (code === 200 && success === true) {
+                    window.alert("复制这行号码："+data.user_code)
+                    window.open(data.verification_url)
+                } else {
+                    alert(res.message)
                 }
             }
         })
+    }
+
+    function goBaidu() {
+        window.open(authURL)
     }
 
 </script>
@@ -91,9 +101,6 @@
                     <input class="layui-input" name="cachePath" id="cachePath" th:value="${cachePath}">
                 </div>
             </div>
-        </div>
-        <div class="layui-row layui-col-space2 ">
-
             <div class="layui-col-md5">
                 <div class=" layui-col-md3">
                     <span>填写加密密码:&nbsp;</span>
@@ -103,16 +110,6 @@
                            style=" width: 300px" th:value="${password}">
                 </div>
             </div>
-            <div class="layui-col-md5">
-                <div class=" layui-col-md3">
-                    <span style="font-size: 16px">确认加密密码:&nbsp;</span>
-                </div>
-                <div class="layui-col-md9">
-                    <input id="password_confim" class="layui-input custom_input"
-                           style=" width: 300px" type="text" value="">
-                </div>
-            </div>
-
         </div>
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
@@ -142,7 +139,8 @@
                     <span style="font-size: 16px">百度网盘SecretKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="SecretKey" class="layui-input custom_input" style=" width: 300px" id="secret-key" th:value="${secretKey}">
+                    <input name="SecretKey" class="layui-input custom_input" style=" width: 300px" id="secret-key"
+                           th:value="${secretKey}">
                 </div>
             </div>
             <div class="layui-col-md5">
@@ -150,13 +148,18 @@
                     <span style="font-size: 16px">百度网盘SignKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="SignKey" class="layui-input custom_input" style=" width: 300px" id="sign-key" th:value="${signKey}">
+                    <input name="SignKey" class="layui-input custom_input" style=" width: 300px" id="sign-key"
+                           th:value="${signKey}">
                 </div>
             </div>
         </div>
-        <div class="layui-footer" style="align-items: center">
-            <button class="layui-btn" id="submit_btn" onclick="submitForm()">添加</button>
+
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <button class="layui-btn" id="submit_btn" onclick="submitForm()">添加</button>
+            </div>
         </div>
+
 
     </div>
 
@@ -165,7 +168,7 @@
 
 </body>
 <style type="text/css">
-    #main{
+    #main {
         padding-top: 40px;
 
     }
