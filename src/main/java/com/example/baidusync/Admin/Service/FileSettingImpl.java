@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
+import kotlin.jvm.internal.Lambda;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -62,7 +63,12 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
      */
     @Override
     public Object settingFile(FileSetting fileSetting){
-        baseMapper.insert(fileSetting);
+        LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(FileSetting::getAppKey,fileSetting.getAppKey())
+                        .eq(FileSetting::getAppId,fileSetting.getAppId()).eq(FileSetting::getSecretKey,fileSetting.getPassword());
+        if (baseMapper.selectCount(lambdaQueryWrapper)  ==0){
+            baseMapper.insert(fileSetting);
+        }
         return null;
     }
 

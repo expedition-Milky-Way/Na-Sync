@@ -36,4 +36,21 @@ public class FileSetting extends BaseEntity {
     @TableField(value = "dateTime", jdbcType = JdbcType.TIMESTAMP)
     public String dateTime;
 
+    /**
+     * 有空返回true 否则返回false
+     *
+     * @return
+     */
+    public Boolean isEmpty() {
+        if (this.appId == null || this.secretKey == null
+                || this.secretKey == null || this.signKey == null
+                || this.appKey == null || this.password == null ||
+                this.path == null || this.cachePath == null ||
+                this.dateTime == null) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 }

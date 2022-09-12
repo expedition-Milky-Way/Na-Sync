@@ -45,12 +45,16 @@ public class AdminController {
     @PostMapping("/add")
     @ResponseBody
     public ResponseData submit(FileSetting setting) {
-        service.settingFile(setting);
-        JSONObject jsonObject = netDiskService.accessToken(setting.getAppKey());
+        if (setting.isEmpty()){
+            //返回报错信息
+            return new ResponseData("设置不能为空");
+        }
+        JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
         if (jsonObject.getString("error_description") != null) {
             //返回报错信息
             return new ResponseData(jsonObject.getString("error_description"));
         }
+        service.settingFile(setting);
         return new ResponseData(jsonObject);
     }
 

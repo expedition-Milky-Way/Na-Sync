@@ -25,15 +25,12 @@
         let time = $("#time").val()
         let cachePath = $("#cachePath").val()
         let password = $("#password").val()
-        let password2 = $("#password_confim").val()
         let appId = $("#app-id").val()
         let appKey = $("#app-key").val()
         let secretKey = $("#secret-key").val()
         let signKey = $("#sign-key").val()
         console.log(path, time, cachePath, password, appKey, appId, secretKey, signKey)
-        if (password != password2) {
-            alert("密码设置有误，两次密码不一样")
-        }
+
         $.ajax("/add", {
             data: {
                 "appId": appId,
@@ -57,15 +54,12 @@
                     window.alert("复制这行号码："+data.user_code)
                     window.open(data.verification_url)
                 } else {
-                    alert(res.message)
+                    alert(message)
                 }
             }
         })
     }
 
-    function goBaidu() {
-        window.open(authURL)
-    }
 
 </script>
 <body>
@@ -98,7 +92,7 @@
                     <span style="font-size: 16px">填写缓存路径</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input class="layui-input" name="cachePath" id="cachePath" th:value="${cachePath}">
+                    <input class="layui-input" style="width:300px " name="cachePath" id="cachePath" th:value="${cachePath}">
                 </div>
             </div>
             <div class="layui-col-md5">
