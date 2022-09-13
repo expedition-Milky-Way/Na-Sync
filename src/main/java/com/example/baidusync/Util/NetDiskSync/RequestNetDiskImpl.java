@@ -7,16 +7,20 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
+import lombok.extern.slf4j.Slf4j;
 import org.omg.CORBA.PRIVATE_MEMBER;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author 杨名
  * 请求
  */
 @Service
+@Slf4j
 public class RequestNetDiskImpl implements RequestNetDiskService {
 
     @Resource
@@ -29,7 +33,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     private static String REFRESH_TOKEN = null;
     //token过期时间  单位：秒
     private static Long EXPIRES = null;
-
+    //会员类型 ： 0 普通用户， 1：普通会员 2:超级会员
+    public static Integer VIP_TYPE = null;
 
     /**
      * 获取设备码，用户授权码，二维码
@@ -108,5 +113,46 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         return jsonObject;
     }
 
+    /**
+     * 获取用户信息
+     */
+    @Override
+    public void getBaiduUsInfo(){
+        JSONObject body = null;
+        if (ACCESS_TOKEN!= null){
+            body = requestUsInfo(ACCESS_TOKEN);
+        }else {
+            JSONObject tokenJson = this.getToken(DEVICE_CODE);
+            String token = null;
+            if (tokenJson.getString("access_token") != null){
+                token = tokenJson.getString("access_token");
+            }
+            ACCESS_TOKEN = token;
+            body = requestUsInfo(token);
+        }
+        if (body.getString("errmsg")!= null){
+            Date date = new Date();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd HH:mm");
+            log.error(format.format(date)+"获取用户信息失败。或许是token为"+ACCESS_TOKEN+"的原因");
+        }
+        VIP_TYPE = body.getInteger("vip_type");
+    }
+
+    public void getBaiduUsInfo(String accessToken){
+
+    }
+
+
+    /**
+     * 请求百度用户信息连接
+     */
+    private JSONObject requestUsInfo(String accessToken){
+        String URL = "http://pan.baidu.com/rest/2.0/xpan/nas?method=uinfo" +
+                "method=uinfo&access_token="+accessToken;
+        HttpResponse response = HttpRequest.get(URL).execute();
+        String bodyStr = response.body();
+        JSONObject body = JSON.parseObject(bodyStr);
+        return body;
+    }
 
 }
