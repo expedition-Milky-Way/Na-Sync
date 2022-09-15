@@ -58,6 +58,18 @@ public class AdminController {
         return new ResponseData(jsonObject);
     }
 
+    /**
+     * 下载日志
+     *
+     */
+    @PostMapping("/downLog")
+    @ResponseBody
+    public String down(){
+        return null;
+    }
+
+
+
     public synchronized void read(File s) {
 
         File[] files = s.listFiles();

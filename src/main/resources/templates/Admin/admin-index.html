@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
+
 </head>
 <script>
     $(function () {
@@ -59,7 +60,11 @@
             }
         })
     }
+    //下载日志
+    function downLoadLog()
+    {
 
+    }
 
 </script>
 <body>
@@ -151,6 +156,11 @@
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
                 <button class="layui-btn" id="submit_btn" onclick="submitForm()">添加</button>
+            </div>
+            <div class="layui-row layui-col-space2">
+                <div class="layui-col-md5">
+                    <button class="layui-btn" id="downloadXls" onclick="downLoadLog()">下载运行日志</button>
+                </div>
             </div>
         </div>
 
