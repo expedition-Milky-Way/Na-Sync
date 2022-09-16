@@ -16,6 +16,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author 杨名
@@ -167,16 +168,28 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      *
      * @return
      */
-    public JSONObject postNetDist(File file) {
+    public JSONObject postNetDist(String fileName, String filePath, List<String> md5, Integer size) {
+        //新建目录
         if (!hasDir(DEFAULT_DISK_DIR)) {
             postCreateNetDisk(DEFAULT_DISK_DIR);
         }
-        String fileName = file.getName();
-        String filePath = file.getPath();
         String parentPath = filePath.split("/")[fileName.length() -1];
         if (!hasDir(DEFAULT_DISK_DIR+parentPath)) postCreateNetDisk(DEFAULT_DISK_DIR+parentPath);
-
-        return null;
+        //开始预上传
+        String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
+        if (ACCESS_TOKEN == null){
+            accessToken();
+        }
+        URL+= ACCESS_TOKEN;
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("path",parentPath+"/"+fileName);
+        requestBody.put("size",size);
+        requestBody.put("isdir",IS_NOT_DIR);
+        requestBody.put("block_list",md5);
+        requestBody.put("autoinit",1);
+        HttpResponse response = new HttpRequest(URL).execute();
+        JSONObject resBody = JSON.parseObject(response.body());
+        return resBody;
     }
 
     /**
