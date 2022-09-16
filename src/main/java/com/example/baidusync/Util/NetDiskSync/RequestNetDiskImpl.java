@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -168,6 +169,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      *
      * @return
      */
+    @Override
     public JSONObject postNetDist(String fileName, String filePath, List<String> md5, Integer size) {
         //新建目录
         if (!hasDir(DEFAULT_DISK_DIR)) {
@@ -191,6 +193,23 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         JSONObject resBody = JSON.parseObject(response.body());
         return resBody;
     }
+
+    public void postSendTemp(File file,String path,String uploadId ){
+        String url = "d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=";
+        if (ACCESS_TOKEN == null){
+            accessToken();
+        }
+        url+=ACCESS_TOKEN;
+        url+="&type=tmpfile&path="+path+"&uploadid="+uploadId+"&partsq=0";
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("file",file);
+        HttpResponse response = HttpRequest.post(url).body(jsonObject.toString()).execute();
+        JSONObject resBody = JSON.parseObject(response.body());
+        if (resBody.getInteger("errno") > 0){
+            log.info(resBody.toString());
+        }
+    }
+
 
     /**
      * 看看有没有和这个目录
