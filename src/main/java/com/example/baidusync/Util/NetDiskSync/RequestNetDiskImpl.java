@@ -9,6 +9,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
+import com.example.baidusync.Admin.Service.FileSettingService;
+import com.example.baidusync.Util.SystemLog.LogEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +31,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
 
     @Resource
     private FileSettingMapping settingMapping;
-
+    @Resource
+    private FileSettingService fileSettingService;
     private static String DEVICE_CODE = null;
 
     private static String ACCESS_TOKEN = null;
@@ -66,8 +69,6 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         String body = bodyStr.replace("\\", "");
         JSONObject jsonObject = JSON.parseObject(body);
         if (jsonObject.getString("device_code") != null) DEVICE_CODE = jsonObject.getString("device_code");
-
-        accessToken();
         return jsonObject;
     }
 
@@ -76,33 +77,25 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * 获取token
      */
     private void accessToken() {
-        new Thread(() -> {
-            while (true) {
-                if (DEVICE_CODE == null) {
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
+            if (DEVICE_CODE == null) {
+                FileSetting settingEntry = fileSettingService.getSetting();
+                this.deviceCode(settingEntry.getAppKey());
+                accessToken();
+            } else {
+                JSONObject result = getToken(DEVICE_CODE);
+                if (result.getString("error_description") == null) {
+                    ACCESS_TOKEN = result.getString("access_token");
+                    REFRESH_TOKEN = result.getString("refresh_token");
+                    EXPIRES = result.getLong("expires_in");
+                    return;
                 } else {
-                    JSONObject result = getToken(DEVICE_CODE);
-                    if (result.getString("error_description") == null) {
-                        ACCESS_TOKEN = result.getString("access_token");
-                        REFRESH_TOKEN = result.getString("refresh_token");
-                        EXPIRES = result.getLong("expires_in");
-                        System.out.println(result.toString());
-                        return;
-                    } else {
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    //记录日志
+                    new LogEntity(RequestNetDiskImpl.class.toString(), "请求百度网盘token报错：\n "
+                            + result.toString(), LogEntity.LOG_TYPE_ERROR);
+
                 }
             }
-
-        }).start();
     }
 
 
@@ -175,37 +168,37 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         if (!hasDir(DEFAULT_DISK_DIR)) {
             postCreateNetDisk(DEFAULT_DISK_DIR);
         }
-        String parentPath = filePath.split("/")[fileName.length() -1];
-        if (!hasDir(DEFAULT_DISK_DIR+parentPath)) postCreateNetDisk(DEFAULT_DISK_DIR+parentPath);
+        String parentPath = filePath.split("/")[fileName.length() - 1];
+        if (!hasDir(DEFAULT_DISK_DIR + parentPath)) postCreateNetDisk(DEFAULT_DISK_DIR + parentPath);
         //开始预上传
         String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
-        if (ACCESS_TOKEN == null){
+        if (ACCESS_TOKEN == null) {
             accessToken();
         }
-        URL+= ACCESS_TOKEN;
+        URL += ACCESS_TOKEN;
         JSONObject requestBody = new JSONObject();
-        requestBody.put("path",parentPath+"/"+fileName);
-        requestBody.put("size",size);
-        requestBody.put("isdir",IS_NOT_DIR);
-        requestBody.put("block_list",md5);
-        requestBody.put("autoinit",1);
+        requestBody.put("path", parentPath + "/" + fileName);
+        requestBody.put("size", size);
+        requestBody.put("isdir", IS_NOT_DIR);
+        requestBody.put("block_list", md5);
+        requestBody.put("autoinit", 1);
         HttpResponse response = new HttpRequest(URL).execute();
         JSONObject resBody = JSON.parseObject(response.body());
         return resBody;
     }
 
-    public void postSendTemp(File file,String path,String uploadId ){
+    public void postSendTemp(File file, String path, String uploadId) {
         String url = "d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=";
-        if (ACCESS_TOKEN == null){
+        if (ACCESS_TOKEN == null) {
             accessToken();
         }
-        url+=ACCESS_TOKEN;
-        url+="&type=tmpfile&path="+path+"&uploadid="+uploadId+"&partsq=0";
+        url += ACCESS_TOKEN;
+        url += "&type=tmpfile&path=" + path + "&uploadid=" + uploadId + "&partsq=0";
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("file",file);
+        jsonObject.put("file", file);
         HttpResponse response = HttpRequest.post(url).body(jsonObject.toString()).execute();
         JSONObject resBody = JSON.parseObject(response.body());
-        if (resBody.getInteger("errno") > 0){
+        if (resBody.getInteger("errno") > 0) {
             log.info(resBody.toString());
         }
     }
