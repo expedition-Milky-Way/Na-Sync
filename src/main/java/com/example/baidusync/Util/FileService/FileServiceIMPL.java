@@ -70,45 +70,6 @@ public class FileServiceIMPL implements FileService {
         return;
     }
 
-    /**
-     * 获取队列
-     */
-    public void TurnOnSendFile() {
-        new Thread(() -> {
-            while (true){
-                if (!SystemCache.isEmpty()) {
-                    ThreadPoolTaskExecutor executor = NetDiskThreadPool.executor();
-                    Map<String, Object> map = SystemCache.get();
-                    if (executor.getActiveCount() > 8){
-                        try {
-                            map.wait(1200000);
-                        } catch (InterruptedException e) {
-                            run(map);
-                        }
-                    }
-                    run(map);
 
-                }else {
-                    try {
-                        Thread.sleep(60000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-        }, "获取缓存文件map").start();
-    }
-
-    /**
-     * 执行发送视频文件
-     */
-    public void run(Map<String,Object> map){
-        String name = (String) map.get("name");
-        Long size = (Long) map.get("size");
-        String parent = (String) map.get("parent");
-        List<FileAndDigsted> digsteds = (List<FileAndDigsted>) map.get("fileList");
-        netDiskService.goSend(name, parent, size, digsteds);
-    }
 }
 
