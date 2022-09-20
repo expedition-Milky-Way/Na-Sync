@@ -35,6 +35,10 @@ public class TempfileImpl implements TempFileService {
     private static Long[] SIZE_BY_VIP_TYPE = {4194304L, 16777216L, 33554432L};
 
     private static Long SIZE = 0L;
+    /**
+     * 百度网盘最小分片大小. 假如文件大小 <= MIN_SIZE 直接上传
+     */
+    private static Long MIN_SIZE =4194304L;
 
     /**
      * 默认分片存放文件夹
@@ -65,13 +69,15 @@ public class TempfileImpl implements TempFileService {
         }
         //获取文件，计算大小
         String filePath = file.getPath();
+        String parent = file.getParent();
         String name = filePath.split("/")[filePath.length() - 1];
         File oneTempFileDir = new File(tempDir + name);
         if (!oneTempFileDir.exists()) oneTempFileDir.mkdir();
         name = tempDir + oneTempFileDir + name;
         Long fileSize = FileUtils.sizeOf(file);
-        if (fileSize <= SIZE) {
+        if (fileSize <= MIN_SIZE) {
             //直接上传
+            fileService.computedMD5(name,file,fileSize,parent);
         } else {
             BigDecimal total = new BigDecimal(fileSize).divide(new BigDecimal(SIZE), 0, BigDecimal.ROUND_UP);
             Integer count = total.intValue(); //分多少片
@@ -86,7 +92,8 @@ public class TempfileImpl implements TempFileService {
                     offSet = write(name, raf, i, begin, end);
                 }
                 //计算md5并放入队列
-                fileService.computedMD5(name,new File(tempDir+oneTempFileDir));
+
+                fileService.computedMD5(name, new File(tempDir + oneTempFileDir), fileSize, parent);
             } catch (Exception e) {
 
             }
@@ -127,8 +134,10 @@ public class TempfileImpl implements TempFileService {
      */
     @Override
     public void scanZipFile(File[] file) {
-        for (File item : file){
+        for (File item : file) {
             splitFile(item);
         }
     }
+
+
 }

@@ -1,6 +1,10 @@
 package com.example.baidusync.Util;
 
+import cn.hutool.log.Log;
+import org.apache.ibatis.annotations.Mapper;
+
 import java.io.File;
+import java.util.Map;
 
 /**
  * @author 杨 名 (字 露煊)
@@ -8,36 +12,71 @@ import java.io.File;
  */
 public class FileAndDigsted {
 
+    private Integer index;
+
     /**
      * tempfile文件的路径（包括文件名）
      */
-    private String pathAndName;
+    private String path;
+    /**
+     * 源文件名(暂时无用）
+     */
+    private String name;
+
     /**
      * MD5
      */
     private String digsted;
 
+    /**
+     * 父文件夹名称
+     */
+    private String parentName;
+
+
     public FileAndDigsted() {
     }
 
-    public FileAndDigsted(String pathAndName, String digsted) {
-        this.pathAndName = pathAndName;
-        this.digsted = digsted;
+
+
+    public String getParentName() {
+        return parentName;
     }
 
-    public String getPathAndName() {
-        return pathAndName;
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
     }
 
-    public void setPathAndName(String pathAndName) {
-        this.pathAndName = pathAndName;
-    }
 
     public String getDigsted() {
         return digsted;
     }
 
-    public void setDigsted(String digsted) {
+    public void setDigsted( String digsted) {
         this.digsted = digsted;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getIndex() {
+        return index;
+    }
+
+    public void setIndex(Integer index) {
+        this.index = index;
     }
 }

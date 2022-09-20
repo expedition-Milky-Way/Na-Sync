@@ -8,5 +8,10 @@ import java.io.File;
 public interface FileService {
     void goBackup(String zipPath, String filePath, String password);
 
-    void computedMD5(String name, File file);
+    /**
+     *
+     * @param name 源文件名（不包含路径）
+     * @param file 文件夹（绝对路径）
+     */
+    void computedMD5(String name, File file,Long fileSize,String parent);
 }

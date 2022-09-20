@@ -6,10 +6,12 @@ import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Admin.Service.FileSettingService;
+import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,8 +20,10 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 杨名
@@ -158,18 +162,48 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     }
 
     /**
+     * 开始上传
+     * @param name 源文件名
+     * @param parent 源文件父路径
+     * @param size 源文件大小
+     * @param fileAndDigsted
+     */
+    @Override
+    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted){
+        List<String> md5 = null;
+        fileAndDigsted.forEach(item->{
+            md5.add(item.getDigsted());
+            List<String> allMd = null;
+            //预上传
+        });
+        //预上传
+        JSONObject responseJson = postNetDist(name,parent,md5,size.intValue());
+        if (responseJson.getInteger("errno")!= 0){
+            new LogEntity(RequestNetDiskImpl.class.toString(),"预上传错误："+responseJson.toString(),LogEntity.LOG_TYPE_ERROR);
+        }
+        String netDiskPath = responseJson.getString("path");
+        String uploadid = responseJson.getString("uploadid");
+        List<Integer> blokList = responseJson.getObject("block_list", ArrayList.class);
+        for (Integer item : blokList){
+            FileAndDigsted tempMessage = fileAndDigsted.get(item);
+            File temFile = new File(tempMessage.getPath());
+            postSendTemp(temFile,netDiskPath,uploadid);
+        }
+
+    }
+
+    /**
      * 预上传
      *
      * @return
      */
-    @Override
-    public JSONObject postNetDist(String fileName, String filePath, List<String> md5, Integer size) {
+    public JSONObject postNetDist(String fileName, String parent, List<String> md5, Integer size) {
         //新建目录
         if (!hasDir(DEFAULT_DISK_DIR)) {
             postCreateNetDisk(DEFAULT_DISK_DIR);
         }
-        String parentPath = filePath.split("/")[fileName.length() - 1];
-        if (!hasDir(DEFAULT_DISK_DIR + parentPath)) postCreateNetDisk(DEFAULT_DISK_DIR + parentPath);
+
+        if (!hasDir(DEFAULT_DISK_DIR + parent)) postCreateNetDisk(DEFAULT_DISK_DIR + parent);
         //开始预上传
         String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
         if (ACCESS_TOKEN == null) {
@@ -177,7 +211,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         }
         URL += ACCESS_TOKEN;
         JSONObject requestBody = new JSONObject();
-        requestBody.put("path", parentPath + "/" + fileName);
+        requestBody.put("path", parent + "/" + fileName);
         requestBody.put("size", size);
         requestBody.put("isdir", IS_NOT_DIR);
         requestBody.put("block_list", md5);
