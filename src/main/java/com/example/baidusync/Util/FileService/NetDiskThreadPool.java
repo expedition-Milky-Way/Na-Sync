@@ -2,7 +2,9 @@ package com.example.baidusync.Util.FileService;
 
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONObject;
+import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
+import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
@@ -25,21 +27,37 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetDiskThreadPool {
 
+    static Integer FINAL_TASK_NUM = 1;
 
     private RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
+
+    private static FileSettingService fileSettingService = SpringUtil.getBean(FileSettingService.class);
 
     static AtomicInteger atomicInteger = new AtomicInteger(0);
 
     private static ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
 
-    public static ThreadPoolTaskExecutor executor (){
-        if (atomicInteger.get() == 0){
-            initExecutor(8,10);
+    /**
+     * 百度网盘后端最大Task是10
+     *
+     * @return
+     */
+    public static ThreadPoolTaskExecutor executor() {
+        if (atomicInteger.get() == 0) {
+            FileSetting fileSetting = fileSettingService.getSetting();
+            if (fileSetting.getTaskNum() == null) {
+                initExecutor(2, 10);
+                FINAL_TASK_NUM = 2;
+            }
+            FINAL_TASK_NUM = fileSetting.getTaskNum();
+            initExecutor(FINAL_TASK_NUM, 10);
+
         }
-       return threadPoolTaskExecutor;
+        atomicInteger.incrementAndGet();
+        return threadPoolTaskExecutor;
     }
 
-    public static void initExecutor(Integer coreSize,Integer maxSize){
+    private static void initExecutor(Integer coreSize, Integer maxSize) {
         threadPoolTaskExecutor.setCorePoolSize(coreSize);
         threadPoolTaskExecutor.setMaxPoolSize(maxSize);
         threadPoolTaskExecutor.setBeanName("sendFileToNetDisk");
@@ -48,26 +66,28 @@ public class NetDiskThreadPool {
     }
 
 
-
     /**
      * 获取队列
      */
     public void TurnOnSendFile() {
         new Thread(() -> {
-            while (true){
+            while (true) {
                 if (!SystemCache.isEmpty()) {
                     ThreadPoolTaskExecutor executor = NetDiskThreadPool.executor();
                     Map<String, Object> map = SystemCache.get();
-                    if (executor.getActiveCount() > 8){
+                    if (executor.getActiveCount() > FINAL_TASK_NUM) {
                         try {
                             map.wait(1200000);
                         } catch (InterruptedException e) {
-                            run(map);
+                            if (executor.getActiveCount() > FINAL_TASK_NUM) {
+                                SystemCache.set(map);
+                            }else{
+                              executor.execute(()->run(map));
+                            }
                         }
                     }
-                    run(map);
-
-                }else {
+                    executor.execute(()->run(map));
+                } else {
                     try {
                         Thread.sleep(60000);
                     } catch (InterruptedException e) {
@@ -82,7 +102,7 @@ public class NetDiskThreadPool {
     /**
      * 执行发送视频文件
      */
-    public void run(Map<String,Object> map){
+    public void run(Map<String, Object> map) {
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
         String parent = (String) map.get("parent");

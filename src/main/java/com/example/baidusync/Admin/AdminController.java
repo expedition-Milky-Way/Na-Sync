@@ -7,6 +7,7 @@ import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.ResponseData;
+import com.example.baidusync.Util.SystemLog.LogService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class AdminController {
@@ -25,6 +28,8 @@ public class AdminController {
     private FileSettingService service;
     @Resource
     private RequestNetDiskService netDiskService;
+    @Resource
+    private LogService logService;
 
     @RequestMapping("/")
     public String index(HttpServletRequest request, ModelMap modelMap) {
@@ -37,8 +42,13 @@ public class AdminController {
             modelMap.put("appKey", fileSetting.getAppKey());
             modelMap.put("secretKey", fileSetting.getSecretKey());
             modelMap.put("signKey", fileSetting.getSignKey());
+            modelMap.put("taskNum",fileSetting.getTaskNum());
         }
-
+        List<Integer> taskNumList = new ArrayList<>();
+        for (Integer i = 1; i < 11; i++) {
+            taskNumList.add(i);
+        }
+        modelMap.put("taskNumList",taskNumList);
         return "Admin/admin-index";
     }
 
@@ -56,6 +66,16 @@ public class AdminController {
         }
         service.settingFile(setting);
         return new ResponseData(jsonObject);
+    }
+
+
+    /**
+     * 加载日志
+     */
+    @PostMapping("/getLog")
+    @ResponseBody
+    public ResponseData getLog(){
+        return new ResponseData(logService.getLog());
     }
 
     /**

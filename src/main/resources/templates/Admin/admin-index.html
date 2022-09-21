@@ -18,6 +18,38 @@
             });
         })
 
+
+        //请求日志接口
+        setInterval(() => {
+            $.ajax("/ajax", {
+                type: 'POST',
+                responseType: 'json',
+                success: res => {
+                    if (res.success === true) {
+                        if (res.data === null) {
+                            $("#systemLog").val('暂无日志')
+                        } else {
+                            let dataList = res.data
+                            let htmlstr = '';
+                            let types = ['正常运行时', '运行时警告', '运行时错误']
+                            let begin = dataList.length /2;
+                            if (begin < 0 ) begin = 0
+                            let end = dataList.length -1;
+
+                            for (let i = begin; i < dataList.length; i++) {
+                                htmlstr += '<tr>'
+                                htmlstr += "<td>" + dataList[i].message + "</td>"
+                                htmlstr += "<td>" + types[dataList[i].type] + "</td>"
+                                htmlstr += "</tr>"
+                            }
+                            $("#systemLog").html(htmlstr)
+                        }
+                    }
+                }
+            })
+        }, 3000)
+
+
     })
 
 
@@ -30,39 +62,49 @@
         let appKey = $("#app-key").val()
         let secretKey = $("#secret-key").val()
         let signKey = $("#sign-key").val()
+        let taskNum = $("#task-num").val()
         console.log(path, time, cachePath, password, appKey, appId, secretKey, signKey)
-
-        $.ajax("/add", {
-            data: {
-                "appId": appId,
-                "secretKey": secretKey,
-                "appKey": appKey,
-                "password": password,
-                "path": path,
-                "cachePath": cachePath,
-                "dateTime": time,
-                "signKey": signKey
-            },
-            type: 'POST',
-            dataType: 'json',
-            success: function (res) {
-                console.log(res)
-                let code = res.code
-                let success = res.success
-                let message = res.message
-                let data = res.data
-                if (code === 200 && success === true) {
-                    window.alert("复制这行号码："+data.user_code)
-                    window.open(data.verification_url)
-                } else {
-                    alert(message)
-                }
+        if (path != '' && time != '' && cachePath != '' && password != '' &&
+            appId != '' && appKey != '' && secretKey != '' && signKey != '' && taskNum != '') {
+            if (taskNum > 5) {
+                alert("并行数量越多所耗费的 IO、内存和CPU也会越多")
+                $("#taskText").val("并行数量越多所耗费的 IO、内存和CPU也会越多")
             }
-        })
+            $.ajax("/add", {
+                data: {
+                    "appId": appId,
+                    "secretKey": secretKey,
+                    "appKey": appKey,
+                    "password": password,
+                    "path": path,
+                    "cachePath": cachePath,
+                    "dateTime": time,
+                    "signKey": signKey
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function (res) {
+                    console.log(res)
+                    let code = res.code
+                    let success = res.success
+                    let message = res.message
+                    let data = res.data
+                    if (code === 200 && success === true) {
+                        window.alert("复制这行号码：" + data.user_code)
+                        window.open(data.verification_url)
+                    } else {
+                        alert(message)
+                    }
+                }
+            })
+        } else {
+            alert('表单不允许为空')
+        }
+
     }
+
     //下载日志
-    function downLoadLog()
-    {
+    function downLoadLog() {
 
     }
 
@@ -97,7 +139,8 @@
                     <span style="font-size: 16px">填写缓存路径</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input class="layui-input" style="width:300px " name="cachePath" id="cachePath" th:value="${cachePath}">
+                    <input class="layui-input" style="width:300px " name="cachePath" id="cachePath"
+                           th:value="${cachePath}">
                 </div>
             </div>
             <div class="layui-col-md5">
@@ -152,21 +195,49 @@
                 </div>
             </div>
         </div>
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">上传并行数量</span>
+                </div>
+                <div class="layui-col-md9">
+                    <select id="task-num" class="layui-select" style="width: 300px">
+                        <option th:each="item:${taskNumList}" th:selected="${taskNum} eq ${item}"
+                                th:text="${item}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div id="taskText" class="layui-font-red layui-font-16"></div>
+            </div>
+        </div>
 
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
                 <button class="layui-btn" id="submit_btn" onclick="submitForm()">添加</button>
             </div>
-            <div class="layui-row layui-col-space2">
-                <div class="layui-col-md5">
-                    <button class="layui-btn" id="downloadXls" onclick="downLoadLog()">下载运行日志</button>
-                </div>
+
+            <div class="layui-col-md5">
+                <button class="layui-btn" id="downloadXls" onclick="downLoadLog()">下载运行日志</button>
             </div>
         </div>
-
-
     </div>
-
+    <div class="layui-row layui-col-space2">
+        <div class="layui-col-md3">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th>信息</th>
+                    <th>级别</th>
+                    <th>类型</th>
+                </tr>
+                </thead>
+                <tbody>
+                <div id="systemLog"></div>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
 
