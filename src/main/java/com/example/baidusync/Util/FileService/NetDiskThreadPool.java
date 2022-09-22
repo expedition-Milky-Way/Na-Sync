@@ -29,7 +29,7 @@ public class NetDiskThreadPool {
 
     static Integer FINAL_TASK_NUM;
 
-    private RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
+    private static RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
 
     private static FileSettingService fileSettingService = SpringUtil.getBean(FileSettingService.class);
 
@@ -69,7 +69,7 @@ public class NetDiskThreadPool {
     /**
      * 获取队列
      */
-    public void TurnOnSendFile() {
+    public static void TurnOnSendFile() {
         new Thread(() -> {
             while (true) {
                 if (!SystemCache.isEmpty()) {
@@ -102,7 +102,7 @@ public class NetDiskThreadPool {
     /**
      * 执行发送视频文件
      */
-    public void run(Map<String, Object> map) {
+    public static void run(Map<String, Object> map) {
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
         String parent = (String) map.get("parent");

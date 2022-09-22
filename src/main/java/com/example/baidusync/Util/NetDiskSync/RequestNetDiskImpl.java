@@ -162,7 +162,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     }
 
     /**
-     * 开始上传
+     * 开始上传(分片）
      * @param name 源文件名
      * @param parent 源文件父路径
      * @param size 源文件大小
@@ -170,7 +170,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      */
     @Override
     public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted){
-        List<String> md5 = null;
+        List<String> md5 = new ArrayList<>();
         fileAndDigsted.forEach(item->{
             md5.add(item.getDigsted());
             List<String> allMd = null;
@@ -189,7 +189,14 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             File temFile = new File(tempMessage.getPath());
             postSendTemp(temFile,netDiskPath,uploadid);
         }
-
+        //上传完成，合并tem文件
+        JSONObject sendSuccess = this.netDiskMkFile(netDiskPath+name,size,md5,uploadid);
+        if (sendSuccess.getInteger("errno") != 0){
+            Integer errorCode = sendSuccess.getInteger("errno");
+            new LogEntity(RequestNetDiskImpl.class.toString(),
+                    "创建文件异常。错误码："+errorCode+"\n 详情访问：https://pan.baidu.com/union/doc/rksg0sa17 一探究竟"
+                    ,LogEntity.LOG_TYPE_ERROR);
+        }
     }
 
     /**
@@ -237,6 +244,27 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         }
     }
 
+    /**
+     * 上传完所有的tempFile,创建文件
+     * @param netDiskPathAndName 网盘上面完整的文件路径和文件名
+     * @param size 文件总大小
+     * @param md5Array md5列表
+     * @param uploadid 百度网盘的uploadid
+     * @return
+     */
+    public JSONObject netDiskMkFile(String netDiskPathAndName,Long size,List<String> md5Array,String uploadid){
+        String url = "pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=TOKEN";
+        if (ACCESS_TOKEN == null) accessToken();
+        url.replace("TOKEN",ACCESS_TOKEN);
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("path",netDiskPathAndName);
+        requestBody.put("isdir",IS_NOT_DIR);
+        requestBody.put("size",size.toString());
+        requestBody.put("blok_list",md5Array);
+        requestBody.put("uploadid",uploadid);
+        HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
+        return JSON.parseObject(response.body());
+    }
 
     /**
      * 看看有没有和这个目录
