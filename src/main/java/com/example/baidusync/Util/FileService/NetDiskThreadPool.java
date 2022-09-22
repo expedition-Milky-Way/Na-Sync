@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetDiskThreadPool {
 
-    static Integer FINAL_TASK_NUM = 1;
+    static Integer FINAL_TASK_NUM;
 
     private RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
 
