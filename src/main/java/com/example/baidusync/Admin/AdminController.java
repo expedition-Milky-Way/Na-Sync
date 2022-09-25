@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.example.baidusync.Admin.Entity.FileSetting;
 
 import com.example.baidusync.Admin.Service.FileSettingService;
+import com.example.baidusync.Util.FileService.FileService;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.ResponseData;
 import com.example.baidusync.Util.SystemLog.LogService;
@@ -30,6 +31,8 @@ public class AdminController {
     private RequestNetDiskService netDiskService;
     @Resource
     private LogService logService;
+    @Resource
+    private FileService fileService;
 
     @RequestMapping("/")
     public String index(HttpServletRequest request, ModelMap modelMap) {
@@ -43,6 +46,7 @@ public class AdminController {
             modelMap.put("secretKey", fileSetting.getSecretKey());
             modelMap.put("signKey", fileSetting.getSignKey());
             modelMap.put("taskNum",fileSetting.getTaskNum());
+            modelMap.put("dateTime",fileSetting.getDateTime());
         }
         List<Integer> taskNumList = new ArrayList<>();
         for (Integer i = 1; i < 11; i++) {
@@ -54,7 +58,8 @@ public class AdminController {
 
     @PostMapping("/add")
     @ResponseBody
-    public ResponseData submit(FileSetting setting) {
+    public ResponseData submit(FileSetting setting,HttpServletRequest request) {
+       String ctx = request.getHeader("host");
         if (setting.isEmpty()){
             //返回报错信息
             return new ResponseData("设置不能为空");
@@ -64,7 +69,10 @@ public class AdminController {
             //返回报错信息
             return new ResponseData(jsonObject.getString("error_description"));
         }
-        service.settingFile(setting);
+        if (!service.excites(setting)){
+            service.settingFile(setting);
+        }
+        jsonObject.put("ctx",ctx);
         return new ResponseData(jsonObject);
     }
 
@@ -89,6 +97,30 @@ public class AdminController {
     }
 
 
+    /**
+     * 打开百度网盘验证
+     * @param
+     */
+    @RequestMapping("/netDiskConfirm")
+    public String getNetDiskConrim(String url,HttpServletRequest request,ModelMap modelMap){
+        String ctx = "http://"+request.getHeader("host");
+        modelMap.put("ctx",ctx);
+        modelMap.put("url",url);
+        return "Admin/confirmSettting";
+    }
+
+    @PostMapping("/netDiskConfirmOk")
+    @ResponseBody
+    public ResponseData  confirmOk(){
+        netDiskService.setAuthIsOk();
+        boolean isok = netDiskService.accessToken();
+        if (isok){
+            return new ResponseData();
+        }else{
+            return new ResponseData("请确认百度网盘扫描二维码完成后点击确认按钮");
+        }
+    }
+
 
     public synchronized void read(File s) {
 
@@ -100,6 +132,19 @@ public class AdminController {
             if (file1.getPath().contains("pixiv")) System.out.println(file1.toString());
 
         }
+    }
+
+
+    /**
+     * 开发者测试
+     */
+    @PostMapping("/testDev")
+    @ResponseBody
+    public void devTest(){
+        FileSetting setting = service.getSetting();
+        netDiskService.deviceCode(setting.getAppKey());
+        netDiskService.getBaiduUsInfo();
+        fileService.goBackup(setting.getCachePath(),setting.getPath(),setting.password);
     }
 
 

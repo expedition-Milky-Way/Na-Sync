@@ -15,35 +15,34 @@ public class LogExecutor {
 
     private static LogService logServiceBean = SpringUtil.getBean(LogService.class);
 
-    private static Executor executor = Executors.newFixedThreadPool(2);
 
-    private static LinkedBlockingQueue<LogEntity>  sysLogQueue = new LinkedBlockingQueue<>(100);
+    private static LinkedBlockingQueue<LogEntity> sysLogQueue = new LinkedBlockingQueue<>(100);
 
 
-    public static boolean addSysLogQueue(LogEntity logEntity){
-        if (sysLogQueue.size()<100){
+    public static boolean addSysLogQueue(LogEntity logEntity) {
+        if (sysLogQueue.size() > 100) {
             try {
                 logEntity.wait(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+
             }
         }
-       return sysLogQueue.offer(logEntity);
+        return sysLogQueue.offer(logEntity);
     }
 
-    public static void takeLogQueue(){
-        executor.execute(()->{
-            while (true){
-                if (sysLogQueue.size()>0){
+    public static void takeLogQueue() {
+            while (true) {
+                if (sysLogQueue.size() > 0) {
                     logServiceBean.InsertInto(sysLogQueue.poll());
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                }else {
+                    try {
+                        Thread.sleep(4000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        });
+
     }
 
 

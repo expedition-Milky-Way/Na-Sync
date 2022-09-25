@@ -83,4 +83,16 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
         FileSetting resultEntity = baseMapper.selectOne(lambdaQueryWrapper);
         return resultEntity;
     }
+
+    /**
+     * 查看是否已经有setting了
+     */
+    @Override
+    public boolean excites(FileSetting fileSetting){
+        LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(FileSetting::getAppKey,fileSetting.getAppKey())
+                .eq(FileSetting::getAppId,fileSetting.getAppId());
+       return baseMapper.exists(lambdaQueryWrapper);
+
+    }
 }

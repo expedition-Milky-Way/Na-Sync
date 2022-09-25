@@ -2,6 +2,7 @@ package com.example.baidusync;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogService;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ class BaiduSyncApplicationTests {
 
     @Resource
     private LogService logService;
+    @Resource
+    private RequestNetDiskService netDiskService;
 
     @Test
     void contextLoads() {
@@ -56,6 +59,14 @@ class BaiduSyncApplicationTests {
             }
         }).start();
 
+    }
+
+    /**
+     * 获取用户信息
+     */
+    @Test
+    public void getUserInfo(){
+        netDiskService.getBaiduUsInfo();
     }
 
 

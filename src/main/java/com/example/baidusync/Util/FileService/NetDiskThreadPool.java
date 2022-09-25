@@ -11,6 +11,8 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.core.SystemCache;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 import java.util.List;

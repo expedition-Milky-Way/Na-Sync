@@ -4,9 +4,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.example.baidusync.Util.FileAndDigsted;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestNetDiskService {
     JSONObject deviceCode(String appKey);
+
+    boolean accessToken();
 
     void getBaiduUsInfo();
     /**
@@ -18,4 +21,9 @@ public interface RequestNetDiskService {
      */
     void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted);
 
+    Long getMaxSize();
+
+    Long getMaxTempSize();
+
+    Integer setAuthIsOk();
 }

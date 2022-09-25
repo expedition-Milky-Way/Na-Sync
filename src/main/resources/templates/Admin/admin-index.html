@@ -21,7 +21,7 @@
 
         //请求日志接口
         setInterval(() => {
-            $.ajax("/ajax", {
+            $.ajax("/getLog", {
                 type: 'POST',
                 responseType: 'json',
                 success: res => {
@@ -35,13 +35,13 @@
                             let begin = dataList.length /2;
                             if (begin < 0 ) begin = 0
                             let end = dataList.length -1;
-
-                            for (let i = begin; i < dataList.length; i++) {
-                                htmlstr += '<tr>'
-                                htmlstr += "<td>" + dataList[i].message + "</td>"
-                                htmlstr += "<td>" + types[dataList[i].type] + "</td>"
-                                htmlstr += "</tr>"
-                            }
+                            //
+                            // for (let i = begin; i < dataList.length; i++) {
+                            //     htmlstr += '<tr>'
+                            //     htmlstr += "<td>" + dataList[i].message + "</td>"
+                            //     htmlstr += "<td>" + types[dataList[i].type] + "</td>"
+                            //     htmlstr += "</tr>"
+                            // }
                             $("#systemLog").html(htmlstr)
                         }
                     }
@@ -89,9 +89,23 @@
                     let success = res.success
                     let message = res.message
                     let data = res.data
+                    let host = data.ctx
+                    console.log(host)
+
                     if (code === 200 && success === true) {
-                        window.alert("复制这行号码：" + data.user_code)
-                        window.open(data.verification_url)
+                        let content = layer.open({
+                            type:2,
+                            content:"http://"+host+"/netDiskConfirm?url="+data.qrcode_url,
+                            area:['560px','560px'],
+                            closeBtn :0,
+                            title:'打开百度网盘手机app扫描二维码',
+                            btn:['确定'],
+                            yes:function (index,layero){
+                                authConfirm(host)
+                                layer.close(index)
+                            }
+                        })
+
                     } else {
                         alert(message)
                     }
@@ -101,6 +115,20 @@
             alert('表单不允许为空')
         }
 
+    }
+
+    function authConfirm(ctx){
+        $.ajax('http://'+ctx+'/netDiskConfirmOk',{
+            type:'POST',
+            dataType: 'json',
+            complete:function (res){
+                console.log(res)
+                let response = res.responseJSON
+                if (!response.success ){
+                    layer.msg(response.message)
+                }
+            }
+        })
     }
 
     //下载日志
@@ -127,7 +155,7 @@
                     <span style="font-size: 16px">选择时间</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="time" id="time" class="layui-input custom_input" style="width: 300px" value="">
+                    <input name="time" id="time" class="layui-input custom_input" style="width: 300px" th:value="${dateTime}">
                 </div>
             </div>
 

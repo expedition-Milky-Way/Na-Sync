@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateTime;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.example.baidusync.core.BaseEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.omg.CORBA.PUBLIC_MEMBER;
 
 import java.io.Serializable;
@@ -17,6 +18,7 @@ import java.util.Map;
  *
  */
 @TableName("sys_log")
+@Slf4j
 public class LogEntity extends BaseEntity implements Serializable {
 
     public static final Integer LOG_TYPE_INFO = 0;
@@ -54,7 +56,6 @@ public class LogEntity extends BaseEntity implements Serializable {
         this.Calssz = classz;
         this.message = message;
         this.type = type;
-        LogExecutor.addSysLogQueue(this);
     }
 
 

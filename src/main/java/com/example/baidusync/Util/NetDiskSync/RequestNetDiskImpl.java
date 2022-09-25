@@ -13,6 +13,11 @@ import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
+import com.example.baidusync.core.SystemBean.SystemConstBean;
+import com.example.baidusync.core.SystemCache;
+import com.example.baidusync.core.SystemConst.ConstCache;
+import com.example.baidusync.core.SystemConst.ConstCacheData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +25,8 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 杨名
@@ -54,7 +57,29 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     private static Integer IS_NOT_DIR = 0;
     //默认文件夹大小
     private static Integer DEFAULT_DIR_SIZE = 0;
-    private static FileSetting fileSetting;
+    /**
+     * 百度网盘/阿里网盘 接受最大单次上传文件大小
+     * 20G:20991366069L
+     *
+     * @unit Bytes
+     */
+    public static Long MAX_SIZE = null;
+    /**
+     * 一个用户最大上传的分片文件大小
+     */
+    public static Long MAX_TEMP_SIZE = null;
+    /**
+     * 通过netDiskService.VIP_TYPE获取分片最大大小
+     */
+    private static Long[] SIZE_BY_VIP_TYPE = {4194304L, 16777216L, 33554432L};
+    /**
+     * 获取用户可以上传的单个文件的最大大小
+     */
+    private static Long[] ONE_FILE_SIZE_BY_VIP = {4294967296L, 10737418240L, 21474836480L};
+
+    private static FileSetting fileSetting = new FileSetting();
+
+    private static AtomicInteger IS_AUTH_OK = new AtomicInteger(0);
 
     /**
      * 获取设备码，用户授权码，二维码
@@ -72,7 +97,20 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         String bodyStr = deviceResponse.body();
         String body = bodyStr.replace("\\", "");
         JSONObject jsonObject = JSON.parseObject(body);
-        if (jsonObject.getString("device_code") != null) DEVICE_CODE = jsonObject.getString("device_code");
+        if (jsonObject.getString("device_code") != null) {
+            String deviceCode = jsonObject.getString("device_code");
+            DEVICE_CODE = deviceCode;
+//            ConstCacheData constCacheData = null;
+//            if (ConstCache.has()) {
+//                constCacheData = new ConstCacheData();
+//            } else {
+//                constCacheData = ConstCache.get();
+//            }
+//            constCacheData.setDeviceCode(deviceCode);
+//            ConstCache.set(constCacheData);
+//            this.accessToken();
+        }
+
         return jsonObject;
     }
 
@@ -80,26 +118,24 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     /**
      * 获取token
      */
-    private void accessToken() {
-
-            if (DEVICE_CODE == null) {
-                FileSetting settingEntry = fileSettingService.getSetting();
-                this.deviceCode(settingEntry.getAppKey());
-                accessToken();
-            } else {
-                JSONObject result = getToken(DEVICE_CODE);
-                if (result.getString("error_description") == null) {
-                    ACCESS_TOKEN = result.getString("access_token");
-                    REFRESH_TOKEN = result.getString("refresh_token");
-                    EXPIRES = result.getLong("expires_in");
-                    return;
-                } else {
-                    //记录日志
-                    new LogEntity(RequestNetDiskImpl.class.toString(), "请求百度网盘token报错：\n "
-                            + result.toString(), LogEntity.LOG_TYPE_ERROR);
-
-                }
+    @Override
+    public boolean accessToken() {
+        if (DEVICE_CODE != null) {
+            JSONObject result = getToken(DEVICE_CODE);
+            if (result.getString("error_description") == null) {
+                ACCESS_TOKEN = result.getString("access_token");
+                REFRESH_TOKEN = result.getString("refresh_token");
+                EXPIRES = result.getLong("expires_in");
+                return true;
+            }else{
+                //记录日志
+                LogExecutor.addSysLogQueue(new LogEntity(RequestNetDiskImpl.class.toString(), "请求百度网盘token报错：\n "
+                        + result.toString(), LogEntity.LOG_TYPE_ERROR));
+                return false;
             }
+        }else{
+            return false;
+        }
     }
 
 
@@ -146,6 +182,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             log.error(format.format(date) + "获取用户信息失败。或许是token为" + ACCESS_TOKEN + "的原因");
         }
         VIP_TYPE = body.getInteger("vip_type");
+        MAX_SIZE = ONE_FILE_SIZE_BY_VIP[VIP_TYPE];
+        MAX_TEMP_SIZE = SIZE_BY_VIP_TYPE[VIP_TYPE];
     }
 
 
@@ -162,41 +200,37 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     }
 
     /**
-     * 开始上传(分片）
-     * @param name 源文件名
-     * @param parent 源文件父路径
-     * @param size 源文件大小
+     * 开始上传
+     *
+     * @param name           源文件名
+     * @param parent         源文件父路径
+     * @param size           源文件大小
      * @param fileAndDigsted
      */
     @Override
-    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted){
-        List<String> md5 = new ArrayList<>();
-        fileAndDigsted.forEach(item->{
+    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted) {
+        List<String> md5 = null;
+        fileAndDigsted.forEach(item -> {
             md5.add(item.getDigsted());
             List<String> allMd = null;
             //预上传
         });
         //预上传
-        JSONObject responseJson = postNetDist(name,parent,md5,size.intValue());
-        if (responseJson.getInteger("errno")!= 0){
-            new LogEntity(RequestNetDiskImpl.class.toString(),"预上传错误："+responseJson.toString(),LogEntity.LOG_TYPE_ERROR);
+        JSONObject responseJson = postNetDist(name, parent, md5, size.intValue());
+        if (responseJson.getInteger("errno") != 0) {
+            LogExecutor.addSysLogQueue(
+                    new LogEntity(RequestNetDiskImpl.class.toString(), "预上传错误：" + responseJson.toString(),
+                            LogEntity.LOG_TYPE_ERROR));
         }
         String netDiskPath = responseJson.getString("path");
         String uploadid = responseJson.getString("uploadid");
         List<Integer> blokList = responseJson.getObject("block_list", ArrayList.class);
-        for (Integer item : blokList){
+        for (Integer item : blokList) {
             FileAndDigsted tempMessage = fileAndDigsted.get(item);
             File temFile = new File(tempMessage.getPath());
-            postSendTemp(temFile,netDiskPath,uploadid);
+            postSendTemp(temFile, netDiskPath, uploadid);
         }
-        //上传完成，合并tem文件
-        JSONObject sendSuccess = this.netDiskMkFile(netDiskPath+name,size,md5,uploadid);
-        if (sendSuccess.getInteger("errno") != 0){
-            Integer errorCode = sendSuccess.getInteger("errno");
-            new LogEntity(RequestNetDiskImpl.class.toString(),
-                    "创建文件异常。错误码："+errorCode+"\n 详情访问：https://pan.baidu.com/union/doc/rksg0sa17 一探究竟"
-                    ,LogEntity.LOG_TYPE_ERROR);
-        }
+
     }
 
     /**
@@ -244,27 +278,6 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         }
     }
 
-    /**
-     * 上传完所有的tempFile,创建文件
-     * @param netDiskPathAndName 网盘上面完整的文件路径和文件名
-     * @param size 文件总大小
-     * @param md5Array md5列表
-     * @param uploadid 百度网盘的uploadid
-     * @return
-     */
-    public JSONObject netDiskMkFile(String netDiskPathAndName,Long size,List<String> md5Array,String uploadid){
-        String url = "pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=TOKEN";
-        if (ACCESS_TOKEN == null) accessToken();
-        url.replace("TOKEN",ACCESS_TOKEN);
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("path",netDiskPathAndName);
-        requestBody.put("isdir",IS_NOT_DIR);
-        requestBody.put("size",size.toString());
-        requestBody.put("blok_list",md5Array);
-        requestBody.put("uploadid",uploadid);
-        HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
-        return JSON.parseObject(response.body());
-    }
 
     /**
      * 看看有没有和这个目录
@@ -320,5 +333,28 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             }
         }
         return false;
+    }
+
+    /**
+     * 获取用户会员类型可以上传的单个文件大小
+     */
+    @Override
+    public Long getMaxSize() {
+        if (MAX_SIZE == null) this.getBaiduUsInfo();
+        return MAX_SIZE;
+    }
+
+    /**
+     * 获取用户会员类型可以上传分片文件大小
+     */
+    @Override
+    public Long getMaxTempSize() {
+        if (MAX_TEMP_SIZE == null) this.getBaiduUsInfo();
+        return MAX_TEMP_SIZE;
+    }
+
+    @Override
+    public Integer setAuthIsOk() {
+        return IS_AUTH_OK.incrementAndGet();
     }
 }

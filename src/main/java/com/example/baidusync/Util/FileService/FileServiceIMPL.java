@@ -7,6 +7,7 @@ import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.core.SystemCache;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,8 @@ public class FileServiceIMPL implements FileService {
     @Override
     public void computedMD5(String name, File Directory, Long fileSize, String parent) {
         if (Directory.exists()) {
-            new LogEntity("", "md5计算：" + Directory, LogEntity.LOG_TYPE_INFO);
+            LogEntity log = new LogEntity("", "md5计算：" + Directory, LogEntity.LOG_TYPE_INFO);
+            LogExecutor.addSysLogQueue(log);
             File[] files = Directory.listFiles();
             String parentName = name.split("/")[name.length() - 1];
             FileAndDigsted fileAndDigsted = new FileAndDigsted();
@@ -64,10 +66,13 @@ public class FileServiceIMPL implements FileService {
             }
             setMap.put("fileList", fileAndDigstedList);
             SystemCache.set(setMap);
-            new LogEntity("", "md5计算完毕，进入等待队列：" + Directory, LogEntity.LOG_TYPE_INFO);
+           LogExecutor.addSysLogQueue(new LogEntity("", "md5计算完毕，进入等待队列：" + Directory, LogEntity.LOG_TYPE_INFO));
+        }else{
+            LogExecutor.addSysLogQueue(
+                    new LogEntity("", "没有该文件夹：" + Directory, LogEntity.LOG_TYPE_ERROR));
+            return;
         }
-        new LogEntity("", "没有该文件夹：" + Directory, LogEntity.LOG_TYPE_ERROR);
-        return;
+
     }
 
 
