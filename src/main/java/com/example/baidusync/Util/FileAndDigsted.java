@@ -33,6 +33,11 @@ public class FileAndDigsted {
      */
     private String parentName;
 
+    /**
+     * 缓存文件大小
+     */
+    private Long size;
+
 
     public FileAndDigsted() {
     }
@@ -78,5 +83,13 @@ public class FileAndDigsted {
 
     public void setIndex(Integer index) {
         this.index = index;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public void setSize(Long size) {
+        this.size = size;
     }
 }

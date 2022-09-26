@@ -19,7 +19,7 @@ public interface RequestNetDiskService {
      * @param size 源文件大小
      * @param fileAndDigsted
      */
-    void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted);
+    void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted,String tempPath);
 
     Long getMaxSize();
 

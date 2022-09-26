@@ -9,6 +9,7 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.core.SystemCache;
+import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -55,9 +56,12 @@ public class FileServiceIMPL implements FileService {
             List<FileAndDigsted> fileAndDigstedList = new ArrayList<>();
             setMap.put("name", name);
             setMap.put("size", fileSize);
+            setMap.put("tempPath",Directory.getPath());
             setMap.put("parent", parent);
             for (int i = 0; i < files.length; i++) {
                 fileAndDigsted.setIndex(i);
+                //获取第i个file的size
+                fileAndDigsted.setSize(FileUtils.sizeOf(files[i]));
                 fileAndDigsted.setName(files[i].getName());
                 fileAndDigsted.setPath(files[i].getPath());
                 fileAndDigsted.setParentName(files[i].getParent());

@@ -14,10 +14,6 @@ import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
-import com.example.baidusync.core.SystemBean.SystemConstBean;
-import com.example.baidusync.core.SystemCache;
-import com.example.baidusync.core.SystemConst.ConstCache;
-import com.example.baidusync.core.SystemConst.ConstCacheData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -127,13 +123,13 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                 REFRESH_TOKEN = result.getString("refresh_token");
                 EXPIRES = result.getLong("expires_in");
                 return true;
-            }else{
+            } else {
                 //记录日志
                 LogExecutor.addSysLogQueue(new LogEntity(RequestNetDiskImpl.class.toString(), "请求百度网盘token报错：\n "
                         + result.toString(), LogEntity.LOG_TYPE_ERROR));
                 return false;
             }
-        }else{
+        } else {
             return false;
         }
     }
@@ -208,13 +204,17 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * @param fileAndDigsted
      */
     @Override
-    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted) {
+    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted, String tempPath) {
         List<String> md5 = null;
-        fileAndDigsted.forEach(item -> {
+        Long totalTempSize = 0L;
+        for (FileAndDigsted item : fileAndDigsted) {
             md5.add(item.getDigsted());
-            List<String> allMd = null;
-            //预上传
-        });
+            totalTempSize += item.getSize();
+        }
+        LogEntity log = new LogEntity(
+                "", "文件：" + name + "大小为" + size + "缓存文件总大小" + totalTempSize,
+                LogEntity.LOG_TYPE_WARN);
+        LogExecutor.addSysLogQueue(log);
         //预上传
         JSONObject responseJson = postNetDist(name, parent, md5, size.intValue());
         if (responseJson.getInteger("errno") != 0) {
@@ -230,7 +230,29 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             File temFile = new File(tempMessage.getPath());
             postSendTemp(temFile, netDiskPath, uploadid);
         }
-
+        //删除缓存文件，记录文件原名和改名后的文件名
+        //i.删除缓存文件和目录
+        for (FileAndDigsted item : fileAndDigsted) {
+            File delFile = new File(item.getPath()+"/"+item.getName());
+            try {
+                boolean isDel = delFile.delete();
+                LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"), LogEntity.LOG_TYPE_INFO);
+                LogExecutor.addSysLogQueue(delLog);
+            } catch (SecurityException e) {
+                LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delFile.getName() + "删除失败，权限报错" + e.getMessage(), LogEntity.LOG_TYPE_ERROR);
+                LogExecutor.addSysLogQueue(delLog);
+            }
+        }
+        File delDir = new File(tempPath);
+        try {
+            boolean isDel = delDir.delete();
+            LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"), LogEntity.LOG_TYPE_INFO);
+            LogExecutor.addSysLogQueue(delLog);
+        }catch (SecurityException e){
+            LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delDir.getName() + "删除失败，权限报错" + e.getMessage(), LogEntity.LOG_TYPE_ERROR);
+            LogExecutor.addSysLogQueue(delLog);
+        }
+        //i. 记录文件上传到百度网盘后，百度网盘上的文件名字和原文件名
     }
 
     /**

@@ -8,6 +8,8 @@ import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
+import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.core.SystemCache;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -75,20 +77,17 @@ public class NetDiskThreadPool {
         new Thread(() -> {
             while (true) {
                 if (!SystemCache.isEmpty()) {
-                    ThreadPoolTaskExecutor executor = NetDiskThreadPool.executor();
-                    Map<String, Object> map = SystemCache.get();
-                    if (executor.getActiveCount() > FINAL_TASK_NUM) {
-                        try {
-                            map.wait(1200000);
-                        } catch (InterruptedException e) {
-                            if (executor.getActiveCount() > FINAL_TASK_NUM) {
-                                SystemCache.set(map);
-                            }else{
-                              executor.execute(()->run(map));
-                            }
+                    Integer canTaskNum = FINAL_TASK_NUM - executor().getActiveCount();
+                    if (canTaskNum > 0){
+                        for (int i = 0 ; i< FINAL_TASK_NUM ; i++){
+                            Map<String, Object> map = SystemCache.get();
+                            executor().execute(()->run(map));
+                            LogEntity log = new LogEntity(
+                                    "","获取文件"+(String)map.get("name")+"启动同步，当前任务数量"+executor().getActiveCount(),
+                                    LogEntity.LOG_TYPE_INFO);
+                            LogExecutor.addSysLogQueue(log);
                         }
                     }
-                    executor.execute(()->run(map));
                 } else {
                     try {
                         Thread.sleep(60000);
@@ -108,7 +107,8 @@ public class NetDiskThreadPool {
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
         String parent = (String) map.get("parent");
+        String tempPath = (String) map.get("temPath");
         List<FileAndDigsted> digsteds = (List<FileAndDigsted>) map.get("fileList");
-        diskService.goSend(name, parent, size, digsteds);
+        diskService.goSend(name, parent, size, digsteds,tempPath);
     }
 }

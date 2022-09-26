@@ -20,7 +20,7 @@ public class LogServiceIMPL extends ServiceImpl<LogEntityMapper,LogEntity> imple
     @Override
     public List<LogEntity> getLog(){
         LambdaQueryWrapper<LogEntity> lambda = new LambdaQueryWrapper<>();
-        lambda.orderBy(true,false,LogEntity::getCreateTime).last("LIMIT 10");
+        lambda.orderBy(true,false,LogEntity::getCreateTime);
         return baseMapper.selectList(lambda);
     }
 }
