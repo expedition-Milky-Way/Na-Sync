@@ -1,5 +1,6 @@
 package com.example.baidusync.Util.FileUtil;
 
+import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -17,13 +18,6 @@ import java.util.zip.ZipFile;
  * 扫描文件
  */
 public class ScanFileUtil extends ZipFileUtil {
-
-    /**
-     * 百度网盘/阿里网盘 接受最大单次上传文件大小
-     *
-     * @unit Bytes
-     */
-    private final Long MAX_SIZE = 20991366069L;
     /**
      * 默认没有文件，大小为0
      */
@@ -87,7 +81,7 @@ public class ScanFileUtil extends ZipFileUtil {
         synchronized (INIT_SIZE) {
             Long fileSize = FileUtils.sizeOf(file);
             INIT_SIZE += fileSize;
-            if (INIT_SIZE <= MAX_SIZE) {
+            if (INIT_SIZE <= RequestNetDiskImpl.MAX_SIZE) {
                 return true;
             } else {
                 return false;

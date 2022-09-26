@@ -232,27 +232,25 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         }
         //删除缓存文件，记录文件原名和改名后的文件名
         //i.删除缓存文件和目录
-        for (FileAndDigsted item : fileAndDigsted) {
-            File delFile = new File(item.getPath()+"/"+item.getName());
-            try {
+        //目录
+        File delDir = new File(tempPath);
+        try {
+            for (FileAndDigsted item : fileAndDigsted) {
+                File delFile = new File(item.getPath() + "/" + item.getName());
                 boolean isDel = delFile.delete();
                 LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"), LogEntity.LOG_TYPE_INFO);
                 LogExecutor.addSysLogQueue(delLog);
-            } catch (SecurityException e) {
-                LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delFile.getName() + "删除失败，权限报错" + e.getMessage(), LogEntity.LOG_TYPE_ERROR);
-                LogExecutor.addSysLogQueue(delLog);
             }
-        }
-        File delDir = new File(tempPath);
-        try {
+            //删除目录
             boolean isDel = delDir.delete();
             LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"), LogEntity.LOG_TYPE_INFO);
             LogExecutor.addSysLogQueue(delLog);
-        }catch (SecurityException e){
+        } catch (SecurityException e) {
             LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delDir.getName() + "删除失败，权限报错" + e.getMessage(), LogEntity.LOG_TYPE_ERROR);
             LogExecutor.addSysLogQueue(delLog);
         }
         //i. 记录文件上传到百度网盘后，百度网盘上的文件名字和原文件名
+
     }
 
     /**
