@@ -14,6 +14,9 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author 杨 名 (字 露煊)
  */
@@ -25,13 +28,14 @@ public class ThymeleafConfig implements WebMvcConfigurer {
     public ClassLoaderTemplateResolver templateResolver() {
 
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-
         templateResolver.setPrefix("templates/");
         templateResolver.setCacheable(false);
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode("HTML5");
         templateResolver.setCharacterEncoding("UTF-8");
-
+        Set<String> jsSet = new HashSet<>();
+        jsSet.add("jquery.min.js");
+        templateResolver.setJavaScriptTemplateModePatterns(jsSet);
         return templateResolver;
     }
 

@@ -39,7 +39,7 @@ public class FileSetting extends BaseEntity {
     public String cachePath;
     @TableField(value = "dateTime", jdbcType = JdbcType.TIMESTAMP)
     public String dateTime;
-    @TableField(value = "task_num")
+    @TableField(value = "task_num",jdbcType = JdbcType.INTEGER)
     public Integer taskNum; //最大并行任务数量
 
 

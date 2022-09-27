@@ -20,9 +20,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Service
-public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting> implements FileSettingService{
+public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting> implements FileSettingService {
 
     @Value("${custom-servicePass}")
     String servicePass;
@@ -33,13 +35,15 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
 
     public static final String ZIP_PATH = "F:/WorkSpace/zip_tryFiles/files.zip";
 
+    private final SimpleDateFormat formator = new SimpleDateFormat("yyyy-mm-dd HH:mm");
+
     /**
-     * @Author YeungLuhyun Demo
-     * 将文件复制到一个文件夹中，然后将该文件夹压缩
      * @return
      * @throws IOException
+     * @Author YeungLuhyun Demo
+     * 将文件复制到一个文件夹中，然后将该文件夹压缩
      */
-    public  String zipFile(String path) throws IOException {
+    public String zipFile(String path) throws IOException {
         ZipParameters zipParameters = new ZipParameters();
         //设置压缩方法
         zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
@@ -56,7 +60,7 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
         //压缩对象
         ZipFile zipFile = new ZipFile(file);
         //开始压缩，参数1：对应的路径下,参数2：压缩配置
-        zipFile.addFolder(new File(ZIP_PATH),zipParameters);
+        zipFile.addFolder(new File(ZIP_PATH), zipParameters);
         return "success";
     }
 
@@ -65,11 +69,11 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
      * 设置fileSetting
      */
     @Override
-    public Object settingFile(FileSetting fileSetting){
+    public Object settingFile(FileSetting fileSetting) {
         LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(FileSetting::getAppKey,fileSetting.getAppKey())
-                        .eq(FileSetting::getAppId,fileSetting.getAppId()).eq(FileSetting::getSecretKey,fileSetting.getPassword());
-        if (baseMapper.selectCount(lambdaQueryWrapper)  ==0){
+        lambdaQueryWrapper.eq(FileSetting::getAppKey, fileSetting.getAppKey())
+                .eq(FileSetting::getAppId, fileSetting.getAppId()).eq(FileSetting::getSecretKey, fileSetting.getPassword());
+        if (baseMapper.selectCount(lambdaQueryWrapper) == 0) {
             baseMapper.insert(fileSetting);
         }
         return null;
@@ -79,10 +83,10 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
      * 获取setting
      */
     @Override
-    public FileSetting getSetting(){
+    public FileSetting getSetting() {
         LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.isNotNull(true,FileSetting::getId)
-                .orderBy(true,false,FileSetting::getId).last("LIMIT 1");
+        lambdaQueryWrapper.isNotNull(true, FileSetting::getId)
+                .orderBy(true, false, FileSetting::getId).last("LIMIT 1");
         FileSetting resultEntity = baseMapper.selectOne(lambdaQueryWrapper);
         return resultEntity;
     }
@@ -91,27 +95,28 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
      * 查看是否已经有setting了
      */
     @Override
-    public boolean excites(FileSetting fileSetting){
+    public boolean excites(FileSetting fileSetting) {
         LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(FileSetting::getAppKey,fileSetting.getAppKey())
-                .eq(FileSetting::getAppId,fileSetting.getAppId());
-       return baseMapper.exists(lambdaQueryWrapper);
+        lambdaQueryWrapper.eq(FileSetting::getAppKey, fileSetting.getAppKey())
+                .eq(FileSetting::getAppId, fileSetting.getAppId());
+        return baseMapper.exists(lambdaQueryWrapper);
     }
 
     /**
      * 更改文件设定
+     *
      * @param fileSetting
      */
     @Override
-    public void updateSetting(FileSetting fileSetting){
+    public void updateSetting(FileSetting fileSetting) {
         LambdaUpdateWrapper<FileSetting> lambda = new LambdaUpdateWrapper<>();
-        if (fileSetting.getId() != null){
-            lambda.eq(FileSetting::getId,fileSetting.getId()).eq(FileSetting::getAppKey,fileSetting.getAppKey());
-            baseMapper.update(fileSetting,lambda);
-            return;  //强行结束
+        fileSetting.setUpdateTime(formator.format(new Date()));
+        lambda.eq(FileSetting::getId, fileSetting.getId()).or().eq(FileSetting::getAppKey, fileSetting.getAppKey());
+        int i = baseMapper.update(fileSetting, lambda);
+        if (i < 1){
+            //软件bug，记录日志
+            LogEntity log = new LogEntity("", "更改设定失败，Id为空，请到Github提交Issues", LogEntity.LOG_TYPE_ERROR);
+            LogExecutor.addSysLogQueue(log);
         }
-        //软件bug，记录日志
-        LogEntity log = new LogEntity("","更改设定失败，Id为空，请到Github提交Issues",LogEntity.LOG_TYPE_ERROR);
-        LogExecutor.addSysLogQueue(log);
     }
 }
