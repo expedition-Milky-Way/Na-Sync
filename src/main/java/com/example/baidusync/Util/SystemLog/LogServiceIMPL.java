@@ -30,9 +30,10 @@ public class LogServiceIMPL extends ServiceImpl<LogEntityMapper, LogEntity> impl
         LambdaQueryWrapper<LogEntity> lambda = new LambdaQueryWrapper<>();
         lambda.orderBy(true, false, LogEntity::getCreateTime);
         List<LogEntity> logList = baseMapper.selectList(lambda);
-        if (logList.get(0).getId() > LAST_SQL_ID){
+        if (logList.size() > 0 && logList.get(0).getId() > LAST_SQL_ID) {
             LAST_SQL_ID = logList.get(0).getId();
             return logList;
+
         }
         return null;
     }
