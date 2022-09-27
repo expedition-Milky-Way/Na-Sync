@@ -1,10 +1,13 @@
 package com.example.baidusync.Admin.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
+import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
 import kotlin.jvm.internal.Lambda;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -93,6 +96,22 @@ public class FileSettingImpl extends ServiceImpl<FileSettingMapping, FileSetting
         lambdaQueryWrapper.eq(FileSetting::getAppKey,fileSetting.getAppKey())
                 .eq(FileSetting::getAppId,fileSetting.getAppId());
        return baseMapper.exists(lambdaQueryWrapper);
+    }
 
+    /**
+     * 更改文件设定
+     * @param fileSetting
+     */
+    @Override
+    public void updateSetting(FileSetting fileSetting){
+        LambdaUpdateWrapper<FileSetting> lambda = new LambdaUpdateWrapper<>();
+        if (fileSetting.getId() != null){
+            lambda.eq(FileSetting::getId,fileSetting.getId()).eq(FileSetting::getAppKey,fileSetting.getAppKey());
+            baseMapper.update(fileSetting,lambda);
+            return;  //强行结束
+        }
+        //软件bug，记录日志
+        LogEntity log = new LogEntity("","更改设定失败，Id为空，请到Github提交Issues",LogEntity.LOG_TYPE_ERROR);
+        LogExecutor.addSysLogQueue(log);
     }
 }

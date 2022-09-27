@@ -9,7 +9,8 @@
 
 </head>
 <script>
-    var HttpHost = "";
+    var HttpHost = window.location.url;
+    var requestNum = 0;
     $(function () {
         layui.use(['laydate'], function () {
             let laydate = layui.laydate
@@ -21,34 +22,34 @@
 
         //请求日志接口
         setInterval(() => {
-            if (HttpHost != ""){
-                $.ajax(HttpHost+"/getLog", {
-                    type: 'POST',
-                    responseType: 'json',
-                    success: res => {
-                        if (res.success === true) {
-                            if (res.data === null) {
-                                $("#systemLog").val('暂无日志')
-                            } else {
-                                let dataList = res.data
-                                let htmlstr = '';
-                                let types = ['正常运行时', '运行时警告', '运行时错误']
-                                let begin = dataList.length /2;
-                                if (begin < 0 ) begin = 0
-                                let end = dataList.length -1;
-                                for (let i = begin; i < end; i++) {
-                                    htmlstr += '<tr>'
-                                    htmlstr += "<td>" + dataList[i].message + "</td>"
-                                    htmlstr += "<td>" + types[dataList[i].type] + "</td>"
-                                    htmlstr += "</tr>"
-                                }
-                                $("#systemLog").html(htmlstr)
-                            }
+            $.ajax("/getLog", {
+                type: 'POST',
+                responseType: 'json',
+                success: res => {
+                    console.log(res)
+                    if (res.success === true && res.data !== null) {
+                        let dataList = res.data
+                        let types = ['正常运行时', '运行时警告', '运行时错误']
+                        let end = dataList.length - 1;
+                        let tbody = document.querySelector('tbody')
+                        for (let i = 0; i < end; i++) {
+                            var tr = document.createElement("tr")
+                            var time = document.createElement("td")
+                            time.innerHTML = dataList[i].createTime
+                            var msg = document.createElement('td')
+                            msg.innerHTML = dataList[i].message
+                            var type = document.createElement('td')
+                            type.innerHTML = types[dataList[i].type]
+                            tr.appendChild(time)
+                            tr.appendChild(msg)
+                            tr.appendChild(type)
+                            tbody.appendChild(tr)
                         }
                     }
-                })
-            }
-        }, 3000)
+                }
+            })
+
+        }, 10000)
 
 
     })
@@ -80,7 +81,8 @@
                     "path": path,
                     "cachePath": cachePath,
                     "dateTime": time,
-                    "signKey": signKey
+                    "signKey": signKey,
+                    "taskNum": taskNum
                 },
                 type: 'POST',
                 dataType: 'json',
@@ -90,17 +92,17 @@
                     let success = res.success
                     let message = res.message
                     let data = res.data
-                    let host = "http://"+data.ctx
+                    let host = "http://" + data.ctx
                     HttpHost = host
                     if (code === 200 && success === true) {
                         let content = layer.open({
-                            type:2,
-                            content:host+"/netDiskConfirm?url="+data.qrcode_url,
-                            area:['560px','560px'],
-                            closeBtn :0,
-                            title:'打开百度网盘手机app扫描二维码',
-                            btn:['确定'],
-                            yes:function (index,layero){
+                            type: 2,
+                            content: host + "/netDiskConfirm?url=" + data.qrcode_url,
+                            area: ['560px', '560px'],
+                            closeBtn: 0,
+                            title: '打开百度网盘手机app扫描二维码',
+                            btn: ['确定'],
+                            yes: function (index, layero) {
                                 authConfirm(host)
                                 layer.close(index)
                             }
@@ -117,14 +119,14 @@
 
     }
 
-    function authConfirm(ctx){
-        $.ajax('http://'+ctx+'/netDiskConfirmOk',{
-            type:'POST',
+    function authConfirm(ctx) {
+        $.ajax(ctx + '/netDiskConfirmOk', {
+            type: 'POST',
             dataType: 'json',
-            complete:function (res){
+            complete: function (res) {
                 console.log(res)
                 let response = res.responseJSON
-                if (!response.success ){
+                if (response.success === false) {
                     layer.msg(response.message)
                 }
             }
@@ -155,7 +157,8 @@
                     <span style="font-size: 16px">选择时间</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="time" id="time" class="layui-input custom_input" style="width: 300px" th:value="${dateTime}">
+                    <input name="time" id="time" class="layui-input custom_input" style="width: 300px"
+                           th:value="${dateTime}">
                 </div>
             </div>
 
@@ -242,30 +245,36 @@
 
         <div class="layui-row layui-col-space2">
             <div class="layui-col-md5">
-                <button class="layui-btn" id="submit_btn" onclick="submitForm()">添加</button>
+                <div th:if="${btnState == 0}">
+                    <button class="layui-btn" onclick="submitForm()">添加</button>
+                </div>
+                <div th:if="${btnState == 1}">
+                    <button class="layui-btn" onclick="submitForm()">修改</button>
+                </div>
             </div>
-
             <div class="layui-col-md5">
                 <button class="layui-btn" id="downloadXls" onclick="downLoadLog()">下载运行日志</button>
             </div>
         </div>
-    </div>
-    <div class="layui-row layui-col-space2">
-        <div class="layui-col-md3">
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md3">
+                <div id="systemLog"></div>
+            </div>
+        </div>
+        <div id="sysLogTable">
             <table class="layui-table">
                 <thead>
                 <tr>
-                    <th>信息</th>
-                    <th>级别</th>
-                    <th>类型</th>
+                    <td>日期</td>
+                    <td width="400">信息</td>
+                    <td>日志类型</td>
                 </tr>
                 </thead>
-                <tbody  id="systemLog">
-
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
+
 
 </div>
 

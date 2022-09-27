@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
 
 @Controller
 public class AdminController {
@@ -47,6 +48,9 @@ public class AdminController {
             modelMap.put("signKey", fileSetting.getSignKey());
             modelMap.put("taskNum",fileSetting.getTaskNum());
             modelMap.put("dateTime",fileSetting.getDateTime());
+            modelMap.put("btnState",FileSetting.HAS_SETTING);
+        }else{
+            modelMap.put("btnState",FileSetting.NO_SETTING);
         }
         List<Integer> taskNumList = new ArrayList<>();
         for (Integer i = 1; i < 11; i++) {
@@ -71,6 +75,8 @@ public class AdminController {
         }
         if (!service.excites(setting)){
             service.settingFile(setting);
+        }else{
+            service.updateSetting(setting);
         }
         jsonObject.put("ctx",ctx);
         return new ResponseData(jsonObject);
@@ -115,6 +121,9 @@ public class AdminController {
         netDiskService.setAuthIsOk();
         boolean isok = netDiskService.accessToken();
         if (isok){
+            FileSetting fileSetting = service.getSetting();
+           Timer timer = netDiskService.setSchTask(fileSetting);
+           if (timer==null )  return new ResponseData("定时任务出现问题");
             return new ResponseData();
         }else{
             return new ResponseData("请确认百度网盘扫描二维码完成后点击确认按钮");
@@ -123,7 +132,6 @@ public class AdminController {
 
 
     public synchronized void read(File s) {
-
         File[] files = s.listFiles();
         for (File file1 : files) {
             if (file1.isDirectory()) {

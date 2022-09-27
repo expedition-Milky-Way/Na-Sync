@@ -12,6 +12,7 @@ import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
+import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.File;
 import java.net.URL;
+import java.sql.Time;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -76,6 +79,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     private static FileSetting fileSetting = new FileSetting();
 
     private static AtomicInteger IS_AUTH_OK = new AtomicInteger(0);
+    //定时任务  每一天
+    private static final long PERIOD_DAY = 24 * 60 * 60 * 1000;
 
     /**
      * 获取设备码，用户授权码，二维码
@@ -96,15 +101,10 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         if (jsonObject.getString("device_code") != null) {
             String deviceCode = jsonObject.getString("device_code");
             DEVICE_CODE = deviceCode;
-//            ConstCacheData constCacheData = null;
-//            if (ConstCache.has()) {
-//                constCacheData = new ConstCacheData();
-//            } else {
-//                constCacheData = ConstCache.get();
-//            }
-//            constCacheData.setDeviceCode(deviceCode);
-//            ConstCache.set(constCacheData);
-//            this.accessToken();
+        }else{
+            //获取token失败，
+            LogEntity log = new LogEntity("","没有扫码，获取Token失败"+jsonObject.toString(),LogEntity.LOG_TYPE_WARN);
+            LogExecutor.addSysLogQueue(log);
         }
 
         return jsonObject;
@@ -376,5 +376,44 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     @Override
     public Integer setAuthIsOk() {
         return IS_AUTH_OK.incrementAndGet();
+    }
+
+    /**
+     * 设置定时任务的时间
+     *
+     * @return
+     */
+    @Override
+    public Timer setSchTask(FileSetting fileSetting) {
+        if (!fileSetting.isEmpty()) {
+            Calendar calendar = Calendar.getInstance();
+            SimpleDateFormat Timeformat = new SimpleDateFormat("HH:mm");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd HH:mm");
+            Date date = null;
+            try {
+                date = Timeformat.parse(fileSetting.getDateTime());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if (date != null) {
+                calendar.set(Calendar.HOUR_OF_DAY, date.getHours());
+                calendar.set(Calendar.MINUTE, date.getMinutes());
+                Timer timer = new Timer();
+                Date taskDate = calendar.getTime();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        String runDate = dateFormat.format(new Date());
+                        LogEntity log = new LogEntity("", runDate + "开始运行", LogEntity.LOG_TYPE_INFO);
+                        ScanFileUtil scanFileUtil = new ScanFileUtil(fileSetting.getCachePath(), fileSetting.getPassword());
+                        scanFileUtil.doSomething(fileSetting.getPath());
+                        LogExecutor.addSysLogQueue(log);
+                    }
+                }, taskDate, PERIOD_DAY);
+                return timer;
+            }
+
+        }
+        return null;
     }
 }

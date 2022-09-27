@@ -19,8 +19,10 @@ import java.util.List;
 @TableName("file_setting")
 public class FileSetting extends BaseEntity {
 
-    @TableId(type = IdType.AUTO)
-    public Integer id;
+    public static final Integer HAS_SETTING = 1;
+
+    public static final Integer NO_SETTING = 0;
+
     @TableField("appId")
     public String appId;
     @TableField("secretKey")
@@ -63,8 +65,8 @@ public class FileSetting extends BaseEntity {
 
     }
 
-    public FileSetting(Integer id, String appId, String secretKey, String signKey, String appKey, String password, String path, String cachePath, String dateTime, Integer taskNum) {
-        this.id = id;
+    public FileSetting(String appId, String secretKey, String signKey, String appKey, String password, String path, String cachePath, String dateTime, Integer taskNum) {
+
         this.appId = appId;
         this.secretKey = secretKey;
         this.signKey = signKey;
@@ -78,13 +80,6 @@ public class FileSetting extends BaseEntity {
     }
 
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getAppId() {
         return appId;

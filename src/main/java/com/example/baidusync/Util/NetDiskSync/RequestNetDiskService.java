@@ -1,10 +1,12 @@
 package com.example.baidusync.Util.NetDiskSync;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Util.FileAndDigsted;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 
 public interface RequestNetDiskService {
     JSONObject deviceCode(String appKey);
@@ -26,4 +28,7 @@ public interface RequestNetDiskService {
     Long getMaxTempSize();
 
     Integer setAuthIsOk();
+
+
+    Timer setSchTask(FileSetting fileSetting);
 }

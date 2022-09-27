@@ -1,6 +1,8 @@
 package com.example.baidusync.Util.FileUtil;
 
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
+import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -31,7 +33,6 @@ public class ScanFileUtil extends ZipFileUtil {
 
     private String ZIP_PATH = null;
 
-    Executor executor = Executors.newFixedThreadPool(2);
 
     /**
      * 扫描文件树
@@ -127,11 +128,17 @@ public class ScanFileUtil extends ZipFileUtil {
         if (!file.exists()) {
             boolean isMkdir = file.mkdir();
             if (!isMkdir) {
-                //记录日志
+                LogEntity log = new LogEntity("ScanFileUtil","目录创建失败",LogEntity.LOG_TYPE_WARN);
+                LogExecutor.addSysLogQueue(log);
             }
         }
         this.ZIP_PATH = zipPath;
 
+    }
+
+    public void doSomething(String path){
+        File file = new File(path);
+        read(file.listFiles());
     }
 
 

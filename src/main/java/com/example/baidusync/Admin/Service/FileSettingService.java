@@ -15,4 +15,6 @@ public interface FileSettingService {
      * @return
      */
     boolean excites(FileSetting fileSetting);
+
+    void updateSetting(FileSetting fileSetting);
 }

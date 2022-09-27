@@ -2,6 +2,7 @@ package com.example.baidusync;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogService;
@@ -21,14 +22,14 @@ class BaiduSyncApplicationTests {
     @Resource
     private RequestNetDiskService netDiskService;
 
+
     @Test
     void contextLoads() {
     }
 
     @Test
     void testLog(){
-
-        System.out.println( logService.getLog());
+        logService.getLog();
     }
 
     @Test
@@ -70,6 +71,23 @@ class BaiduSyncApplicationTests {
     }
 
 
+    /**
+     * 设置定时线程
+     */
+    @Test
+    public void testSch(){
+        FileSetting fileSetting = new FileSetting();
+        fileSetting.setDateTime("01:00");
+        fileSetting.setPassword("123123");
+        fileSetting.setCachePath("D:/JavaWorkSpace/g/zip_tryFile");
+        fileSetting.setPath("D:/JavaWorkSpace/g/files");
+        fileSetting.setTaskNum(2);
+        fileSetting.setAppId("27205775");
+        fileSetting.setAppKey("cjl9y2pbLPwlv3VQIa3OhPhVoxGr9Lzv");
+        fileSetting.setSecretKey("1EvQX6yUnl5edTnkSa5WvyTUGQMABRzT");
+        fileSetting.setSignKey("ov*p@DlS2V@L=91WVq#HpuQIM1cQLF~M");
+        netDiskService.setSchTask(fileSetting);
+    }
 
 
 
