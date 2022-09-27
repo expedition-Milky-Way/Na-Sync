@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LogServiceIMPL extends ServiceImpl<LogEntityMapper, LogEntity> implements LogService {
 
 
-    static Integer LAST_SQL_ID = 1;
+    static Integer LAST_SQL_ID = 0;
 
     @Override
     @Transactional
@@ -33,9 +33,9 @@ public class LogServiceIMPL extends ServiceImpl<LogEntityMapper, LogEntity> impl
         if (logList.size() > 0 && logList.get(0).getId() > LAST_SQL_ID) {
             LAST_SQL_ID = logList.get(0).getId();
             return logList;
-
         }
-        return null;
+            return null;
+
     }
 
 }

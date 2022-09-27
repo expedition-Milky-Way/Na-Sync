@@ -172,14 +172,16 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             ACCESS_TOKEN = token;
             body = requestUsInfo(token);
         }
-        if (body.getString("errmsg") != null) {
+        if (body.getInteger("errno") != 0) {
             Date date = new Date();
             SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd HH:mm");
             log.error(format.format(date) + "获取用户信息失败。或许是token为" + ACCESS_TOKEN + "的原因");
+        }else{
+            VIP_TYPE = body.getInteger("vip_type");
+            MAX_SIZE = ONE_FILE_SIZE_BY_VIP[VIP_TYPE];
+            MAX_TEMP_SIZE = SIZE_BY_VIP_TYPE[VIP_TYPE];
         }
-        VIP_TYPE = body.getInteger("vip_type");
-        MAX_SIZE = ONE_FILE_SIZE_BY_VIP[VIP_TYPE];
-        MAX_TEMP_SIZE = SIZE_BY_VIP_TYPE[VIP_TYPE];
+
     }
 
 
@@ -187,8 +189,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * 请求百度用户信息连接
      */
     private JSONObject requestUsInfo(String accessToken) {
-        String URL = "http://pan.baidu.com/rest/2.0/xpan/nas?method=uinfo" +
-                "method=uinfo&access_token=" + accessToken;
+        String URL = "pan.baidu.com/rest/2.0/xpan/nas?method=uinfo" +
+                "&access_token=" + accessToken;
         HttpResponse response = HttpRequest.get(URL).execute();
         String bodyStr = response.body();
         JSONObject body = JSON.parseObject(bodyStr);

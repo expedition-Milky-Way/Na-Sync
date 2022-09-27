@@ -27,18 +27,17 @@ public class TempfileImpl implements TempFileService {
     private RequestNetDiskService netDiskService;
     @Resource
     private FileService fileService;
+    @Resource
+    private RequestNetDiskService requestNetDiskService;
 
     private static String CACHE_PATH = null;
-    /**
-     * 通过netDiskService.VIP_TYPE获取
-     */
-    private static Long[] SIZE_BY_VIP_TYPE = {4194304L, 16777216L, 33554432L};
+
 
     private static Long SIZE = 0L;
     /**
      * 百度网盘最小分片大小. 假如文件大小 <= MIN_SIZE 直接上传
      */
-    private static Long MIN_SIZE =4194304L;
+    private static Long MIN_SIZE = 4194304L;
 
     /**
      * 默认分片存放文件夹
@@ -55,7 +54,7 @@ public class TempfileImpl implements TempFileService {
         //获取用户信息
         netDiskService.getBaiduUsInfo();
         //获取分片大小
-        SIZE = SIZE_BY_VIP_TYPE[RequestNetDiskImpl.VIP_TYPE];
+        SIZE = requestNetDiskService.getMaxTempSize();
         if (CACHE_PATH == null) { //获取路径
             LambdaQueryWrapper<FileSetting> lambda = new LambdaQueryWrapper<>();
             lambda.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
@@ -77,7 +76,7 @@ public class TempfileImpl implements TempFileService {
         Long fileSize = FileUtils.sizeOf(file);
         if (fileSize <= MIN_SIZE) {
             //直接上传
-            fileService.computedMD5(name,file,fileSize,parent);
+            fileService.computedMD5(name, file, fileSize, parent);
         } else {
             BigDecimal total = new BigDecimal(fileSize).divide(new BigDecimal(SIZE), 0, BigDecimal.ROUND_UP);
             Integer count = total.intValue(); //分多少片
@@ -138,6 +137,5 @@ public class TempfileImpl implements TempFileService {
             splitFile(item);
         }
     }
-
 
 }

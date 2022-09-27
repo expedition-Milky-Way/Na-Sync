@@ -18,38 +18,46 @@
                 type: 'time'
             });
         })
-
-        //请求日志接口
-        setInterval(() => {
+        function firstGetLog(){
             $.ajax("/getLog", {
                 type: 'POST',
                 responseType: 'json',
                 success: res => {
                     console.log(res)
-                    if (res.success === true && res.data !== null) {
-                        let dataList = res.data
-                        let types = ['正常运行时', '运行时警告', '运行时错误']
-                        let end = dataList.length - 1;
-                        let tbody = document.querySelector('tbody')
-                        for (let i = 0; i < end; i++) {
-                            var tr = document.createElement("tr")
-                            var time = document.createElement("td")
-                            time.innerHTML = dataList[i].createTime
-                            var msg = document.createElement('td')
-                            msg.innerHTML = dataList[i].message
-                            var type = document.createElement('td')
-                            type.innerHTML = types[dataList[i].type]
-                            tr.appendChild(time)
-                            tr.appendChild(msg)
-                            tr.appendChild(type)
-                            tbody.appendChild(tr)
-                        }
+                    if (res!= null){
+                        viewLog(res.data)
                     }
+
+
+
                 }
             })
+        }
+
+        //请求日志接口
+        setInterval(() => {
+           firstGetLog()
 
         }, 10000)
 
+       //渲染日志log
+        function viewLog(data){
+            let types = ['正常运行时', '运行时警告', '运行时错误']
+            let tbody = document.querySelector('tbody')
+            for (let i = 0; i < data.length; i++) {
+                var tr = document.createElement("tr")
+                var time = document.createElement("td")
+                time.innerHTML = data[i].createTime
+                var msg = document.createElement('td')
+                msg.innerHTML = data[i].message
+                var type = document.createElement('td')
+                type.innerHTML = types[data[i].type]
+                tr.appendChild(time)
+                tr.appendChild(msg)
+                tr.appendChild(type)
+                tbody.appendChild(tr)
+            }
+        }
 
     })
 
@@ -128,6 +136,8 @@
                 let response = res.responseJSON
                 if (response.success === false) {
                     layer.msg(response.message)
+                }else{
+                    layer.msg("程序启动成功，将会在固定时间段执行任务")
                 }
             }
         })

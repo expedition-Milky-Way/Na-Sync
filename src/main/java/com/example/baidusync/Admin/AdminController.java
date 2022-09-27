@@ -71,7 +71,7 @@ public class AdminController {
         JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
         if (jsonObject.getString("error_description") != null) {
             //返回报错信息
-            return new ResponseData(jsonObject.getString("error_description"));
+            return new ResponseData("AppKey不正确，检查是否有空格存在或是否有误"+jsonObject.getString("error_description"));
         }
         if (!service.excites(setting)){
             service.settingFile(setting);
@@ -124,24 +124,11 @@ public class AdminController {
             FileSetting fileSetting = service.getSetting();
            Timer timer = netDiskService.setSchTask(fileSetting);
            if (timer==null )  return new ResponseData("定时任务出现问题");
-            return new ResponseData();
+           return new ResponseData();
         }else{
             return new ResponseData("请确认百度网盘扫描二维码完成后点击确认按钮");
         }
     }
-
-
-    public synchronized void read(File s) {
-        File[] files = s.listFiles();
-        for (File file1 : files) {
-            if (file1.isDirectory()) {
-                new Thread(() -> read(file1)).start();
-            }
-            if (file1.getPath().contains("pixiv")) System.out.println(file1.toString());
-
-        }
-    }
-
 
     /**
      * 开发者测试

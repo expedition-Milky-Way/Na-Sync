@@ -1,12 +1,16 @@
 package com.example.baidusync.Util.FileUtil;
 
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
+import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
+import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -32,6 +36,8 @@ public class ScanFileUtil extends ZipFileUtil {
     private String PASSWORD = null;
 
     private String ZIP_PATH = null;
+    @Resource
+    private RequestNetDiskService requestNetDiskService;
 
 
     /**

@@ -3,6 +3,7 @@ package com.example.baidusync.Util.SystemLog;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.extra.spring.SpringUtil;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,7 +25,6 @@ public class LogExecutor {
             try {
                 logEntity.wait(100);
             } catch (InterruptedException e) {
-
             }
         }
         return sysLogQueue.offer(logEntity);
@@ -33,7 +33,8 @@ public class LogExecutor {
     public static void takeLogQueue() {
             while (true) {
                 if (sysLogQueue.size() > 0) {
-                    logServiceBean.InsertInto(sysLogQueue.poll());
+                    LogEntity entity = sysLogQueue.poll();
+                    if (!Objects.isNull(entity)) logServiceBean.InsertInto(entity);
                 }else {
                     try {
                         Thread.sleep(4000);

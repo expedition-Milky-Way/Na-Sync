@@ -2,15 +2,21 @@ package com.example.baidusync;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.alibaba.fastjson.JSONObject;
 import com.example.baidusync.Admin.Entity.FileSetting;
+import com.example.baidusync.Admin.Service.FileSettingService;
+import com.example.baidusync.Util.FileService.NetDiskThreadPool;
+import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogService;
+import com.mysql.cj.PreparedQuery;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +27,8 @@ class BaiduSyncApplicationTests {
     private LogService logService;
     @Resource
     private RequestNetDiskService netDiskService;
-
+    @Resource
+    private FileSettingService settingService;
 
     @Test
     void contextLoads() {
@@ -87,6 +94,18 @@ class BaiduSyncApplicationTests {
         fileSetting.setSecretKey("1EvQX6yUnl5edTnkSa5WvyTUGQMABRzT");
         fileSetting.setSignKey("ov*p@DlS2V@L=91WVq#HpuQIM1cQLF~M");
         netDiskService.setSchTask(fileSetting);
+    }
+
+    @Test
+    public void testLogic(){
+        FileSetting setting = settingService.getSetting();
+        JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
+        System.out.printf(jsonObject.toString());
+        netDiskService.accessToken();
+        netDiskService.getBaiduUsInfo();
+        ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(),setting.getPassword());
+        scanFileUtil.doSomething(setting.getPath());
+        NetDiskThreadPool.TurnOnSendFile();
     }
 
 

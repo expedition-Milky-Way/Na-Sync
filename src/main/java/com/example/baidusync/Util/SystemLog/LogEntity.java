@@ -33,7 +33,7 @@ public class LogEntity implements Serializable {
 
     public static final Integer LOG_TYPE_ERROR = 2;
     private static final long serialVersionUID = 6843145008833598631L;
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Integer id;
     @TableField(value = "createTime",jdbcType = JdbcType.TIMESTAMP)
     private String createTime;
