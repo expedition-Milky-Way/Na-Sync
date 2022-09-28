@@ -46,6 +46,9 @@ public class ScanFileUtil extends ZipFileUtil {
     public void read(File[] files) {
         for (File item : files) {
             String key = item.getParent();
+            if (item == files[18]){
+                System.out.println("");
+            }
             if (!item.isDirectory()) {
                 if (isMoreThen(item)) {
                     InsertFile(key, item);
@@ -54,28 +57,27 @@ public class ScanFileUtil extends ZipFileUtil {
                     InsertFile(key, item);
                 }
             } else {
-                if (FILES_MAP.size() > 0) {
-                    zip();
-                }
+                zip();//先把这20G的文件压进队列。清空一下map
                 read(item.listFiles());
             }
         }
     }
 
+
+
     /**
      * 增加文件到MAP中
      */
     private void InsertFile(String key, File file) {
-        if (FILES_MAP.get(key) != null) {
-            synchronized (FILES_MAP) {
+        synchronized (FILES_MAP) {
+            if (FILES_MAP.get(key) != null) {
                 List<File> fileList = FILES_MAP.get(key);
                 fileList.add(file);
                 FILES_MAP.put(key, fileList);
-            }
-        } else {
-            List<File> files = new ArrayList<>();
-            files.add(file);
-            synchronized (FILES_MAP) {
+
+            } else {
+                List<File> files = new ArrayList<>();
+                files.add(file);
                 FILES_MAP.put(key, files);
             }
         }
@@ -114,13 +116,12 @@ public class ScanFileUtil extends ZipFileUtil {
                     }
                     String[] dirs = pathGeneral.split("/");
                     String fileName = dirs[dirs.length - 1];
-                    String zipName = ZIP_PATH + fileName;
+                    String zipName = ZIP_PATH + "/" + fileName;
                     try {
                         this.zipFile(zipName, map.getValue(), PASSWORD);
                     } catch (ZipException e) {
-                        //记录日志
+                       e.printStackTrace();
                     }
-
                 }
             }
             FILES_MAP.clear();
@@ -128,23 +129,43 @@ public class ScanFileUtil extends ZipFileUtil {
 
     }
 
-    public ScanFileUtil( String zipPath, String password) {
+    public ScanFileUtil(String zipPath, String password) {
         this.PASSWORD = password;
         File file = new File(zipPath);
         if (!file.exists()) {
             boolean isMkdir = file.mkdir();
             if (!isMkdir) {
-                LogEntity log = new LogEntity("ScanFileUtil","目录创建失败",LogEntity.LOG_TYPE_WARN);
+                LogEntity log = new LogEntity("ScanFileUtil", "目录创建失败", LogEntity.LOG_TYPE_WARN);
                 LogExecutor.addSysLogQueue(log);
             }
+        } else {
+            File[] dirFiles = file.listFiles();
+            if (dirFiles.length > 0){
+                delteCachePath(dirFiles);
+            }
+
         }
         this.ZIP_PATH = zipPath;
 
     }
 
-    public void doSomething(String path){
+    public void doSomething(String path) {
         File file = new File(path);
         read(file.listFiles());
+    }
+
+    /**
+     * 清空缓存文件夹下的所有文件
+     */
+    private void delteCachePath(File[] files) {
+        for (File dirFile : files) {
+            if (!dirFile.isDirectory()) {
+                dirFile.delete();
+            } else {
+                delteCachePath(dirFile.listFiles());
+            }
+
+        }
     }
 
 

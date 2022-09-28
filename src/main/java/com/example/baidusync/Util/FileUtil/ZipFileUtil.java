@@ -2,6 +2,11 @@ package com.example.baidusync.Util.FileUtil;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.model.enums.CompressionLevel;
+import net.lingala.zip4j.model.enums.CompressionMethod;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import java.io.File;
 import java.util.List;
@@ -23,9 +28,14 @@ public class ZipFileUtil {
         if (fileList.size() > 0) {
             String fileName = this.rename(name, FILE_ZIP_PREFIX);
             ZipFile zipFile = new ZipFile(fileName);
+            ZipParameters zipParameters = new ZipParameters();
+            zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+            zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+            zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+            zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
             char[] passowrdChard = password.toCharArray();
             zipFile.setPassword(passowrdChard);
-            zipFile.addFiles(fileList);
+            zipFile.addFiles(fileList,zipParameters);
         }
     }
 
@@ -33,18 +43,20 @@ public class ZipFileUtil {
     /**
      * 重命名（检查文件名是否重复）
      */
-    public synchronized String rename(String name, String prefix) {
-        String fileFinalName = name + prefix;
-        if (isExist(fileFinalName)) { //如果存在相同的名
-            String[] nameChar = name.split("/");
-            String oldName = nameChar[nameChar.length - 1];
-            String nName = oldName + "(" + NAME_PREFIX + ")";
-            String dir = name.replace(oldName, nName);
-            NAME_PREFIX++;
-            return rename(dir, prefix);
+    public  String rename(String name, String prefix) {
+        synchronized (NAME_PREFIX){
+            String fileFinalName = name + prefix;
+            if (isExist(fileFinalName)) { //如果存在相同的名
+                String[] nameChar = name.split("/");
+                String oldName = nameChar[nameChar.length - 1];
+                String nName = oldName + "(" + NAME_PREFIX + ")";
+                String dir = name.replace(oldName, nName);
+                NAME_PREFIX++;
+                return rename(dir,prefix);
+            }
+            NAME_PREFIX = 1;
+            return name + prefix;
         }
-        NAME_PREFIX = 1;
-        return name + prefix;
     }
 
     /**

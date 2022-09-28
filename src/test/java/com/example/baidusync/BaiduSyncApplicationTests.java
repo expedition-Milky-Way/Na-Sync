@@ -99,10 +99,10 @@ class BaiduSyncApplicationTests {
     @Test
     public void testLogic(){
         FileSetting setting = settingService.getSetting();
-        JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
-        System.out.printf(jsonObject.toString());
-        netDiskService.accessToken();
-        netDiskService.getBaiduUsInfo();
+//        JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
+//        System.out.printf(jsonObject.toString());
+//        netDiskService.accessToken();
+//        netDiskService.getBaiduUsInfo();
         ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(),setting.getPassword());
         scanFileUtil.doSomething(setting.getPath());
         NetDiskThreadPool.TurnOnSendFile();
