@@ -5,7 +5,6 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -17,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 /**
@@ -33,7 +33,7 @@ public class ScanFileUtil extends ZipFileUtil {
      */
     private static Map<String, List<File>> FILES_MAP = new HashMap<>();
 
-    private String PASSWORD = null;
+    public static String PASSWORD = null;
 
     private String ZIP_PATH = null;
     @Resource
@@ -43,12 +43,23 @@ public class ScanFileUtil extends ZipFileUtil {
     /**
      * 扫描文件树
      */
-    public void read(File[] files) {
+    public  void read(File[] files) {
+        List list = Arrays.asList(files);
+        Collections.sort(list, new Comparator<File>() {
+
+            @Override
+            public int compare(File o1, File o2) {
+                if (o1.isDirectory() && o2.isFile()){
+                    return 1;
+                }
+                if (o1.isFile() && o2.isDirectory()){
+                    return -1;
+                }
+                return 0;
+            }
+        });
         for (File item : files) {
             String key = item.getParent();
-            if (item == files[18]){
-                System.out.println("");
-            }
             if (!item.isDirectory()) {
                 if (isMoreThen(item)) {
                     InsertFile(key, item);
@@ -57,12 +68,11 @@ public class ScanFileUtil extends ZipFileUtil {
                     InsertFile(key, item);
                 }
             } else {
-                zip();//先把这20G的文件压进队列。清空一下map
+                zip(); //先把这20G的文件压进队列。清空一下map
                 read(item.listFiles());
             }
         }
     }
-
 
 
     /**
@@ -102,9 +112,11 @@ public class ScanFileUtil extends ZipFileUtil {
      * 调用进行压缩
      */
     private void zip() {
-        synchronized (FILES_MAP) {
-            Iterator<Map.Entry<String, List<File>>> iterator = FILES_MAP.entrySet().iterator();
-            while (iterator.hasNext()) {
+        synchronized (INIT_SIZE){
+            INIT_SIZE = 0L;
+        }
+        Iterator<Map.Entry<String, List<File>>> iterator = FILES_MAP.entrySet().iterator();
+        while (iterator.hasNext()) {
                 Map.Entry<String, List<File>> map = iterator.next();
                 if (map != null) {
                     String path = map.getKey();
@@ -120,12 +132,12 @@ public class ScanFileUtil extends ZipFileUtil {
                     try {
                         this.zipFile(zipName, map.getValue(), PASSWORD);
                     } catch (ZipException e) {
-                       e.printStackTrace();
+                        e.printStackTrace();
                     }
-                }
             }
-            FILES_MAP.clear();
+
         }
+        FILES_MAP.clear();
 
     }
 
@@ -140,7 +152,7 @@ public class ScanFileUtil extends ZipFileUtil {
             }
         } else {
             File[] dirFiles = file.listFiles();
-            if (dirFiles.length > 0){
+            if (dirFiles.length > 0) {
                 delteCachePath(dirFiles);
             }
 
@@ -151,6 +163,7 @@ public class ScanFileUtil extends ZipFileUtil {
 
     public void doSomething(String path) {
         File file = new File(path);
+        List<File> files = Arrays.asList(file.listFiles());
         read(file.listFiles());
     }
 

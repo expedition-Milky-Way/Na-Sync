@@ -1,15 +1,17 @@
 package com.example.baidusync.Util.FileUtil;
 
 import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
+
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.zip.ZipException;
 
 /**
  * @author 杨 名 (字 露煊)
@@ -30,12 +32,15 @@ public class ZipFileUtil {
             ZipFile zipFile = new ZipFile(fileName);
             ZipParameters zipParameters = new ZipParameters();
             zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-            zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+            zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-            zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
-            char[] passowrdChard = password.toCharArray();
-            zipFile.setPassword(passowrdChard);
-            zipFile.addFiles(fileList,zipParameters);
+            zipParameters.setEncryptFiles(true);
+            zipFile.setPassword(password.toCharArray());
+            try {
+                zipFile.addFiles(fileList,zipParameters);
+            } catch (net.lingala.zip4j.exception.ZipException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -46,18 +51,24 @@ public class ZipFileUtil {
     public  String rename(String name, String prefix) {
         synchronized (NAME_PREFIX){
             String fileFinalName = name + prefix;
-            if (isExist(fileFinalName)) { //如果存在相同的名
-                String[] nameChar = name.split("/");
-                String oldName = nameChar[nameChar.length - 1];
-                String nName = oldName + "(" + NAME_PREFIX + ")";
-                String dir = name.replace(oldName, nName);
-                NAME_PREFIX++;
-                return rename(dir,prefix);
+            while (true){
+                if (isExist(fileFinalName)) { //如果存在相同的名
+                    String[] nameChar = name.split("/");
+                    String oldName = nameChar[nameChar.length - 1];
+                    String nName = oldName + "(" + NAME_PREFIX + ")";
+                    fileFinalName = name.replace(oldName, nName);
+                    NAME_PREFIX++;
+                }else{
+                    break;
+                }
             }
             NAME_PREFIX = 1;
-            return name + prefix;
+            return fileFinalName;
         }
+
     }
+
+
 
     /**
      * 检查文件是否重复
