@@ -106,7 +106,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             LogEntity log = new LogEntity("","没有扫码，获取Token失败"+jsonObject.toString(),LogEntity.LOG_TYPE_WARN);
             LogExecutor.addSysLogQueue(log);
         }
-
+        log.info(jsonObject.toString());
         return jsonObject;
     }
 

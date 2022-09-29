@@ -31,41 +31,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetDiskThreadPool {
 
-    static Integer FINAL_TASK_NUM;
+    static Integer FINAL_TASK_NUM = 10;
+
+    static final Integer MAX_TASK_NUM = 10;
 
     private static RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
 
     private static FileSettingService fileSettingService = SpringUtil.getBean(FileSettingService.class);
 
-    static AtomicInteger atomicInteger = new AtomicInteger(0);
+    static AtomicInteger activeTaskNum = new AtomicInteger(0);
 
-    private static ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+    private static ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-    /**
-     * 百度网盘后端最大Task是10
-     *
-     * @return
-     */
-    public static ThreadPoolTaskExecutor executor() {
-        if (atomicInteger.get() == 0) {
-            FileSetting fileSetting = fileSettingService.getSetting();
-            if (fileSetting.getTaskNum() == null) {
-                initExecutor(2, 10);
-                FINAL_TASK_NUM = 2;
-            }
-            FINAL_TASK_NUM = fileSetting.getTaskNum();
-            initExecutor(FINAL_TASK_NUM, 10);
 
-        }
-        atomicInteger.incrementAndGet();
-        return threadPoolTaskExecutor;
-    }
-
-    private static void initExecutor(Integer coreSize, Integer maxSize) {
-        threadPoolTaskExecutor.setCorePoolSize(coreSize);
-        threadPoolTaskExecutor.setMaxPoolSize(maxSize);
-        threadPoolTaskExecutor.setBeanName("sendFileToNetDisk");
-        threadPoolTaskExecutor.initialize();
+    private static void initExecutor() {
+        FileSetting setting = fileSettingService.getSetting();
+        Integer coreSize = setting.getTaskNum();
+        executor.setCorePoolSize(coreSize);
+        executor.setMaxPoolSize(MAX_TASK_NUM);
+        executor.setBeanName("sendFileToNetDisk");
+        executor.initialize();
 
     }
 
@@ -75,15 +60,17 @@ public class NetDiskThreadPool {
      */
     public static void TurnOnSendFile() {
         new Thread(() -> {
+            initExecutor(); //初始化线程池
             while (true) {
                 if (!SystemCache.isEmpty()) {
-                    Integer canTaskNum = FINAL_TASK_NUM - executor().getActiveCount();
+                    Integer canTaskNum = FINAL_TASK_NUM - activeTaskNum.get();
                     if (canTaskNum > 0){
+                        Integer top = activeTaskNum.incrementAndGet();
                         for (int i = 0 ; i< FINAL_TASK_NUM ; i++){
                             Map<String, Object> map = SystemCache.get();
-                            executor().execute(()->run(map));
+                            executor.execute(()->run(map, top));
                             LogEntity log = new LogEntity(
-                                    "","获取文件"+(String)map.get("name")+"启动同步，当前任务数量"+executor().getActiveCount(),
+                                    "","获取文件"+(String)map.get("name")+"启动同步，当前任务数量"+activeTaskNum.get(),
                                     LogEntity.LOG_TYPE_INFO);
                             LogExecutor.addSysLogQueue(log);
                         }
@@ -103,12 +90,17 @@ public class NetDiskThreadPool {
     /**
      * 执行发送视频文件
      */
-    public static void run(Map<String, Object> map) {
+    public static void run(Map<String, Object> map,Integer top) {
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
         String parent = (String) map.get("parent");
         String tempPath = (String) map.get("temPath");
         List<FileAndDigsted> digsteds = (List<FileAndDigsted>) map.get("fileList");
         diskService.goSend(name, parent, size, digsteds,tempPath);
+        Integer nowTask = activeTaskNum.decrementAndGet();
+        if (top.intValue() < nowTask.intValue()){
+            LogEntity log = new LogEntity("","发送视频任务执行任务进行中："+executor.getActiveCount(),LogEntity.LOG_TYPE_INFO);
+            LogExecutor.addSysLogQueue(log);
+        }
     }
 }

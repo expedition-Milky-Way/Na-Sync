@@ -48,18 +48,11 @@ public class TempfileImpl implements TempFileService {
      * 切片
      */
     public void splitFile(File file) {
-        /*
-        获取用户信息和可用分片大小
-         */
+
         //获取用户信息
         netDiskService.getBaiduUsInfo();
         //获取分片大小
         SIZE = requestNetDiskService.getMaxTempSize();
-        if (CACHE_PATH == null) { //获取路径
-            LambdaQueryWrapper<FileSetting> lambda = new LambdaQueryWrapper<>();
-            lambda.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
-            CACHE_PATH = settingMapping.selectOne(lambda).getCachePath();
-        }
         //查看有没有用来存放temp文件的位置
         String tempDir = CACHE_PATH + TEMP_FILE_CACHE;
         File cacheDir = new File(tempDir);
@@ -72,7 +65,7 @@ public class TempfileImpl implements TempFileService {
         String name = filePath.split("/")[filePath.length() - 1];
         File oneTempFileDir = new File(tempDir + name);
         if (!oneTempFileDir.exists()) oneTempFileDir.mkdir();
-        name = tempDir + oneTempFileDir + name;
+        name = tempDir + oneTempFileDir;
         Long fileSize = FileUtils.sizeOf(file);
         if (fileSize <= MIN_SIZE) {
             //直接上传
@@ -91,10 +84,9 @@ public class TempfileImpl implements TempFileService {
                     offSet = write(name, raf, i, begin, end);
                 }
                 //计算md5并放入队列
-
                 fileService.computedMD5(name, new File(tempDir + oneTempFileDir), fileSize, parent);
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
 
@@ -133,6 +125,11 @@ public class TempfileImpl implements TempFileService {
      */
     @Override
     public void scanZipFile(File[] file) {
+        if (CACHE_PATH == null) { //获取路径
+            LambdaQueryWrapper<FileSetting> lambda = new LambdaQueryWrapper<>();
+            lambda.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
+            CACHE_PATH = settingMapping.selectOne(lambda).getCachePath();
+        }
         for (File item : file) {
             splitFile(item);
         }

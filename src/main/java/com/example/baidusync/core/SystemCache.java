@@ -32,7 +32,7 @@ public class SystemCache {
     }
 
     public static boolean isEmpty(){
-        return queue.isEmpty();
+        return queue.size()==0;
     }
 
     

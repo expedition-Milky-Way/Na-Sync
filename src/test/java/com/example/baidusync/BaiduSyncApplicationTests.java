@@ -9,7 +9,9 @@ import com.example.baidusync.Util.FileService.NetDiskThreadPool;
 import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.Util.SystemLog.LogService;
+import com.example.baidusync.Util.TempFileService.TempFileService;
 import com.mysql.cj.PreparedQuery;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +32,8 @@ class BaiduSyncApplicationTests {
     private RequestNetDiskService netDiskService;
     @Resource
     private FileSettingService settingService;
-
+    @Resource
+    private TempFileService tempFileService;
     @Test
     void contextLoads() {
     }
@@ -100,13 +103,21 @@ class BaiduSyncApplicationTests {
     @Test
     public void testLogic(){
         FileSetting setting = settingService.getSetting();
-//        JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
-//        System.out.printf(jsonObject.toString());
-//        netDiskService.accessToken();
-//        netDiskService.getBaiduUsInfo();
-        ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(),setting.getPassword());
-        scanFileUtil.doSomething(setting.getPath());
-        NetDiskThreadPool.TurnOnSendFile();
+        JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
+        System.out.printf(jsonObject.toString());
+        netDiskService.accessToken();
+        netDiskService.getBaiduUsInfo();
+     /*   ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(),setting.getPassword());
+        scanFileUtil.doSomething(setting.getPath());*/
+        if (setting.getCachePath() != null){
+            File cacheFile = new File(setting.getCachePath());
+            tempFileService.scanZipFile(cacheFile.listFiles());
+            NetDiskThreadPool.TurnOnSendFile();
+        }else{
+         LogEntity log = new LogEntity("","还没有设置缓存路径诶~",LogEntity.LOG_TYPE_WARN);
+            LogExecutor.addSysLogQueue(log);
+        }
+        System.out.println("测试结束");
     }
 
 
