@@ -15,6 +15,8 @@ import com.example.baidusync.Util.FileAndDigsted;
 import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
+import com.example.baidusync.Util.TempFileService.TempFileService;
+import com.example.baidusync.Util.TempFileService.TempfileImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     private FileSettingMapping settingMapping;
     @Resource
     private FileSettingService fileSettingService;
+    @Resource
+    private TempFileService tempFileService;
     private static String DEVICE_CODE = null;
 
     private static String ACCESS_TOKEN = null;
@@ -409,6 +413,13 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                         LogEntity log = new LogEntity("", runDate + "开始运行", LogEntity.LOG_TYPE_INFO);
                         ScanFileUtil scanFileUtil = new ScanFileUtil(fileSetting.getCachePath(), fileSetting.getPassword());
                         scanFileUtil.doSomething(fileSetting.getPath());
+                        if (TempfileImpl.TEMP_FILE_DIR != null ){
+                            tempFileService.scanZipFile(new File(TempfileImpl.TEMP_FILE_DIR).listFiles());
+                        }else{
+                            log = new LogEntity("",runDate+"缓存位置有误，上传前0x03工作结束",LogEntity.LOG_TYPE_ERROR);
+                            LogExecutor.addSysLogQueue(log);
+                            Thread.yield(); //如果找不到路径，就直接放弃当前任务
+                        }
                         LogExecutor.addSysLogQueue(log);
                     }
                 }, taskDate, PERIOD_DAY);

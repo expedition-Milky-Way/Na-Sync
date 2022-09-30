@@ -43,14 +43,16 @@ public class TempfileImpl implements TempFileService {
      * 默认分片存放文件夹
      */
     private static String TEMP_FILE_CACHE = "/temp";
+    /**
+     * 分片存放文件夹
+     */
+    public static String TEMP_FILE_DIR ;
 
     /**
      * 切片
      */
     public void splitFile(File file) {
 
-        //获取用户信息
-        netDiskService.getBaiduUsInfo();
         //获取分片大小
         SIZE = requestNetDiskService.getMaxTempSize();
         //查看有没有用来存放temp文件的位置
@@ -128,7 +130,9 @@ public class TempfileImpl implements TempFileService {
         if (CACHE_PATH == null) { //获取路径
             LambdaQueryWrapper<FileSetting> lambda = new LambdaQueryWrapper<>();
             lambda.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
-            CACHE_PATH = settingMapping.selectOne(lambda).getCachePath();
+            FileSetting setting = settingMapping.selectOne(lambda);
+            CACHE_PATH = setting.getCachePath();
+            TEMP_FILE_DIR = CACHE_PATH+TEMP_FILE_CACHE;
         }
         for (File item : file) {
             splitFile(item);

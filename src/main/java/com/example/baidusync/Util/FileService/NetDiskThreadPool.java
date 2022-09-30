@@ -11,6 +11,7 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.core.SystemCache;
+import org.apache.ibatis.logging.LogException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetDiskThreadPool {
 
-    static Integer FINAL_TASK_NUM = 10;
-
+    static Integer FINAL_TASK_NUM = 1;
+    //百度网盘最大允许10个Task
     static final Integer MAX_TASK_NUM = 10;
 
     private static RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
@@ -47,6 +48,7 @@ public class NetDiskThreadPool {
     private static void initExecutor() {
         FileSetting setting = fileSettingService.getSetting();
         Integer coreSize = setting.getTaskNum();
+        FINAL_TASK_NUM = setting.getTaskNum();
         executor.setCorePoolSize(coreSize);
         executor.setMaxPoolSize(MAX_TASK_NUM);
         executor.setBeanName("sendFileToNetDisk");
@@ -62,17 +64,18 @@ public class NetDiskThreadPool {
         new Thread(() -> {
             initExecutor(); //初始化线程池
             while (true) {
-                if (!SystemCache.isEmpty()) {
-                    Integer canTaskNum = FINAL_TASK_NUM - activeTaskNum.get();
-                    if (canTaskNum > 0){
-                        Integer top = activeTaskNum.incrementAndGet();
-                        for (int i = 0 ; i< FINAL_TASK_NUM ; i++){
-                            Map<String, Object> map = SystemCache.get();
-                            executor.execute(()->run(map, top));
+                Integer canTaskNum = FINAL_TASK_NUM - activeTaskNum.get();
+                if (canTaskNum > 0) {
+                    for (int i = 0; i < FINAL_TASK_NUM; i++) {
+                        Map<String, Object> map = SystemCache.get();
+                        if (map != null) {
+                            executor.execute(() -> run(map));
                             LogEntity log = new LogEntity(
-                                    "","获取文件"+(String)map.get("name")+"启动同步，当前任务数量"+activeTaskNum.get(),
+                                    "", "获取文件" + (String) map.get("name") + "启动同步，当前任务数量" + activeTaskNum.get(),
                                     LogEntity.LOG_TYPE_INFO);
                             LogExecutor.addSysLogQueue(log);
+                        } else {
+                            break;
                         }
                     }
                 } else {
@@ -90,16 +93,21 @@ public class NetDiskThreadPool {
     /**
      * 执行发送视频文件
      */
-    public static void run(Map<String, Object> map,Integer top) {
+    public static void run(Map<String, Object> map) {
+        Integer top = activeTaskNum.incrementAndGet();
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
         String parent = (String) map.get("parent");
         String tempPath = (String) map.get("temPath");
         List<FileAndDigsted> digsteds = (List<FileAndDigsted>) map.get("fileList");
-        diskService.goSend(name, parent, size, digsteds,tempPath);
+        diskService.goSend(name, parent, size, digsteds, tempPath);
         Integer nowTask = activeTaskNum.decrementAndGet();
-        if (top.intValue() < nowTask.intValue()){
-            LogEntity log = new LogEntity("","发送视频任务执行任务进行中："+executor.getActiveCount(),LogEntity.LOG_TYPE_INFO);
+        if (top.intValue() < nowTask.intValue()) {
+            LogEntity log = new LogEntity(
+                    "", "上传任务执行任务进行中：" + executor.getActiveCount() + "线程池可能存在问题:nowTask=" + nowTask, LogEntity.LOG_TYPE_INFO);
+            LogExecutor.addSysLogQueue(log);
+        } else {
+            LogEntity log = new LogEntity("", "文件上传任务（上传" + name + "任务）结束", LogEntity.LOG_TYPE_INFO);
             LogExecutor.addSysLogQueue(log);
         }
     }

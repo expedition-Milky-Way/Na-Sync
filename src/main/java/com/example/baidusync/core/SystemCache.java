@@ -27,7 +27,11 @@ public class SystemCache {
 
     public static Map<String, Object> get(){
         synchronized (queue){
-            return queue.poll();
+            if (queue.size()> 0){
+                return queue.poll();
+            }else{
+              return   null;
+            }
         }
     }
 
