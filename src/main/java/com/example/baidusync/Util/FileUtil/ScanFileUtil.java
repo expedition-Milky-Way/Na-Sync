@@ -163,14 +163,14 @@ public class ScanFileUtil extends ZipFileUtil {
 
     public void doSomething(String path) {
         File file = new File(path);
-        List<File> files = Arrays.asList(file.listFiles());
         read(file.listFiles());
+
     }
 
     /**
      * 清空缓存文件夹下的所有文件
      */
-    private void delteCachePath(File[] files) {
+    private  void delteCachePath(File[] files) {
         for (File dirFile : files) {
             if (!dirFile.isDirectory()) {
                 dirFile.delete();

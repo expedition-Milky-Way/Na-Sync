@@ -36,9 +36,9 @@ public class LogEntity implements Serializable {
     @TableId(type = IdType.AUTO)
     private Integer id;
     @TableField(value = "createTime",jdbcType = JdbcType.TIMESTAMP)
-    private String createTime;
+    private Date createTime;
     @TableField(value = "updateTime",jdbcType = JdbcType.TIMESTAMP)
-    private String updateTime;
+    private Date updateTime;
 
     /**
      * 类名
@@ -66,7 +66,7 @@ public class LogEntity implements Serializable {
      */
     public LogEntity(String classz,String message,Integer type){
         SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd HH:mm");
-       this.createTime = format.format(new Date());
+        this.createTime = new Date();
         this.Calssz = classz;
         this.message = message;
         this.type = type;

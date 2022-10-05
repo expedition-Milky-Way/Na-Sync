@@ -1,29 +1,27 @@
 package com.example.baidusync.Util.NetDiskSync;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
+import com.example.baidusync.Util.FileLog.FileLogEntity;
+import com.example.baidusync.Util.FileLog.FileLogService;
 import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
-import com.example.baidusync.Util.TempFileService.TempFileService;
-import com.example.baidusync.Util.TempFileService.TempfileImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.net.URL;
-import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -42,7 +40,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     @Resource
     private FileSettingService fileSettingService;
     @Resource
-    private TempFileService tempFileService;
+    private FileLogService fileLogService;
     private static String DEVICE_CODE = null;
 
     private static String ACCESS_TOKEN = null;
@@ -222,41 +220,70 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                 LogEntity.LOG_TYPE_WARN);
         LogExecutor.addSysLogQueue(log);
         //预上传
+        //1.将文件名和文件父目录名哈希，防止百度网盘和谐盗版资源
+        String baiduParent = String.valueOf(RandomUtil.randomChar(parent));
+        String baiduFileName = String.valueOf(RandomUtil.randomChar(name));
+        //2.存入数据库
+        FileLogEntity fileLog = new FileLogEntity();
+        fileLog.setCreateTime(new Date());
+        fileLog.setFileName(baiduFileName);
+        fileLog.setParent(baiduParent);
+        fileLog.setOriginalFileName(name);
+        fileLog.setOriginalParentName(parent);
+        if (fileSetting.isEmpty()) {
+            LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
+            BeanUtil.copyProperties(settingMapping.selectOne(lambdaQueryWrapper),fileSetting);
+        }
+        fileLog.setPassword(fileSetting.getPassword());
+        fileLog.setProgress(FileLogEntity.PROGRESS_NO_COMPLETE);
+        //3.发起预上传请求
         JSONObject responseJson = postNetDist(name, parent, md5, size.intValue());
         if (responseJson.getInteger("errno") != 0) {
             LogExecutor.addSysLogQueue(
                     new LogEntity(RequestNetDiskImpl.class.toString(), "预上传错误：" + responseJson.toString(),
                             LogEntity.LOG_TYPE_ERROR));
         }
+        fileLogService.add(fileLog);
         String netDiskPath = responseJson.getString("path");
         String uploadid = responseJson.getString("uploadid");
         List<Integer> blokList = responseJson.getObject("block_list", ArrayList.class);
+        //i. 发送分片文件
         for (Integer item : blokList) {
             FileAndDigsted tempMessage = fileAndDigsted.get(item);
             File temFile = new File(tempMessage.getPath());
-            postSendTemp(temFile, netDiskPath, uploadid);
+            JSONObject sendTempRes = postSendTemp(temFile, netDiskPath, uploadid);
+            if (sendTempRes.getInteger("errno")!=0){
+                LogEntity logEntity = new LogEntity("","上传分片出现了问题:"+name,LogEntity.LOG_TYPE_ERROR);
+                LogExecutor.addSysLogQueue(logEntity);
+            }
         }
+        //i.在网盘上面创建这个文件，完成上传
+        String filePath = DEFAULT_DISK_DIR+"/"+parent+"/"+name;
+        postCreateFile(filePath,size,IS_NOT_DIR,md5,uploadid);
         //删除缓存文件，记录文件原名和改名后的文件名
-        //i.删除缓存文件和目录
+        //i.删除缓存文件和目录l
         //目录
         File delDir = new File(tempPath);
         try {
             for (FileAndDigsted item : fileAndDigsted) {
                 File delFile = new File(item.getPath() + "/" + item.getName());
                 boolean isDel = delFile.delete();
-                LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"), LogEntity.LOG_TYPE_INFO);
+                LogEntity delLog = new LogEntity("",
+                        "上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"),
+                        LogEntity.LOG_TYPE_INFO);
                 LogExecutor.addSysLogQueue(delLog);
             }
             //删除目录
             boolean isDel = delDir.delete();
-            LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"), LogEntity.LOG_TYPE_INFO);
+            LogEntity delLog = new LogEntity("",
+                    "上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"),
+                    LogEntity.LOG_TYPE_INFO);
             LogExecutor.addSysLogQueue(delLog);
         } catch (SecurityException e) {
             LogEntity delLog = new LogEntity("", "上传任务结束,删除" + delDir.getName() + "删除失败，权限报错" + e.getMessage(), LogEntity.LOG_TYPE_ERROR);
             LogExecutor.addSysLogQueue(delLog);
         }
-        //i. 记录文件上传到百度网盘后，百度网盘上的文件名字和原文件名
-
     }
 
     /**
@@ -269,8 +296,9 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         if (!hasDir(DEFAULT_DISK_DIR)) {
             postCreateNetDisk(DEFAULT_DISK_DIR);
         }
-
-        if (!hasDir(DEFAULT_DISK_DIR + parent)) postCreateNetDisk(DEFAULT_DISK_DIR + parent);
+        String netDiskFile = parent;
+        if (parent.contains("/")) netDiskFile = "/"+parent;
+        if (!hasDir(DEFAULT_DISK_DIR + netDiskFile)) postCreateNetDisk(netDiskFile);
         //开始预上传
         String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
         if (ACCESS_TOKEN == null) {
@@ -278,17 +306,23 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         }
         URL += ACCESS_TOKEN;
         JSONObject requestBody = new JSONObject();
-        requestBody.put("path", parent + "/" + fileName);
+        requestBody.put("path", netDiskFile +"/"+ fileName);
         requestBody.put("size", size);
         requestBody.put("isdir", IS_NOT_DIR);
         requestBody.put("block_list", md5);
         requestBody.put("autoinit", 1);
-        HttpResponse response = new HttpRequest(URL).execute();
+        HttpResponse response =  HttpRequest.post(URL).execute();
         JSONObject resBody = JSON.parseObject(response.body());
         return resBody;
     }
 
-    public void postSendTemp(File file, String path, String uploadId) {
+    /**
+     * 发送切片文件
+     * @param file
+     * @param path
+     * @param uploadId
+     */
+    public JSONObject postSendTemp(File file, String path, String uploadId) {
         String url = "d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=";
         if (ACCESS_TOKEN == null) {
             accessToken();
@@ -299,9 +333,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         jsonObject.put("file", file);
         HttpResponse response = HttpRequest.post(url).body(jsonObject.toString()).execute();
         JSONObject resBody = JSON.parseObject(response.body());
-        if (resBody.getInteger("errno") > 0) {
-            log.info(resBody.toString());
-        }
+        return resBody;
     }
 
 
@@ -329,8 +361,31 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                 return true;
             }
         }
-
         return false;
+    }
+
+    /**
+     * 在网盘上创建这个文件
+     * @param path
+     * @param size
+     * @param isDir
+     * @param blokList
+     * @param uploadId
+     * @return
+     */
+    public JSONObject postCreateFile(String path,Long size,Integer isDir,
+                                     List<String> blokList,String uploadId)
+    {
+        String url = "pan.baidu.com/2.0/xpan/file?method=create&access_token="+ACCESS_TOKEN;
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("path",path);
+        requestBody.put("size",String.valueOf(size));
+        requestBody.put("isdir",String.valueOf(isDir.intValue()));
+        requestBody.put("block_list",blokList);
+        requestBody.put("uploadid",uploadId);
+        HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
+        JSONObject resBody = JSON.parseObject(response.body());
+        return resBody;
     }
 
     /**
@@ -413,13 +468,6 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                         LogEntity log = new LogEntity("", runDate + "开始运行", LogEntity.LOG_TYPE_INFO);
                         ScanFileUtil scanFileUtil = new ScanFileUtil(fileSetting.getCachePath(), fileSetting.getPassword());
                         scanFileUtil.doSomething(fileSetting.getPath());
-                        if (TempfileImpl.TEMP_FILE_DIR != null ){
-                            tempFileService.scanZipFile(new File(TempfileImpl.TEMP_FILE_DIR).listFiles());
-                        }else{
-                            log = new LogEntity("",runDate+"缓存位置有误，上传前0x03工作结束",LogEntity.LOG_TYPE_ERROR);
-                            LogExecutor.addSysLogQueue(log);
-                            Thread.yield(); //如果找不到路径，就直接放弃当前任务
-                        }
                         LogExecutor.addSysLogQueue(log);
                     }
                 }, taskDate, PERIOD_DAY);

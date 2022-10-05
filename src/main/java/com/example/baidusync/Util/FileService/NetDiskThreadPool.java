@@ -94,7 +94,7 @@ public class NetDiskThreadPool {
      * 执行发送视频文件
      */
     public static void run(Map<String, Object> map) {
-        Integer top = activeTaskNum.incrementAndGet();
+        Integer latTaskNum = activeTaskNum.incrementAndGet();
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
         String parent = (String) map.get("parent");
@@ -102,7 +102,7 @@ public class NetDiskThreadPool {
         List<FileAndDigsted> digsteds = (List<FileAndDigsted>) map.get("fileList");
         diskService.goSend(name, parent, size, digsteds, tempPath);
         Integer nowTask = activeTaskNum.decrementAndGet();
-        if (top.intValue() < nowTask.intValue()) {
+        if (latTaskNum < nowTask) {
             LogEntity log = new LogEntity(
                     "", "上传任务执行任务进行中：" + executor.getActiveCount() + "线程池可能存在问题:nowTask=" + nowTask, LogEntity.LOG_TYPE_INFO);
             LogExecutor.addSysLogQueue(log);
@@ -110,5 +110,20 @@ public class NetDiskThreadPool {
             LogEntity log = new LogEntity("", "文件上传任务（上传" + name + "任务）结束", LogEntity.LOG_TYPE_INFO);
             LogExecutor.addSysLogQueue(log);
         }
+    }
+
+    /**
+     * 关闭线程池及任务
+     */
+    public static boolean turnOff(){
+        Map<String,Object> map = null;
+        if (!SystemCache.isEmpty()){
+            map = SystemCache.get();
+        }
+        if (map == null || map.isEmpty() && activeTaskNum.get() ==0 || executor.getActiveCount() == 0 ){
+            executor.shutdown();
+            return true;
+        }
+        return  false;
     }
 }

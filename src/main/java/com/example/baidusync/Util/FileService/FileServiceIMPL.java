@@ -50,7 +50,6 @@ public class FileServiceIMPL implements FileService {
             LogEntity log = new LogEntity("", "md5计算：" + Directory, LogEntity.LOG_TYPE_INFO);
             LogExecutor.addSysLogQueue(log);
             File[] files = Directory.listFiles();
-            String parentName = name.split("/")[name.length() - 1];
             FileAndDigsted fileAndDigsted = new FileAndDigsted();
             Map<String, Object> setMap = new HashMap<>();
             List<FileAndDigsted> fileAndDigstedList = new ArrayList<>();

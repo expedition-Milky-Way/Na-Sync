@@ -42,36 +42,30 @@ public class TempfileImpl implements TempFileService {
     /**
      * 默认分片存放文件夹
      */
-    private static String TEMP_FILE_CACHE = "/temp";
+    private static String TEMP_FILE_CACHE = "/temp/";
     /**
      * 分片存放文件夹
      */
-    public static String TEMP_FILE_DIR ;
+    public static String TEMP_FILE_DIR;
 
     /**
      * 切片
      */
     public void splitFile(File file) {
-
-        //获取分片大小
+        //获取最大分片大小
         SIZE = requestNetDiskService.getMaxTempSize();
-        //查看有没有用来存放temp文件的位置
-        String tempDir = CACHE_PATH + TEMP_FILE_CACHE;
-        File cacheDir = new File(tempDir);
-        if (!cacheDir.exists() && !cacheDir.isDirectory()) {
-            cacheDir.mkdir();
-        }
         //获取文件，计算大小
-        String filePath = file.getPath();
-        String parent = file.getParent();
-        String name = filePath.split("/")[filePath.length() - 1];
-        File oneTempFileDir = new File(tempDir + name);
+        String filePath = this.replace(file.getPath());
+        String parent = this.replace(file.getParent());
+        String fileName = file.getName();
+        String fileDirName = fileName.split("\\.")[0];
+        File oneTempFileDir = new File(TEMP_FILE_DIR + fileDirName);
         if (!oneTempFileDir.exists()) oneTempFileDir.mkdir();
-        name = tempDir + oneTempFileDir;
+        String splitFileName = this.replace(oneTempFileDir.toString())+"/"+fileName;//分片文件的绝对路径
         Long fileSize = FileUtils.sizeOf(file);
-        if (fileSize <= MIN_SIZE) {
+        if (fileSize < MIN_SIZE) {
             //直接上传
-            fileService.computedMD5(name, file, fileSize, parent);
+            fileService.computedMD5(fileName, file, fileSize, parent);
         } else {
             BigDecimal total = new BigDecimal(fileSize).divide(new BigDecimal(SIZE), 0, BigDecimal.ROUND_UP);
             Integer count = total.intValue(); //分多少片
@@ -83,10 +77,10 @@ public class TempfileImpl implements TempFileService {
                 for (int i = 0; i < count; i++) {
                     long begin = offSet;
                     long end = (i + 1) * maxSize;
-                    offSet = write(name, raf, i, begin, end);
+                    offSet = write(splitFileName, raf, i, begin, end);
                 }
                 //计算md5并放入队列
-                fileService.computedMD5(name, new File(tempDir + oneTempFileDir), fileSize, parent);
+                fileService.computedMD5(fileName, oneTempFileDir, fileSize, parent);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -99,14 +93,14 @@ public class TempfileImpl implements TempFileService {
      * 切分并写文件
      *
      * @param filename 文件名
-     * @param file     文件片
+     * @param raf     切片文件
      * @param index    索引
      * @param end      索引
      */
-    private Long write(String filename, RandomAccessFile file, int index, long begin, long end) {
+    private Long write(String filename, RandomAccessFile raf, int index, long begin, long end) {
         long enPointer = 0L; //结尾指针
         try {
-            RandomAccessFile in = file;
+            RandomAccessFile in = raf;
             RandomAccessFile out = new RandomAccessFile(new File(filename + "_" + index + ".tmp"), "rw");
             byte[] bytes = new byte[Math.toIntExact(SIZE)];
             int n = 0;
@@ -117,7 +111,7 @@ public class TempfileImpl implements TempFileService {
             enPointer = in.getFilePointer();
             out.close();
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
         return enPointer;
     }
@@ -131,12 +125,31 @@ public class TempfileImpl implements TempFileService {
             LambdaQueryWrapper<FileSetting> lambda = new LambdaQueryWrapper<>();
             lambda.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
             FileSetting setting = settingMapping.selectOne(lambda);
-            CACHE_PATH = setting.getCachePath();
-            TEMP_FILE_DIR = CACHE_PATH+TEMP_FILE_CACHE;
+            String cachePath = setting.getCachePath();
+            String[] cachePathChar = cachePath.split("");
+            if (cachePathChar[cachePathChar.length-1] == "/" || cachePathChar[cachePathChar.length-1].equals("/")){
+                CACHE_PATH = cachePath.substring(0, cachePath.length() - 1);
+            }
+            TEMP_FILE_DIR = CACHE_PATH + TEMP_FILE_CACHE;
+            File temDir = new File(TEMP_FILE_DIR);
+            if (!temDir.exists()){
+                temDir.mkdirs();
+            }
+
         }
+        int i = 0;
         for (File item : file) {
-            splitFile(item);
+            System.out.println(i+":::"+item.getName());
+            if (!item.isDirectory())  splitFile(item);
+            i++;
         }
+    }
+
+    public String replace(String name){
+        if (name.contains("\\")){
+          name=name.replaceAll("\\\\","/");
+        }
+        return name;
     }
 
 }

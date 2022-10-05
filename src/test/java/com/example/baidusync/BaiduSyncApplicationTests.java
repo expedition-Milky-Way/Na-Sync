@@ -105,6 +105,7 @@ class BaiduSyncApplicationTests {
         FileSetting setting = settingService.getSetting();
         JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
         System.out.printf(jsonObject.toString());
+
         netDiskService.accessToken();
         netDiskService.getBaiduUsInfo();
      /*   ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(),setting.getPassword());
@@ -118,6 +119,12 @@ class BaiduSyncApplicationTests {
             LogExecutor.addSysLogQueue(log);
         }
         System.out.println("测试结束");
+    }
+
+    public void device(String code){
+        String url = "openapi.baidu.com/device?code="+code+"&display=page&redirect_uri=&force_login=";
+        HttpResponse response = HttpRequest.get(url).execute();
+        System.out.printf(response.body());
     }
 
 
