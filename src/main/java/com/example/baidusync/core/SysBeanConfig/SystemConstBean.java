@@ -1,6 +1,5 @@
-package com.example.baidusync.core.SystemBean;
+package com.example.baidusync.core.SysBeanConfig;
 
-import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
