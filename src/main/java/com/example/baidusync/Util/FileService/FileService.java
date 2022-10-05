@@ -6,8 +6,6 @@ import java.io.File;
  * @author 杨 名 (字 露煊)
  */
 public interface FileService {
-    void goBackup(String zipPath, String filePath, String password);
-
     /**
      *
      * @param name 源文件名（不包含路径）

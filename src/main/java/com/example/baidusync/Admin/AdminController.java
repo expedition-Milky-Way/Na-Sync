@@ -130,17 +130,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * 开发者测试
-     */
-    @PostMapping("/testDev")
-    @ResponseBody
-    public void devTest(){
-        FileSetting setting = service.getSetting();
-        netDiskService.deviceCode(setting.getAppKey());
-        netDiskService.getBaiduUsInfo();
-        fileService.goBackup(setting.getCachePath(),setting.getPath(),setting.password);
-    }
+
 
 
 }

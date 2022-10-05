@@ -113,7 +113,7 @@ class BaiduSyncApplicationTests {
         if (setting.getCachePath() != null){
             File cacheFile = new File(setting.getCachePath());
             tempFileService.scanZipFile(cacheFile.listFiles());
-            NetDiskThreadPool.TurnOnSendFile();
+//            NetDiskThreadPool.TurnOnSendFile();
         }else{
          LogEntity log = new LogEntity("","还没有设置缓存路径诶~",LogEntity.LOG_TYPE_WARN);
             LogExecutor.addSysLogQueue(log);
@@ -123,7 +123,7 @@ class BaiduSyncApplicationTests {
 
     public void device(String code){
         String url = "openapi.baidu.com/device?code="+code+"&display=page&redirect_uri=&force_login=";
-        HttpResponse response = HttpRequest.get(url).execute();
+        HttpResponse response = HttpRequest.post(url).execute();
         System.out.printf(response.body());
     }
 

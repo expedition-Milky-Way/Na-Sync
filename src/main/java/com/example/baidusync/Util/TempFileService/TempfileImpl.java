@@ -6,6 +6,8 @@ import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Util.FileService.FileService;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
+import com.example.baidusync.Util.SystemLog.LogEntity;
+import com.example.baidusync.Util.SystemLog.LogExecutor;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author 杨名 （字 露煊）
@@ -37,7 +41,7 @@ public class TempfileImpl implements TempFileService {
     /**
      * 百度网盘最小分片大小. 假如文件大小 <= MIN_SIZE 直接上传
      */
-    private static Long MIN_SIZE = 4194304L;
+    public static Long MIN_SIZE = 4194304L;
 
     /**
      * 默认分片存放文件夹
@@ -58,15 +62,18 @@ public class TempfileImpl implements TempFileService {
         String filePath = this.replace(file.getPath());
         String parent = this.replace(file.getParent());
         String fileName = file.getName();
-        String fileDirName = fileName.split("\\.")[0];
-        File oneTempFileDir = new File(TEMP_FILE_DIR + fileDirName);
-        if (!oneTempFileDir.exists()) oneTempFileDir.mkdir();
-        String splitFileName = this.replace(oneTempFileDir.toString())+"/"+fileName;//分片文件的绝对路径
+
+        File oneTempFileDir = new File(TEMP_FILE_DIR + fileName);
+
         Long fileSize = FileUtils.sizeOf(file);
-        if (fileSize < MIN_SIZE) {
+        if (fileSize <= MIN_SIZE) {
             //直接上传
             fileService.computedMD5(fileName, file, fileSize, parent);
         } else {
+            if (!oneTempFileDir.exists()){
+                oneTempFileDir.mkdir();
+            }
+            String splitFileName = this.replace(oneTempFileDir.toString())+"/"+fileName;//分片文件的绝对路径
             BigDecimal total = new BigDecimal(fileSize).divide(new BigDecimal(SIZE), 0, BigDecimal.ROUND_UP);
             Integer count = total.intValue(); //分多少片
             RandomAccessFile raf = null;
@@ -111,6 +118,11 @@ public class TempfileImpl implements TempFileService {
             enPointer = in.getFilePointer();
             out.close();
         } catch (Exception e) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd HH:mm");
+            LogExecutor.addSysLogQueue(
+                    new LogEntity("",
+                            dateFormat.format(new Date())+"对文件"+filename+"进行分片失败：\n"+e,
+                            LogEntity.LOG_TYPE_ERROR));
             e.printStackTrace();
         }
         return enPointer;
@@ -127,10 +139,10 @@ public class TempfileImpl implements TempFileService {
             FileSetting setting = settingMapping.selectOne(lambda);
             String cachePath = setting.getCachePath();
             String[] cachePathChar = cachePath.split("");
-            if (cachePathChar[cachePathChar.length-1] == "/" || cachePathChar[cachePathChar.length-1].equals("/")){
-                CACHE_PATH = cachePath.substring(0, cachePath.length() - 1);
+            if (cachePathChar[cachePathChar.length-1] == "/" || cachePathChar[cachePathChar.length-1].equals("/")) {
+                cachePath = cachePath.substring(0, cachePath.length() - 1);
             }
-            TEMP_FILE_DIR = CACHE_PATH + TEMP_FILE_CACHE;
+            TEMP_FILE_DIR = cachePath + TEMP_FILE_CACHE;
             File temDir = new File(TEMP_FILE_DIR);
             if (!temDir.exists()){
                 temDir.mkdirs();
