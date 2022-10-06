@@ -3,6 +3,7 @@ package com.example.baidusync.core.Entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.apache.ibatis.type.JdbcType;
 
@@ -19,8 +20,12 @@ public class BaseEntity {
 
     @TableId(type = IdType.NONE)
     public Integer id;
+
+    @JsonFormat(pattern = "yyyy-mm-dd HH:mm")
     @TableField(value = "createTime",jdbcType = JdbcType.TIMESTAMP)
     public Date createTime;
+
+    @JsonFormat(pattern = "yyyy-mm-dd HH:mm")
     @TableField(value = "updateTime",jdbcType = JdbcType.TIMESTAMP)
     public Date updateTime;
 
