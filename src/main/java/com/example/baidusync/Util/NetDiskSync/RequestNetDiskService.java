@@ -23,9 +23,7 @@ public interface RequestNetDiskService {
      */
     void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted,String tempPath);
 
-    Long getMaxSize();
 
-    Long getMaxTempSize();
 
     Integer setAuthIsOk();
 
