@@ -17,6 +17,7 @@ import com.example.baidusync.Util.FileLog.FileLogService;
 import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
+import com.example.baidusync.core.Bean.SysConst;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -41,34 +42,9 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     private FileSettingService fileSettingService;
     @Resource
     private FileLogService fileLogService;
-    private static String DEVICE_CODE = null;
 
-    private static String ACCESS_TOKEN = null;
-
-    private static String REFRESH_TOKEN = null;
-    //token过期时间  单位：秒
-    private static Long EXPIRES = null;
     //会员类型 ： 0 普通用户， 1：普通会员 2:超级会员
     public static Integer VIP_TYPE = null;
-    //默认网盘备份文件夹(网盘上的)
-    private static String DEFAULT_DISK_DIR = "/nasBackUpByYZXH";
-    //是文件目录
-    private static Integer IS_DIR = 1;
-    //不是文件目录
-    private static Integer IS_NOT_DIR = 0;
-    //默认文件夹大小
-    private static Integer DEFAULT_DIR_SIZE = 0;
-    /**
-     * 百度网盘/阿里网盘 接受最大单次上传文件大小
-     * 20G:20991366069L
-     *
-     * @unit Bytes
-     */
-    public static Long MAX_SIZE = null;
-    /**
-     * 一个用户最大上传的分片文件大小
-     */
-    public static Long MAX_TEMP_SIZE = null;
     /**
      * 通过netDiskService.VIP_TYPE获取分片最大大小
      */
@@ -102,10 +78,10 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         JSONObject jsonObject = JSON.parseObject(body);
         if (jsonObject.getString("device_code") != null) {
             String deviceCode = jsonObject.getString("device_code");
-            DEVICE_CODE = deviceCode;
-        }else{
+            SysConst.setDeviceCode(deviceCode);
+        } else {
             //获取token失败，
-            LogEntity log = new LogEntity("","没有扫码，获取Token失败"+jsonObject.toString(),LogEntity.LOG_TYPE_WARN);
+            LogEntity log = new LogEntity("", "没有扫码，获取Token失败" + jsonObject.toString(), LogEntity.LOG_TYPE_WARN);
             LogExecutor.addSysLogQueue(log);
         }
         log.info(jsonObject.toString());
@@ -118,12 +94,18 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      */
     @Override
     public boolean accessToken() {
-        if (DEVICE_CODE != null) {
-            JSONObject result = getToken(DEVICE_CODE);
+        if (SysConst.getDeviceCode() != null) {
+            JSONObject result = getToken(SysConst.getDeviceCode());
             if (result.getString("error_description") == null) {
-                ACCESS_TOKEN = result.getString("access_token");
-                REFRESH_TOKEN = result.getString("refresh_token");
-                EXPIRES = result.getLong("expires_in");
+                SysConst.setAccessToken(result.getString("access_token"));
+                SysConst.setRefreshToken(result.getString("refresh_token"));
+                SysConst.setExpireTime(result.getLong("expires_in"));
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        freshToken(SysConst.getRefreshToken());
+                    }
+                }, SysConst.getExpireTime());
                 return true;
             } else {
                 //记录日志
@@ -135,7 +117,6 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             return false;
         }
     }
-
 
     /**
      * 请求百度获取token
@@ -158,30 +139,49 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     }
 
     /**
+     * 请求刷新百度网盘Token
+     */
+    public void freshToken(String refreshToken) {
+        String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=" + SysConst.getRefreshToken()
+                + "&client_id=:cid&client_secret=:sec";
+        if (fileSetting.isEmpty()) BeanUtil.copyProperties(fileSettingService.getSetting(), fileSetting);
+        if (fileSetting.getAppId() != null) url.replace(":cid", fileSetting.getAppId());
+        if (fileSetting.getSecretKey() != null) url.replace(":sec", fileSetting.getSecretKey());
+        HttpResponse response = HttpRequest.get(url).execute();
+        JSONObject resBody = JSON.parseObject(response.body());
+        if (resBody.getString("access_token") != null) {
+            SysConst.setAccessToken(resBody.getString("access_token"));
+            SysConst.setRefreshToken(resBody.getString("refresh_token"));
+            SysConst.setExpireTime(resBody.getInteger("expires_in").longValue());
+        }
+    }
+
+
+    /**
      * 获取用户信息
      */
     @Override
     public void getBaiduUsInfo() {
         JSONObject body = null;
-        if (ACCESS_TOKEN != null) {
-            body = requestUsInfo(ACCESS_TOKEN);
+        String token = SysConst.getAccessToken();
+        if (token != null) {
+            body = requestUsInfo(token);
         } else {
-            JSONObject tokenJson = this.getToken(DEVICE_CODE);
-            String token = null;
+            JSONObject tokenJson = this.getToken(SysConst.getDeviceCode());
             if (tokenJson.getString("access_token") != null) {
                 token = tokenJson.getString("access_token");
             }
-            ACCESS_TOKEN = token;
+            SysConst.setAccessToken(token);
             body = requestUsInfo(token);
         }
         if (body.getInteger("errno") != 0) {
             Date date = new Date();
             SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd HH:mm");
-            log.error(format.format(date) + "获取用户信息失败。或许是token为" + ACCESS_TOKEN + "的原因");
-        }else{
+            log.error(format.format(date) + "获取用户信息失败。或许是token为" + SysConst.getAccessToken() + "的原因");
+        } else {
             VIP_TYPE = body.getInteger("vip_type");
-            MAX_SIZE = ONE_FILE_SIZE_BY_VIP[VIP_TYPE];
-            MAX_TEMP_SIZE = SIZE_BY_VIP_TYPE[VIP_TYPE];
+            SysConst.setMaxSize(ONE_FILE_SIZE_BY_VIP[VIP_TYPE]);
+            SysConst.setMaxTempSize(SIZE_BY_VIP_TYPE[VIP_TYPE]);
         }
 
     }
@@ -233,7 +233,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         if (fileSetting.isEmpty()) {
             LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
             lambdaQueryWrapper.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
-            BeanUtil.copyProperties(settingMapping.selectOne(lambdaQueryWrapper),fileSetting);
+            BeanUtil.copyProperties(settingMapping.selectOne(lambdaQueryWrapper), fileSetting);
         }
         fileLog.setPassword(fileSetting.getPassword());
         fileLog.setProgress(FileLogEntity.PROGRESS_NO_COMPLETE);
@@ -253,14 +253,15 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             FileAndDigsted tempMessage = fileAndDigsted.get(item);
             File temFile = new File(tempMessage.getPath());
             JSONObject sendTempRes = postSendTemp(temFile, netDiskPath, uploadid);
-            if (sendTempRes.getInteger("errno")!=0){
-                LogEntity logEntity = new LogEntity("","上传分片出现了问题:"+name,LogEntity.LOG_TYPE_ERROR);
+            if (sendTempRes.getInteger("errno") != 0) {
+                LogEntity logEntity = new LogEntity("", "上传分片出现了问题:" + name, LogEntity.LOG_TYPE_ERROR);
                 LogExecutor.addSysLogQueue(logEntity);
             }
         }
         //i.在网盘上面创建这个文件，完成上传
-        String filePath = DEFAULT_DISK_DIR+"/"+parent+"/"+name;
-        postCreateFile(filePath,size,IS_NOT_DIR,md5,uploadid);
+        String netDiskDir = SysConst.getDefaultNetDiskDir();
+        String filePath = netDiskDir + "/" + parent + "/" + name;
+        postCreateFile(filePath, size, SysConst.getIsNotDir(), md5, uploadid);
         //删除缓存文件，记录文件原名和改名后的文件名
         //i.删除缓存文件和目录l
         //目录
@@ -293,41 +294,46 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      */
     public JSONObject postNetDist(String fileName, String parent, List<String> md5, Integer size) {
         //新建目录
-        if (!hasDir(DEFAULT_DISK_DIR)) {
-            postCreateNetDisk(DEFAULT_DISK_DIR);
+        String netDiskDir = SysConst.getDefaultNetDiskDir();
+        if (!hasDir(netDiskDir)) {
+            postCreateNetDisk(netDiskDir);
         }
         String netDiskFile = parent;
-        if (parent.contains("/")) netDiskFile = "/"+parent;
-        if (!hasDir(DEFAULT_DISK_DIR + netDiskFile)) postCreateNetDisk(netDiskFile);
+        if (parent.contains("/")) netDiskFile = "/" + parent;
+        if (!hasDir(netDiskDir + netDiskFile)) postCreateNetDisk(netDiskFile);
         //开始预上传
         String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
-        if (ACCESS_TOKEN == null) {
+        String token = SysConst.getAccessToken();
+        if (token == null) {
             accessToken();
         }
-        URL += ACCESS_TOKEN;
+        URL += token;
         JSONObject requestBody = new JSONObject();
-        requestBody.put("path", netDiskFile +"/"+ fileName);
+        requestBody.put("path", netDiskFile + "/" + fileName);
         requestBody.put("size", size);
-        requestBody.put("isdir", IS_NOT_DIR);
+        requestBody.put("isdir", SysConst.getIsNotDir());
         requestBody.put("block_list", md5);
         requestBody.put("autoinit", 1);
-        HttpResponse response =  HttpRequest.post(URL).execute();
+        HttpResponse response = HttpRequest.post(URL).execute();
         JSONObject resBody = JSON.parseObject(response.body());
         return resBody;
     }
 
     /**
      * 发送切片文件
+     *
      * @param file
      * @param path
      * @param uploadId
      */
     public JSONObject postSendTemp(File file, String path, String uploadId) {
         String url = "d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=";
-        if (ACCESS_TOKEN == null) {
+        String token = SysConst.getAccessToken();
+        if (token == null) {
             accessToken();
+            token = SysConst.getAccessToken();
         }
-        url += ACCESS_TOKEN;
+        url += token;
         url += "&type=tmpfile&path=" + path + "&uploadid=" + uploadId + "&partsq=0";
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("file", file);
@@ -345,19 +351,20 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      */
     public boolean hasDir(String path) {
         String url = "pan.baidu.com/rest/2.0/xpan/file?method=list&access_token=";
-        if (ACCESS_TOKEN != null) {
-            url += ACCESS_TOKEN;
-        } else {
+        String token = SysConst.getAccessToken();
+        if (token == null) {
             accessToken();
-            hasDir(path);
+            token = SysConst.getAccessToken();
         }
+        url += token;
         HttpResponse response = HttpRequest.get(url).execute();
         String bodyStr = response.body();
         JSONObject bodyJson = JSON.parseObject(bodyStr);
         JSONArray jsonArray = bodyJson.getJSONArray("list");
         for (int i = 0; i < jsonArray.size(); i++) {
             JSONObject jsonItem = (JSONObject) jsonArray.get(i);
-            if (path == jsonItem.getString("path") && jsonItem.getInteger("isdir") == IS_DIR) {
+            if (path == jsonItem.getString("path") &&
+                    jsonItem.getInteger("isdir").intValue() == SysConst.getIsDir().intValue()) {
                 return true;
             }
         }
@@ -366,6 +373,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
 
     /**
      * 在网盘上创建这个文件
+     *
      * @param path
      * @param size
      * @param isDir
@@ -373,16 +381,21 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * @param uploadId
      * @return
      */
-    public JSONObject postCreateFile(String path,Long size,Integer isDir,
-                                     List<String> blokList,String uploadId)
-    {
-        String url = "pan.baidu.com/2.0/xpan/file?method=create&access_token="+ACCESS_TOKEN;
+    public JSONObject postCreateFile(String path, Long size, Integer isDir,
+                                     List<String> blokList, String uploadId) {
+        String url = "pan.baidu.com/2.0/xpan/file?method=create&access_token=";
+        String token = SysConst.getAccessToken();
+        if (token == null) {
+            accessToken();
+            token = SysConst.getAccessToken();
+        }
+        url += token;
         JSONObject requestBody = new JSONObject();
-        requestBody.put("path",path);
-        requestBody.put("size",String.valueOf(size));
-        requestBody.put("isdir",String.valueOf(isDir.intValue()));
-        requestBody.put("block_list",blokList);
-        requestBody.put("uploadid",uploadId);
+        requestBody.put("path", path);
+        requestBody.put("size", String.valueOf(size));
+        requestBody.put("isdir", String.valueOf(isDir.intValue()));
+        requestBody.put("block_list", blokList);
+        requestBody.put("uploadid", uploadId);
         HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
         JSONObject resBody = JSON.parseObject(response.body());
         return resBody;
@@ -397,8 +410,8 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         if (!fileSetting.isEmpty()) {
             JSONObject requestBody = new JSONObject();
             requestBody.put("path", path);
-            requestBody.put("size", DEFAULT_DIR_SIZE);
-            requestBody.put("isdir", IS_DIR);
+            requestBody.put("size", SysConst.getDefaultDirSize());
+            requestBody.put("isdir", SysConst.getIsDir());
             HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
             System.out.println(response);
             //到时候记log
@@ -416,23 +429,6 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         return false;
     }
 
-    /**
-     * 获取用户会员类型可以上传的单个文件大小
-     */
-    @Override
-    public Long getMaxSize() {
-        if (MAX_SIZE == null) this.getBaiduUsInfo();
-        return MAX_SIZE;
-    }
-
-    /**
-     * 获取用户会员类型可以上传分片文件大小
-     */
-    @Override
-    public Long getMaxTempSize() {
-        if (MAX_TEMP_SIZE == null) this.getBaiduUsInfo();
-        return MAX_TEMP_SIZE;
-    }
 
     @Override
     public Integer setAuthIsOk() {

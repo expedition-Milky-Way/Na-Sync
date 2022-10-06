@@ -5,6 +5,7 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
+import com.example.baidusync.core.Bean.SysConst;
 import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -100,7 +101,7 @@ public class ScanFileUtil extends ZipFileUtil {
         synchronized (INIT_SIZE) {
             Long fileSize = FileUtils.sizeOf(file);
             INIT_SIZE += fileSize;
-            if (INIT_SIZE <= RequestNetDiskImpl.MAX_SIZE) {
+            if (INIT_SIZE <= SysConst.getMaxSize()) {
                 return true;
             } else {
                 return false;

@@ -8,6 +8,7 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
+import com.example.baidusync.core.Bean.SysConst;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +58,7 @@ public class TempfileImpl implements TempFileService {
      */
     public void splitFile(File file) {
         //获取最大分片大小
-        SIZE = requestNetDiskService.getMaxTempSize();
+        SIZE = SysConst.getMaxTempSize();
         //获取文件，计算大小
         String filePath = this.replace(file.getPath());
         String parent = this.replace(file.getParent());
@@ -66,7 +67,7 @@ public class TempfileImpl implements TempFileService {
         File oneTempFileDir = new File(TEMP_FILE_DIR + fileName);
 
         Long fileSize = FileUtils.sizeOf(file);
-        if (fileSize <= MIN_SIZE) {
+        if (fileSize <= SysConst.getMinSize()) {
             //直接上传
             fileService.computedMD5(fileName, file, fileSize, parent);
         } else {
