@@ -1,6 +1,10 @@
 package com.example.baidusync.Admin;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import com.alibaba.fastjson.JSONObject;
 import com.example.baidusync.Admin.Entity.FileSetting;
 
@@ -9,6 +13,7 @@ import com.example.baidusync.Util.FileService.FileService;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.ResponseData;
 import com.example.baidusync.Util.SystemLog.LogService;
+import net.lingala.zip4j.crypto.AesCipherUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,9 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
+import java.util.*;
 
 @Controller
 public class AdminController {
@@ -128,6 +131,7 @@ public class AdminController {
             return new ResponseData("请确认百度网盘扫描二维码完成后点击确认按钮");
         }
     }
+
 
 
 }

@@ -65,7 +65,9 @@ public class FileSetting extends BaseEntity {
 
     }
 
-    public FileSetting(String appId, String secretKey, String signKey, String appKey, String password, String path, String cachePath, String dateTime, Integer taskNum) {
+    public FileSetting(String appId, String secretKey, String signKey,
+                       String appKey, String password, String path, String cachePath,
+                       String dateTime, Integer taskNum) {
 
         this.appId = appId;
         this.secretKey = secretKey;
