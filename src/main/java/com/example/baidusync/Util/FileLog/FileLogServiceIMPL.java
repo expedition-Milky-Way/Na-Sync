@@ -18,8 +18,9 @@ public class FileLogServiceIMPL extends ServiceImpl<FileMapper,FileLogEntity> im
      * 增
      */
     @Override
-    public Boolean add(FileLogEntity entity){
-        return this.save(entity);
+    public Integer add(FileLogEntity entity){
+         this.save(entity);
+         return entity.getId();
     }
 
 

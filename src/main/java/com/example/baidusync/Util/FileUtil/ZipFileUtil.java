@@ -1,5 +1,13 @@
 package com.example.baidusync.Util.FileUtil;
 
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.extra.spring.SpringUtil;
+import com.example.baidusync.Admin.Entity.FileSetting;
+import com.example.baidusync.Util.FileLog.FileLogEntity;
+import com.example.baidusync.Util.FileLog.FileLogService;
+import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
+import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
+import com.example.baidusync.core.Bean.SysConst;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -10,6 +18,7 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipException;
 
@@ -20,6 +29,9 @@ import java.util.zip.ZipException;
  */
 
 public class ZipFileUtil {
+
+    private FileLogService fileLogService = SpringUtil.getBean(FileLogService.class);
+    private RequestNetDiskService diskService  =SpringUtil.getBean(RequestNetDiskService.class);
     //如果出现同名文件，将会采用  xx(NAME_PREFIX).zip来命名文件
     private static Integer NAME_PREFIX = 1;
     //文件后缀
@@ -29,6 +41,26 @@ public class ZipFileUtil {
     public void zipFile(String name, List<File> fileList, String password) throws ZipException {
         if (fileList.size() > 0) {
             String fileName = this.rename(name, FILE_ZIP_PREFIX);
+            //1.将文件名和文件父目录名哈希，防止百度网盘和谐盗版资源
+            String[] nameDir = name.split("/"); //文件绝对路径
+            String parent = "";
+            if (nameDir[nameDir.length-3] != null){
+                parent+= "/"+nameDir[nameDir.length -3];
+            }
+            if (nameDir[nameDir.length-2]!= null){
+                parent +="/"+ nameDir[nameDir.length-2];
+            }
+            FileLogEntity fileLog = new FileLogEntity();
+            String baiduParent = String.valueOf(RandomUtil.randomChar(parent));
+            String baiduFileName = String.valueOf(RandomUtil.randomChar(fileName));
+            fileLog.setOriginalFileName(fileName);
+            fileLog.setOriginalParentName(parent);
+            fileLog.setOriginalPathName(name); // name传进来的是绝对路径
+            fileLog.setCreateTime(new Date());
+            fileLog.setFileName(baiduFileName);
+            fileLog.setParent(baiduParent);
+            fileLog.setPassword(password);
+
             ZipFile zipFile = new ZipFile(fileName);
             ZipParameters zipParameters = new ZipParameters();
             zipParameters.setEncryptionMethod(EncryptionMethod.AES);
@@ -38,8 +70,15 @@ public class ZipFileUtil {
             zipFile.setPassword(password.toCharArray());
             try {
                 zipFile.addFiles(fileList,zipParameters);
+                fileLogService.add(fileLog);
             } catch (net.lingala.zip4j.exception.ZipException e) {
                 e.printStackTrace();
+            }
+            //查看网盘上是否有该文件目录
+            String diskNetDisk = SysConst.getDefaultNetDiskDir()+nameDir;
+            boolean hasDir = diskService.hasDir(diskNetDisk);
+            if (!hasDir){
+                diskService.postCreateNetDisk(diskNetDisk);
             }
         }
     }

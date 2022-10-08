@@ -18,7 +18,7 @@ public class BaseEntity {
     @TableField(exist = false)
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd HH:mm");
 
-    @TableId(type = IdType.NONE)
+    @TableId(type = IdType.AUTO)
     public Integer id;
 
     @JsonFormat(pattern = "yyyy-mm-dd HH:mm")

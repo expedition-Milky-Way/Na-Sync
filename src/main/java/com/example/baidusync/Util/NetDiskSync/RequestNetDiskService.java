@@ -24,9 +24,15 @@ public interface RequestNetDiskService {
     void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted,String tempPath);
 
 
+    boolean hasDir(String path);
+
+    JSONObject postCreateFile(String path, Long size, Integer isDir,
+                              List<String> blokList, String uploadId);
+
+    boolean postCreateNetDisk(String path);
 
     Integer setAuthIsOk();
 
 
-    Timer setSchTask(FileSetting fileSetting);
+    void setSchTask(FileSetting fileSetting);
 }
