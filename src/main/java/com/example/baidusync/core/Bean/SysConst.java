@@ -1,5 +1,7 @@
 package com.example.baidusync.core.Bean;
 
+import com.example.baidusync.Admin.Entity.FileSetting;
+
 /**
  * @author 杨名 （字 露煊） YeungLuhyun
  * 系统常量
@@ -37,6 +39,8 @@ public class SysConst {
     private static Integer IS_NOT_DIR = 0;
     //默认文件夹大小
     private static Integer DEFAULT_DIR_SIZE = 0;
+
+    private static FileSetting fileSetting;
 
 
     public static String getAccessToken() {
@@ -159,4 +163,11 @@ public class SysConst {
     }
 
 
+    public static FileSetting getFileSetting() {
+        return fileSetting;
+    }
+
+    public static void setFileSetting(FileSetting fileSetting) {
+        SysConst.fileSetting = fileSetting;
+    }
 }

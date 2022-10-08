@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Admin.Service.FileSettingService;
@@ -220,23 +221,12 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                 LogEntity.LOG_TYPE_WARN);
         LogExecutor.addSysLogQueue(log);
         //预上传
-        //1.将文件名和文件父目录名哈希，防止百度网盘和谐盗版资源
-        String baiduParent = String.valueOf(RandomUtil.randomChar(parent));
-        String baiduFileName = String.valueOf(RandomUtil.randomChar(name));
-        //2.存入数据库
-        FileLogEntity fileLog = new FileLogEntity();
-        fileLog.setCreateTime(new Date());
-        fileLog.setFileName(baiduFileName);
-        fileLog.setParent(baiduParent);
-        fileLog.setOriginalFileName(name);
-        fileLog.setOriginalParentName(parent);
         if (fileSetting.isEmpty()) {
             LambdaQueryWrapper<FileSetting> lambdaQueryWrapper = new LambdaQueryWrapper<>();
             lambdaQueryWrapper.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
             BeanUtil.copyProperties(settingMapping.selectOne(lambdaQueryWrapper), fileSetting);
         }
-        fileLog.setPassword(fileSetting.getPassword());
-        fileLog.setProgress(FileLogEntity.PROGRESS_NO_COMPLETE);
+
         //3.发起预上传请求
         JSONObject responseJson = postNetDist(name, parent, md5, size.intValue());
         if (responseJson.getInteger("errno") != 0) {
@@ -244,7 +234,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                     new LogEntity(RequestNetDiskImpl.class.toString(), "预上传错误：" + responseJson.toString(),
                             LogEntity.LOG_TYPE_ERROR));
         }
-        fileLogService.add(fileLog);
+
         String netDiskPath = responseJson.getString("path");
         String uploadid = responseJson.getString("uploadid");
         List<Integer> blokList = responseJson.getObject("block_list", ArrayList.class);
@@ -349,6 +339,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * @param path
      * @return
      */
+    @Override
     public boolean hasDir(String path) {
         String url = "pan.baidu.com/rest/2.0/xpan/file?method=list&access_token=";
         String token = SysConst.getAccessToken();
@@ -381,6 +372,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * @param uploadId
      * @return
      */
+    @Override
     public JSONObject postCreateFile(String path, Long size, Integer isDir,
                                      List<String> blokList, String uploadId) {
         String url = "pan.baidu.com/2.0/xpan/file?method=create&access_token=";
@@ -404,6 +396,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     /**
      * 新建目录
      */
+    @Override
     public boolean postCreateNetDisk(String path) {
         String url = "https://pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=";
         JSONObject responseBody = null;
@@ -420,7 +413,9 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
         }
         if (responseBody != null) {
             if (responseBody.getInteger("errno") > 0) {
-                //新建失败  记log
+                LogEntity log = new LogEntity("","申请在网盘中创建目录异常：\n"+responseBody.getString("errmsg"),
+                        LogEntity.LOG_TYPE_ERROR);
+                LogExecutor.addSysLogQueue(log);
                 return false;
             } else {
                 return true;
@@ -441,7 +436,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      * @return
      */
     @Override
-    public Timer setSchTask(FileSetting fileSetting) {
+    public void setSchTask(FileSetting fileSetting) {
         if (!fileSetting.isEmpty()) {
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat Timeformat = new SimpleDateFormat("HH:mm");
@@ -467,10 +462,10 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                         LogExecutor.addSysLogQueue(log);
                     }
                 }, taskDate, PERIOD_DAY);
-                return timer;
             }
-
         }
-        return null;
     }
+
+
+
 }

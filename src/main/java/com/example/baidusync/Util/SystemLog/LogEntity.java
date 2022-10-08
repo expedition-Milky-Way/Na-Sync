@@ -32,6 +32,7 @@ public class LogEntity implements Serializable {
     public static final Integer LOG_TYPE_WARN = 1;
 
     public static final Integer LOG_TYPE_ERROR = 2;
+    private static final String[] ERRORS = {"常规","警告","异常"};
     private static final long serialVersionUID = 6843145008833598631L;
     @TableId(type = IdType.AUTO)
     private Integer id;
@@ -70,8 +71,20 @@ public class LogEntity implements Serializable {
         this.Calssz = classz;
         this.message = message;
         this.type = type;
+        System.out.println(this.toString());
     }
 
 
-
+    @Override
+    public String toString() {
+        String str =  "LogEntity{" +
+                "id=" + id +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", Calssz='" + Calssz + '\'' +
+                ", message='" + message + '\'' +
+                ", type=:type}";
+        str = str.replace(":type",ERRORS[this.type]);
+        return str;
+    }
 }
