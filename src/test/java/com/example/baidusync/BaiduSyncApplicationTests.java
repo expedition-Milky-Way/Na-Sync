@@ -1,5 +1,6 @@
 package com.example.baidusync;
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSONObject;
@@ -102,6 +103,7 @@ class BaiduSyncApplicationTests {
 
     @Test
     public void testLogic(){
+
         FileSetting setting = settingService.getSetting();
         JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
         System.out.printf(jsonObject.toString());

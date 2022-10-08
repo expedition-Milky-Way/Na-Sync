@@ -1,6 +1,9 @@
 package com.example.baidusync.Util.FileUtil;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.extra.spring.SpringUtil;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Util.FileLog.FileLogEntity;
@@ -37,6 +40,9 @@ public class ZipFileUtil {
     //文件后缀
     private static final String FILE_ZIP_PREFIX = ".zip";
     private static final String FILE_7Z_PREFIX = ".7z";
+    //打乱文件名
+    byte[] key = SecureUtil.generateKey(SymmetricAlgorithm.AES.getValue()).getEncoded();
+    SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, key);;
 
     public void zipFile(String name, List<File> fileList, String password) throws ZipException {
         if (fileList.size() > 0) {
@@ -51,8 +57,8 @@ public class ZipFileUtil {
                 parent +="/"+ nameDir[nameDir.length-2];
             }
             FileLogEntity fileLog = new FileLogEntity();
-            String baiduParent = String.valueOf(RandomUtil.randomChar(parent));
-            String baiduFileName = String.valueOf(RandomUtil.randomChar(fileName));
+            String baiduParent = String.valueOf(aes.encrypt(parent.getBytes()));
+            String baiduFileName = String.valueOf(aes.encrypt(fileName.getBytes()));
             fileLog.setOriginalFileName(fileName);
             fileLog.setOriginalParentName(parent);
             fileLog.setOriginalPathName(name); // name传进来的是绝对路径
