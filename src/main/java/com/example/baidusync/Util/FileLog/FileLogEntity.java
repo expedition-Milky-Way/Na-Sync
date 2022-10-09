@@ -1,6 +1,7 @@
 package com.example.baidusync.Util.FileLog;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.example.baidusync.core.Entity.BaseEntity;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.io.Serializable;
  * 存储上传到百度网盘后，网盘文件夹名称和网盘文件名
  */
 @Data
+@TableName("file_log")
 public class FileLogEntity extends BaseEntity implements Serializable {
 
     public static Integer PROGRESS_NO_COMPLETE = 0;

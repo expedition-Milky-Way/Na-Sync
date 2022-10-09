@@ -11,25 +11,25 @@ public class SysConst {
     /**
      * token
      */
-    private static String ACCESS_TOKEN = null;
+    private static String ACCESS_TOKEN ;
 
-    private static String REFRESH_TOKEN = null;
+    private static String REFRESH_TOKEN ;
 
-    private static Long EXPIRE_TIME = null;
+    private static Long EXPIRE_TIME ;
 
-    private static String DEVICE_CODE = null;
+    private static String DEVICE_CODE ;
 
-    private static String CACHE_PATH = null;
+    private static String CACHE_PATH ;
 
-    private static String PATH = null;
+    private static String PATH;
 
     private static String TEMP_PATH = "/temp/";
 
     private static Long MIN_SIZE = 4194304L;
 
-    private static Long MAX_SIZE = null;
+    private static Long MAX_SIZE ;
 
-    private static Long MAX_TEMP_SIZE = null;
+    private static Long MAX_TEMP_SIZE ;
 
     //百度网盘默认上传的文件夹
     private static String DEFAULT_NET_DISK_DIR = "/nasBackUpByYZXH";

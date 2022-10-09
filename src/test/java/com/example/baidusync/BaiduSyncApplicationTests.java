@@ -1,5 +1,6 @@
 package com.example.baidusync;
 
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
@@ -13,7 +14,11 @@ import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.Util.SystemLog.LogService;
 import com.example.baidusync.Util.TempFileService.TempFileService;
+import com.example.baidusync.core.Bean.SysConst;
 import com.mysql.cj.PreparedQuery;
+
+import javafx.scene.shape.Path;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -21,6 +26,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,7 +122,7 @@ class BaiduSyncApplicationTests {
         if (setting.getCachePath() != null){
             File cacheFile = new File(setting.getCachePath());
             tempFileService.scanZipFile(cacheFile.listFiles());
-            NetDiskThreadPool.TurnOnSendFile();
+//            NetDiskThreadPool.TurnOnSendFile();
         }else{
          LogEntity log = new LogEntity("","还没有设置缓存路径诶~",LogEntity.LOG_TYPE_WARN);
             LogExecutor.addSysLogQueue(log);
@@ -123,11 +130,46 @@ class BaiduSyncApplicationTests {
         System.out.println("测试结束");
     }
 
-    public void device(String code){
-        String url = "openapi.baidu.com/device?code="+code+"&display=page&redirect_uri=&force_login=";
-        HttpResponse response = HttpRequest.post(url).execute();
-        System.out.printf(response.body());
+    @Test
+    public void tempFileTest(){
+        FileSetting fileSetting = settingService.getSetting();
+        String path = fileSetting.getCachePath();
+        File[] dir = new File(path).listFiles();
+        Long totalSize = 0L;
+        for (int i = 0 ;i< dir.length ; i++){
+            if (!dir[i].isDirectory() && FileUtils.sizeOf(dir[i]) < SysConst.getMinSize()){
+                totalSize+=FileUtils.sizeOf(dir[i]);
+                System.out.println(dir[i].getName());
+            }
+        }
+     DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        if (totalSize < 1024) {
+            Double size = Double.valueOf(decimalFormat.format((double) totalSize));
+            String unit = "B";
+            System.out.println( "::" + decimalFormat.format((double) totalSize) + " B");
+
+
+        } else if (totalSize < 1048567) {
+            Double size = Double.valueOf(decimalFormat.format((double) totalSize / 1024));
+            String unit = "KB";
+            System.out.println( "::" + decimalFormat.format((double) totalSize / 1024) + " KB");
+
+        } else if (totalSize < 1073741824) {
+            Double size = Double.valueOf(decimalFormat.format((double) totalSize / 1048567));
+            String unit = "MB";
+            System.out.println( "::" + decimalFormat.format((double) totalSize / 1048567) + " MB");
+
+        }
+        Double size = Double.valueOf(decimalFormat.format((double) totalSize / 1073741824));
     }
+
+    @Test
+    public void testUUID(){
+        String s= "1(2)";
+        System.out.println(UUID.nameUUIDFromBytes(s.getBytes()));
+    }
+
+
 
 
 

@@ -37,23 +37,21 @@ public class ScanFileUtil extends ZipFileUtil {
     public static String PASSWORD = null;
 
     private String ZIP_PATH = null;
-    @Resource
-    private RequestNetDiskService requestNetDiskService;
 
 
     /**
      * 扫描文件树
      */
-    public  void read(File[] files) {
+    public void read(File[] files) {
         List list = Arrays.asList(files);
         Collections.sort(list, new Comparator<File>() {
 
             @Override
             public int compare(File o1, File o2) {
-                if (o1.isDirectory() && o2.isFile()){
+                if (o1.isDirectory() && o2.isFile()) {
                     return 1;
                 }
-                if (o1.isFile() && o2.isDirectory()){
+                if (o1.isFile() && o2.isDirectory()) {
                     return -1;
                 }
                 return 0;
@@ -69,7 +67,9 @@ public class ScanFileUtil extends ZipFileUtil {
                     InsertFile(key, item);
                 }
             } else {
-                zip(); //先把这20G的文件压进队列。清空一下map
+                if (FILES_MAP.size() > 0){
+                    zip(); //先把这20G的文件压进队列。清空一下map
+                }
                 read(item.listFiles());
             }
         }
@@ -98,43 +98,36 @@ public class ScanFileUtil extends ZipFileUtil {
      * 判断文件是否超过了大小
      */
     private Boolean isMoreThen(File file) {
-        synchronized (INIT_SIZE) {
-            Long fileSize = FileUtils.sizeOf(file);
-            INIT_SIZE += fileSize;
-            if (INIT_SIZE <= SysConst.getMaxSize()) {
-                return true;
-            } else {
-                return false;
-            }
-        }
+
+        Long fileSize = FileUtils.sizeOf(file);
+        INIT_SIZE += fileSize;
+        return INIT_SIZE <= SysConst.getMaxSize();
     }
 
     /**
      * 调用进行压缩
      */
     private void zip() {
-        synchronized (INIT_SIZE){
-            INIT_SIZE = 0L;
-        }
+        INIT_SIZE = 0L;
         Iterator<Map.Entry<String, List<File>>> iterator = FILES_MAP.entrySet().iterator();
         while (iterator.hasNext()) {
-                Map.Entry<String, List<File>> map = iterator.next();
-                if (map != null) {
-                    String path = map.getKey();
-                    String pathGeneral = null;
-                    if (path.contains("\\")) {
-                        pathGeneral = path.replaceAll("\\\\", "/");
-                    } else {
-                        pathGeneral = path;
-                    }
-                    String[] dirs = pathGeneral.split("/");
-                    String fileName = dirs[dirs.length - 1];
-                    String zipName = ZIP_PATH + "/" + fileName;
-                    try {
-                        this.zipFile(zipName, map.getValue(), PASSWORD);
-                    } catch (ZipException e) {
-                        e.printStackTrace();
-                    }
+            Map.Entry<String, List<File>> map = iterator.next();
+            if (map != null) {
+                String path = map.getKey();
+                String pathGeneral = null;
+                if (path.contains("\\")) {
+                    pathGeneral = path.replaceAll("\\\\", "/");
+                } else {
+                    pathGeneral = path;
+                }
+                String[] dirs = pathGeneral.split("/");
+                String fileName = dirs[dirs.length - 1];
+                String zipName = ZIP_PATH + "/" + fileName;
+                try {
+                    this.zipFile(zipName, map.getValue(), PASSWORD);
+                } catch (ZipException e) {
+                    e.printStackTrace();
+                }
             }
 
         }
@@ -153,10 +146,11 @@ public class ScanFileUtil extends ZipFileUtil {
             }
         } else {
             File[] dirFiles = file.listFiles();
-            if (dirFiles.length > 0) {
-                delteCachePath(dirFiles);
+            if ( dirFiles.length > 0) {
+                deleteCacheFile(dirFiles);//清空缓存文件
+                dirFiles = file.listFiles(); //重新加载文件目录
+                deleteCachePath(dirFiles);//清空缓存文件夹
             }
-
         }
         this.ZIP_PATH = zipPath;
 
@@ -171,16 +165,26 @@ public class ScanFileUtil extends ZipFileUtil {
     /**
      * 清空缓存文件夹下的所有文件
      */
-    private  void delteCachePath(File[] files) {
+    private void deleteCacheFile(File[] files) {
         for (File dirFile : files) {
             if (!dirFile.isDirectory()) {
                 dirFile.delete();
             } else {
-                delteCachePath(dirFile.listFiles());
+                deleteCacheFile(dirFile.listFiles());
             }
-
         }
     }
+    /**
+     * 清空缓存文件夹下所有目录
+     */
+    private void deleteCachePath(File[] files){
+
+        for (File item : files){
+            item.delete();
+        }
+    }
+
+
 
 
 }

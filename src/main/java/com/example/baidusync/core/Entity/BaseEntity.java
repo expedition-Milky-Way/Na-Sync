@@ -16,16 +16,16 @@ import java.util.Date;
 
 public class BaseEntity {
     @TableField(exist = false)
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd HH:mm");
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     @TableId(type = IdType.AUTO)
     public Integer id;
 
-    @JsonFormat(pattern = "yyyy-mm-dd HH:mm")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     @TableField(value = "createTime",jdbcType = JdbcType.TIMESTAMP)
     public Date createTime;
 
-    @JsonFormat(pattern = "yyyy-mm-dd HH:mm")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     @TableField(value = "updateTime",jdbcType = JdbcType.TIMESTAMP)
     public Date updateTime;
 

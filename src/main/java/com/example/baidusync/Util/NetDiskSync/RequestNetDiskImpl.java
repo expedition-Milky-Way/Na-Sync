@@ -101,22 +101,35 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                 SysConst.setAccessToken(result.getString("access_token"));
                 SysConst.setRefreshToken(result.getString("refresh_token"));
                 SysConst.setExpireTime(result.getLong("expires_in"));
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        freshToken(SysConst.getRefreshToken());
-                    }
-                }, SysConst.getExpireTime());
-                return true;
+                //查看是否拥有备份目录
+                boolean isDir = false;
+                if (!hasDir(SysConst.getDefaultNetDiskDir())) {
+                    isDir = postCreateNetDisk(SysConst.getDefaultNetDiskDir());
+                }
+                if (isDir) {
+                    new Timer().schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            freshToken(SysConst.getRefreshToken());
+                        }
+                    }, SysConst.getExpireTime());
+                    return true;
+                }else{
+                    LogEntity log = new LogEntity("RequestNetDiskImpl.accessToken() 118Row","初始化百度网盘文件夹失败",
+                            LogEntity.LOG_TYPE_ERROR);
+                    LogExecutor.addSysLogQueue(log);
+                    return false;
+                }
             } else {
                 //记录日志
                 LogExecutor.addSysLogQueue(new LogEntity(RequestNetDiskImpl.class.toString(), "请求百度网盘token报错：\n "
                         + result.toString(), LogEntity.LOG_TYPE_ERROR));
                 return false;
             }
-        } else {
-            return false;
         }
+        LogEntity log = new LogEntity("RequestNetDisk.accessToken():125 row","获取token失败", LogEntity.LOG_TYPE_ERROR);
+        LogExecutor.addSysLogQueue(log);
+        return false;
     }
 
     /**
@@ -134,7 +147,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             String bodyStr = response.body();
             bodyStr = bodyStr.replace("\\", "");
             jsonObject = new JSONObject(JSON.parseObject(bodyStr));
-            System.out.println(jsonObject);
+
         }
         return jsonObject;
     }
@@ -171,9 +184,13 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             JSONObject tokenJson = this.getToken(SysConst.getDeviceCode());
             if (tokenJson.getString("access_token") != null) {
                 token = tokenJson.getString("access_token");
+                SysConst.setAccessToken(token);
+                body = requestUsInfo(token);
+            } else {
+                LogEntity log = new LogEntity("", "请求token有误", LogEntity.LOG_TYPE_ERROR);
+                LogExecutor.addSysLogQueue(log);
             }
-            SysConst.setAccessToken(token);
-            body = requestUsInfo(token);
+
         }
         if (body.getInteger("errno") != 0) {
             Date date = new Date();
@@ -398,7 +415,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
      */
     @Override
     public boolean postCreateNetDisk(String path) {
-        String url = "https://pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=";
+        String url = "pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=";
         JSONObject responseBody = null;
         if (!fileSetting.isEmpty()) {
             JSONObject requestBody = new JSONObject();
@@ -406,14 +423,12 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             requestBody.put("size", SysConst.getDefaultDirSize());
             requestBody.put("isdir", SysConst.getIsDir());
             HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
-            System.out.println(response);
-            //到时候记log
             String bodyStr = response.body();
             responseBody = JSON.parseObject(bodyStr);
         }
         if (responseBody != null) {
             if (responseBody.getInteger("errno") > 0) {
-                LogEntity log = new LogEntity("","申请在网盘中创建目录异常：\n"+responseBody.getString("errmsg"),
+                LogEntity log = new LogEntity("", "申请在网盘中创建目录异常：\n" + responseBody.getString("errmsg"),
                         LogEntity.LOG_TYPE_ERROR);
                 LogExecutor.addSysLogQueue(log);
                 return false;
@@ -465,7 +480,6 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             }
         }
     }
-
 
 
 }

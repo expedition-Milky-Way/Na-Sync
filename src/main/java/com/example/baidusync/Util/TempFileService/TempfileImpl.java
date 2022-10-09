@@ -1,5 +1,6 @@
 package com.example.baidusync.Util.TempFileService;
 
+import cn.hutool.log.Log;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
@@ -69,6 +70,8 @@ public class TempfileImpl implements TempFileService {
         Long fileSize = FileUtils.sizeOf(file);
         if (fileSize <= SysConst.getMinSize()) {
             //直接上传
+            LogEntity log = new LogEntity("","文件"+fileName+"≤ 4MB，直接上传",LogEntity.LOG_TYPE_INFO);
+            LogExecutor.addSysLogQueue(log);
             fileService.computedMD5(fileName, file, fileSize, parent);
         } else {
             if (!oneTempFileDir.exists()){

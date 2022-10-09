@@ -1,5 +1,6 @@
 package com.example.baidusync.Util.FileUtil;
 
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
@@ -32,7 +33,7 @@ import java.util.zip.ZipException;
  */
 
 public class ZipFileUtil {
-
+    private  static ZipParameters zipParameters = new ZipParameters();
     private FileLogService fileLogService = SpringUtil.getBean(FileLogService.class);
     private RequestNetDiskService diskService  =SpringUtil.getBean(RequestNetDiskService.class);
     //如果出现同名文件，将会采用  xx(NAME_PREFIX).zip来命名文件
@@ -40,9 +41,7 @@ public class ZipFileUtil {
     //文件后缀
     private static final String FILE_ZIP_PREFIX = ".zip";
     private static final String FILE_7Z_PREFIX = ".7z";
-    //打乱文件名
-    byte[] key = SecureUtil.generateKey(SymmetricAlgorithm.AES.getValue()).getEncoded();
-    SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, key);;
+
 
     public void zipFile(String name, List<File> fileList, String password) throws ZipException {
         if (fileList.size() > 0) {
@@ -57,8 +56,9 @@ public class ZipFileUtil {
                 parent +="/"+ nameDir[nameDir.length-2];
             }
             FileLogEntity fileLog = new FileLogEntity();
-            String baiduParent = String.valueOf(aes.encrypt(parent.getBytes()));
-            String baiduFileName = String.valueOf(aes.encrypt(fileName.getBytes()));
+
+            String baiduParent = UUID.nameUUIDFromBytes(parent.getBytes()).toString();
+            String baiduFileName =UUID.nameUUIDFromBytes(fileName.getBytes()).toString();
             fileLog.setOriginalFileName(fileName);
             fileLog.setOriginalParentName(parent);
             fileLog.setOriginalPathName(name); // name传进来的是绝对路径
@@ -68,7 +68,6 @@ public class ZipFileUtil {
             fileLog.setPassword(password);
 
             ZipFile zipFile = new ZipFile(fileName);
-            ZipParameters zipParameters = new ZipParameters();
             zipParameters.setEncryptionMethod(EncryptionMethod.AES);
             zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
@@ -81,7 +80,7 @@ public class ZipFileUtil {
                 e.printStackTrace();
             }
             //查看网盘上是否有该文件目录
-            String diskNetDisk = SysConst.getDefaultNetDiskDir()+nameDir;
+            String diskNetDisk = SysConst.getDefaultNetDiskDir()+"/"+name;
             boolean hasDir = diskService.hasDir(diskNetDisk);
             if (!hasDir){
                 diskService.postCreateNetDisk(diskNetDisk);
@@ -100,7 +99,7 @@ public class ZipFileUtil {
                 if (isExist(fileFinalName)) { //如果存在相同的名
                     String[] nameChar = name.split("/");
                     String oldName = nameChar[nameChar.length - 1];
-                    String nName = oldName + "(" + NAME_PREFIX + ")";
+                    String nName = oldName + "(" + NAME_PREFIX + ").zip";
                     fileFinalName = name.replace(oldName, nName);
                     NAME_PREFIX++;
                 }else{
