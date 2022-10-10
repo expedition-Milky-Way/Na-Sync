@@ -75,6 +75,7 @@ public class ZipFileUtil {
             zipFile.setPassword(password.toCharArray());
             try {
                 zipFile.addFiles(fileList,zipParameters);
+                System.out.println(zipFile.getProgressMonitor().getResult());
                 fileLogService.add(fileLog);
             } catch (net.lingala.zip4j.exception.ZipException e) {
                 e.printStackTrace();
