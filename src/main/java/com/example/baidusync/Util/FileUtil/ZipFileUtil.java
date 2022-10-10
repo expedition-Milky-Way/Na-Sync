@@ -50,10 +50,10 @@ public class ZipFileUtil {
             String[] nameDir = name.split("/"); //文件绝对路径
             String parent = "";
             if (nameDir[nameDir.length-3] != null){
-                parent+= "/"+nameDir[nameDir.length -3];
+                parent+= "/"+nameDir[nameDir.length -2];
             }
             if (nameDir[nameDir.length-2]!= null){
-                parent +="/"+ nameDir[nameDir.length-2];
+                parent +="/"+ nameDir[nameDir.length-1];
             }
             FileLogEntity fileLog = new FileLogEntity();
 

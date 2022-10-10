@@ -139,7 +139,7 @@ public class ScanFileUtil extends ZipFileUtil {
         this.PASSWORD = password;
         File file = new File(zipPath);
         if (!file.exists()) {
-            boolean isMkdir = file.mkdir();
+            boolean isMkdir = file.mkdirs();
             if (!isMkdir) {
                 LogEntity log = new LogEntity("ScanFileUtil", "目录创建失败", LogEntity.LOG_TYPE_WARN);
                 LogExecutor.addSysLogQueue(log);

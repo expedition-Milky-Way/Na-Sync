@@ -169,6 +169,19 @@ class BaiduSyncApplicationTests {
         System.out.println(UUID.nameUUIDFromBytes(s.getBytes()));
     }
 
+    @Test
+    public void testParent(){
+        File[] files = new File("D:\\JavaWorkSpace\\g\\pixiv").listFiles();
+        for (int i = 0 ;i< files.length ; i++){
+            System.out.println(files[i].getParent());
+        }
+    }
+
+
+
+
+
+
 
 
 
