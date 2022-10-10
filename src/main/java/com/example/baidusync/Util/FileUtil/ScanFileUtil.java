@@ -122,7 +122,7 @@ public class ScanFileUtil extends ZipFileUtil {
                 }
                 String[] dirs = pathGeneral.split("/");
                 String fileName = dirs[dirs.length - 1];
-                String zipName = ZIP_PATH + "/" + fileName;
+                String zipName = pathGeneral + "/" + fileName;
                 try {
                     this.zipFile(zipName, map.getValue(), PASSWORD);
                 } catch (ZipException e) {
@@ -151,6 +151,9 @@ public class ScanFileUtil extends ZipFileUtil {
                 dirFiles = file.listFiles(); //重新加载文件目录
                 deleteCachePath(dirFiles);//清空缓存文件夹
             }
+        }
+        if (zipPath.endsWith("/")){
+            zipPath.substring(0,zipPath.length()-2);
         }
         this.ZIP_PATH = zipPath;
 

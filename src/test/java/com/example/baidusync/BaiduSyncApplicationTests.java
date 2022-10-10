@@ -119,14 +119,14 @@ class BaiduSyncApplicationTests {
         netDiskService.getBaiduUsInfo();
         ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(),setting.getPassword());
         scanFileUtil.doSomething(setting.getPath());
-        if (setting.getCachePath() != null){
+     /*   if (setting.getCachePath() != null){
             File cacheFile = new File(setting.getCachePath());
             tempFileService.scanZipFile(cacheFile.listFiles());
 //            NetDiskThreadPool.TurnOnSendFile();
         }else{
          LogEntity log = new LogEntity("","还没有设置缓存路径诶~",LogEntity.LOG_TYPE_WARN);
             LogExecutor.addSysLogQueue(log);
-        }
+        }*/
         System.out.println("测试结束");
     }
 
@@ -176,6 +176,8 @@ class BaiduSyncApplicationTests {
             System.out.println(files[i].getParent());
         }
     }
+
+
 
 
 
