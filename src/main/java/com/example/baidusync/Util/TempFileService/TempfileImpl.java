@@ -7,6 +7,7 @@ import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Util.FileService.FileService;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
+import com.example.baidusync.Util.SysUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.core.Bean.SysConst;
@@ -17,6 +18,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
+import java.nio.file.FileStore;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -37,18 +39,10 @@ public class TempfileImpl implements TempFileService {
     private RequestNetDiskService requestNetDiskService;
 
     private static String CACHE_PATH = null;
-
+    private static FileSetting fileSetting;
 
     private static Long SIZE = 0L;
-    /**
-     * 百度网盘最小分片大小. 假如文件大小 <= MIN_SIZE 直接上传
-     */
-    public static Long MIN_SIZE = 4194304L;
 
-    /**
-     * 默认分片存放文件夹
-     */
-    private static String TEMP_FILE_CACHE = "/temp/";
     /**
      * 分片存放文件夹
      */
@@ -61,8 +55,8 @@ public class TempfileImpl implements TempFileService {
         //获取最大分片大小
         SIZE = SysConst.getMaxTempSize();
         //获取文件，计算大小
-        String filePath = this.replace(file.getPath());
-        String parent = this.replace(file.getParent());
+        String filePath = SysUtil.reNamePath(file.getPath());
+        String parent = SysUtil.reNamePath(file.getParent());
         String fileName = file.getName();
 
         File oneTempFileDir = new File(TEMP_FILE_DIR + fileName);
@@ -77,7 +71,7 @@ public class TempfileImpl implements TempFileService {
             if (!oneTempFileDir.exists()){
                 oneTempFileDir.mkdir();
             }
-            String splitFileName = this.replace(oneTempFileDir.toString())+"/"+fileName;//分片文件的绝对路径
+            String splitFileName = SysUtil.reNamePath(oneTempFileDir.toString())+"/"+fileName;//分片文件的绝对路径
             BigDecimal total = new BigDecimal(fileSize).divide(new BigDecimal(SIZE), 0, BigDecimal.ROUND_UP);
             Integer count = total.intValue(); //分多少片
             RandomAccessFile raf = null;
@@ -137,21 +131,20 @@ public class TempfileImpl implements TempFileService {
      */
     @Override
     public void scanZipFile(File[] file) {
-        if (CACHE_PATH == null) { //获取路径
+        if (fileSetting == null) { //获取路径
             LambdaQueryWrapper<FileSetting> lambda = new LambdaQueryWrapper<>();
             lambda.orderBy(true, false, FileSetting::getId).last("LIMIT 1");
-            FileSetting setting = settingMapping.selectOne(lambda);
-            String cachePath = setting.getCachePath();
-            String[] cachePathChar = cachePath.split("");
-            if (cachePathChar[cachePathChar.length-1] == "/" || cachePathChar[cachePathChar.length-1].equals("/")) {
-                cachePath = cachePath.substring(0, cachePath.length() - 1);
-            }
-            TEMP_FILE_DIR = cachePath + TEMP_FILE_CACHE;
-            File temDir = new File(TEMP_FILE_DIR);
-            if (!temDir.exists()){
-                temDir.mkdirs();
-            }
-
+            fileSetting = settingMapping.selectOne(lambda);
+        }
+        String cachePath = fileSetting.getCachePath();
+        String[] cachePathChar = cachePath.split("");
+        if (cachePathChar[cachePathChar.length-1] == "/" || cachePathChar[cachePathChar.length-1].equals("/")) {
+            cachePath = cachePath.substring(0, cachePath.length() - 1);
+        }
+        TEMP_FILE_DIR = cachePath + SysConst.getTempPath();
+        File temDir = new File(TEMP_FILE_DIR);
+        if (!temDir.exists()){
+            temDir.mkdirs();
         }
         int i = 0;
         for (File item : file) {
@@ -161,11 +154,6 @@ public class TempfileImpl implements TempFileService {
         }
     }
 
-    public String replace(String name){
-        if (name.contains("\\")){
-          name=name.replaceAll("\\\\","/");
-        }
-        return name;
-    }
+
 
 }

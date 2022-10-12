@@ -1,7 +1,9 @@
 package com.example.baidusync.Util.FileUtil;
 
+import com.example.baidusync.Util.FileLog.FileLogEntity;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
+import com.example.baidusync.Util.SysUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
@@ -17,6 +19,8 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
@@ -48,11 +52,8 @@ public class ScanFileUtil extends ZipFileUtil {
 
             @Override
             public int compare(File o1, File o2) {
-                if (o1.isDirectory() && o2.isFile()) {
+                if ((o1.isDirectory()) && (o2.isFile())) {
                     return 1;
-                }
-                if (o1.isFile() && o2.isDirectory()) {
-                    return -1;
                 }
                 return 0;
             }
@@ -113,19 +114,31 @@ public class ScanFileUtil extends ZipFileUtil {
         while (iterator.hasNext()) {
             Map.Entry<String, List<File>> map = iterator.next();
             if (map != null) {
+                FileLogEntity fileLog = new FileLogEntity();
+
                 String path = map.getKey();
-                String pathGeneral = null;
-                if (path.contains("\\")) {
-                    pathGeneral = path.replaceAll("\\\\", "/");
-                } else {
-                    pathGeneral = path;
-                }
+                String pathGeneral = SysUtil.reNamePath(path);
                 String[] dirs = pathGeneral.split("/");
                 String fileName = dirs[dirs.length - 1];
-                String zipName = pathGeneral + "/" + fileName;
+                String parent = dirs[dirs.length-2];
+                String zipName = ZIP_PATH + fileName;
+
+                fileLog.setCreateTime(new Date());
+                fileLog.setOriginalFileName(fileName);
+                fileLog.setOriginalPathName(pathGeneral);
+                fileLog.setParent(parent);
+                //调整一下网盘上的文件名和目录名，防止被和谐
+                String oneLineName = SysUtil.onlineName(fileName);
+                String onLineParent = SysUtil.onlineParent(parent);
+                fileLog.setFileName(oneLineName);
+                fileLog.setParent(onLineParent);
+                //插入FileLog
+                Integer id =  this.fileLogService.add(fileLog);
+                fileLog.setId(id);
+
                 try {
-                    this.zipFile(zipName, map.getValue(), PASSWORD);
-                } catch (ZipException e) {
+                    this.zipFile(fileLog,zipName, map.getValue(), PASSWORD);
+                } catch (ZipException e ) {
                     e.printStackTrace();
                 }
             }
@@ -152,8 +165,9 @@ public class ScanFileUtil extends ZipFileUtil {
                 deleteCachePath(dirFiles);//清空缓存文件夹
             }
         }
-        if (zipPath.endsWith("/")){
-            zipPath.substring(0,zipPath.length()-2);
+        zipPath = SysUtil.reNamePath(zipPath);
+        if (!zipPath.endsWith("/")){
+            zipPath+="/";
         }
         this.ZIP_PATH = zipPath;
 
