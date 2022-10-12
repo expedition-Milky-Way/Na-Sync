@@ -1,4 +1,4 @@
-package com.example.baidusync.Util.FileService;
+package com.example.baidusync.core.SysThread;
 
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONObject;
@@ -10,7 +10,7 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskImpl;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
-import com.example.baidusync.core.SystemCache;
+import com.example.baidusync.core.SendQueue;
 import org.apache.ibatis.logging.LogException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 杨 名 (字 露煊)
  * 控制上传并发数量的线程池
  */
-
-public class NetDiskThreadPool {
+@Service
+public class NetDiskThreadPool implements NetDiskThreadPoolService {
 
     static Integer FINAL_TASK_NUM = 1;
     //百度网盘最大允许10个Task
@@ -45,7 +45,7 @@ public class NetDiskThreadPool {
     private static ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
 
-    private static void initExecutor() {
+    private void initExecutor() {
         FileSetting setting = fileSettingService.getSetting();
         Integer coreSize = setting.getTaskNum();
         FINAL_TASK_NUM = setting.getTaskNum();
@@ -60,14 +60,15 @@ public class NetDiskThreadPool {
     /**
      * 获取队列
      */
-    public static void TurnOnSendFile() {
+    @Override
+    public void TurnOnSendFile() {
         new Thread(() -> {
             initExecutor(); //初始化线程池
             while (true) {
                 Integer canTaskNum = FINAL_TASK_NUM - activeTaskNum.get();
                 if (canTaskNum > 0) {
                     for (int i = 0; i < FINAL_TASK_NUM; i++) {
-                        Map<String, Object> map = SystemCache.get();
+                        Map<String, Object> map = SendQueue.get();
                         if (map != null) {
                             executor.execute(() -> run(map));
                             LogEntity log = new LogEntity(
@@ -93,7 +94,8 @@ public class NetDiskThreadPool {
     /**
      * 执行发送视频文件
      */
-    public static void run(Map<String, Object> map) {
+    @Override
+    public  void run(Map<String, Object> map) {
         Integer latTaskNum = activeTaskNum.incrementAndGet();
         String name = (String) map.get("name");
         Long size = (Long) map.get("size");
@@ -115,10 +117,11 @@ public class NetDiskThreadPool {
     /**
      * 关闭线程池及任务
      */
-    public static boolean turnOff(){
+    @Override
+    public  boolean turnOff(){
         Map<String,Object> map = null;
-        if (!SystemCache.isEmpty()){
-            map = SystemCache.get();
+        if (!SendQueue.isEmpty()){
+            map = SendQueue.get();
         }
         if (map == null || map.isEmpty() && activeTaskNum.get() ==0 || executor.getActiveCount() == 0 ){
             executor.shutdown();

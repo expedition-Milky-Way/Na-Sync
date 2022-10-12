@@ -36,21 +36,29 @@ public class FileLogEntity extends BaseEntity implements Serializable {
     private String originalPathName;
     @TableField("original_parent_name")
     private String originalParentName;
+    @TableField("zip_file_name")
+    private String zipFileName;
+    @TableField("zip_path_name")
+    private String zipPathName;
+    @TableField("zip_parent_name")
+    private String zipParentName;
 
     private String nameHash;
 
     private String password;
 //0：未完成上传 1：上传完成 2： 上传失败
     private Integer progress;
+    @TableField("tempPath") //分片文件的路径
+    private String tempPath;
 
 
     public FileLogEntity() {
     }
 
-    public FileLogEntity(Integer version, String fileName, String path,
-                         String parent, String originalFileName,
-                         String originalPathName, String originalParentName,
-                         String nameHash, String password, Integer progress) {
+    public FileLogEntity(Integer version, String fileName, String path, String parent,
+                         String originalFileName, String originalPathName,
+                         String originalParentName, String nameHash, String password,
+                         Integer progress, String tempPath) {
         this.version = version;
         this.fileName = fileName;
         this.path = path;
@@ -61,5 +69,6 @@ public class FileLogEntity extends BaseEntity implements Serializable {
         this.nameHash = nameHash;
         this.password = password;
         this.progress = progress;
+        this.tempPath = tempPath;
     }
 }

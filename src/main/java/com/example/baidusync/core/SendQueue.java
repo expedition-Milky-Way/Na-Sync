@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 /**
  * @author 杨 名 (字 露煊)
  */
-public class SystemCache {
+public class SendQueue {
 
    private  static  Executor executor = Executors.newFixedThreadPool(1);
 

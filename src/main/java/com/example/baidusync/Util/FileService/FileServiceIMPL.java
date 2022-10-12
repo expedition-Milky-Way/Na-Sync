@@ -10,7 +10,8 @@ import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.Util.TempFileService.TempfileImpl;
-import com.example.baidusync.core.SystemCache;
+import com.example.baidusync.core.Bean.SysConst;
+import com.example.baidusync.core.SendQueue;
 import org.apache.commons.io.FileUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class FileServiceIMPL implements FileService {
         setMap.put("size", fileSize);
         setMap.put("tempPath", Directory.getPath());
         setMap.put("parent", parent);
-        if (fileSize <= TempfileImpl.MIN_SIZE) {
+        if (fileSize <= SysConst.getMaxSize()) {
             BeanUtil.copyProperties(computedMD5(name, Directory, parent), fileAndDigsted);
         } else {
             if (Directory.exists()) {
@@ -68,7 +69,7 @@ public class FileServiceIMPL implements FileService {
             }
         }
         setMap.put("fileList", fileAndDigstedList);
-        SystemCache.set(setMap);
+        SendQueue.set(setMap);
         LogExecutor.addSysLogQueue(new LogEntity("", "md5计算完毕，进入等待队列：" + Directory, LogEntity.LOG_TYPE_INFO));
     }
 
