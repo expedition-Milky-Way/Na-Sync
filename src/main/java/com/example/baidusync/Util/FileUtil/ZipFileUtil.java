@@ -11,6 +11,7 @@ import com.example.baidusync.core.Bean.SysConst;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.lingala.zip4j.progress.ProgressMonitor;
@@ -75,9 +76,11 @@ public class ZipFileUtil {
 
             ZipFile zipFile = new ZipFile(fileName);
             zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-            zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+            zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
+            zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setEncryptFiles(true);
+            zipFile.setRunInThread(false);
             zipFile.setPassword(password.toCharArray());
             try {
                 zipFile.addFiles(fileList, zipParameters);
