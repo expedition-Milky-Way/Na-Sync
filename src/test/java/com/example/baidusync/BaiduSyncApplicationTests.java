@@ -112,7 +112,7 @@ class BaiduSyncApplicationTests {
 
         FileSetting setting = settingService.getSetting();
         JSONObject jsonObject = netDiskService.deviceCode(setting.getAppKey());
-        System.out.printf(jsonObject.toString());
+        System.out.print(jsonObject.toString());
 
         netDiskService.accessToken();
         netDiskService.getBaiduUsInfo();
