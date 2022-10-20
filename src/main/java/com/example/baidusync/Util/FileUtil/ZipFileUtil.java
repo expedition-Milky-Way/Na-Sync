@@ -20,6 +20,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
@@ -41,7 +42,6 @@ public class ZipFileUtil {
     public RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
 
 
-
     //如果出现同名文件，将会采用  xx(NAME_PREFIX).zip来命名文件
     private static Integer NAME_PREFIX = 1;
     //文件后缀
@@ -49,12 +49,7 @@ public class ZipFileUtil {
     private static final String FILE_7Z_PREFIX = ".7z";
 
 
-
-
-
-
-
-    public  void zipFile(FileLogEntity fileLog,String name, List<File> fileList, String password) throws ZipException {
+    public void zipFile(FileLogEntity fileLog, String name, List<File> fileList, String password)  {
         if (fileList.size() > 0) {
             String fileName = this.rename(name, FILE_ZIP_PREFIX);
 
@@ -83,9 +78,9 @@ public class ZipFileUtil {
             zipFile.setRunInThread(false);
             zipFile.setPassword(password.toCharArray());
             try {
-                zipFile.addFiles(fileList, zipParameters);
-
-            } catch (net.lingala.zip4j.exception.ZipException e) {
+                zipFile.addFiles(fileList,zipParameters);
+                zipFile.close();
+            }catch (IOException e){
                 e.printStackTrace();
             }
             fileLogService.up(fileLog);
