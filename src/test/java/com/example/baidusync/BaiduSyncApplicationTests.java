@@ -12,13 +12,15 @@ import com.example.baidusync.Util.SystemLog.LogService;
 import com.example.baidusync.Util.TempFileService.TempFileService;
 import com.example.baidusync.core.Bean.SysConst;
 
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.annotation.Resource;
-import java.io.File;
+import javax.swing.plaf.FileChooserUI;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,14 +120,14 @@ class BaiduSyncApplicationTests {
         netDiskService.getBaiduUsInfo();
         ScanFileUtil scanFileUtil = new ScanFileUtil(setting.getCachePath(), setting.getPassword());
         scanFileUtil.doSomething(setting.getPath());
- /*       if (setting.getCachePath() != null){
+        if (setting.getCachePath() != null){
             File cacheFile = new File(setting.getCachePath());
             tempFileService.scanZipFile(cacheFile.listFiles());
 //            NetDiskThreadPool.TurnOnSendFile();
         }else{
          LogEntity log = new LogEntity("","还没有设置缓存路径诶~",LogEntity.LOG_TYPE_WARN);
             LogExecutor.addSysLogQueue(log);
-        }*/
+        }
         System.out.println("测试结束");
     }
 
@@ -175,6 +177,25 @@ class BaiduSyncApplicationTests {
             System.out.println(files[i].getParent());
         }
     }
+
+
+    @SneakyThrows
+    @Test
+    public void testNIO()  {
+        //E:\JavaWorkSpace\佳能\JPEG
+        File[] files = new File("E:/JavaWorkSpace/佳能/JPEG").listFiles();
+            for (int i =0 ;i < files.length ; i++){
+                byte[] fileBytes = FileUtils.readFileToByteArray(files[i]);
+                FileOutputStream fileOutputStream = new FileOutputStream("E:/JavaWorkSpace/Cannon/"+i+".jpg");
+                try {
+                    fileOutputStream.write(fileBytes);
+                }finally {
+                    fileOutputStream.close();
+                }
+            }
+        }
+
+
 
 
 }

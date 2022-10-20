@@ -85,10 +85,15 @@ public class TempfileImpl implements TempFileService {
                     offSet = write(splitFileName, raf, i, begin, end);
                 }
                 //计算md5并放入队列
-                fileService.computedMD5(fileName, oneTempFileDir, fileSize, parent);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            fileService.computedMD5(fileName, oneTempFileDir, fileSize, parent);
         }
 
     }
@@ -147,6 +152,11 @@ public class TempfileImpl implements TempFileService {
             temDir.mkdirs();
         }
         int i = 0;
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         for (File item : file) {
             System.out.println(i+":::"+item.getName());
             if (!item.isDirectory())  splitFile(item);

@@ -1,6 +1,7 @@
 package com.example.baidusync.Util;
 
 import cn.hutool.core.lang.UUID;
+import com.example.baidusync.core.Bean.SysConst;
 
 /**
  * @author 杨名 （字 露煊） YeungLuhyun
@@ -38,5 +39,13 @@ public class SysUtil {
         String baiduParent =  UUID.nameUUIDFromBytes(
                 parent.getBytes()).toString();
         return baiduParent;
+    }
+
+    public static String onLinePath(String path){
+        String basePath = SysConst.getDefaultNetDiskDir();
+        if (path.split("")[0] != "/"){
+            basePath += "/";
+        }
+        return basePath+path;
     }
 }

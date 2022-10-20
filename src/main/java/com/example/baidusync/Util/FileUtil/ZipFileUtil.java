@@ -1,31 +1,24 @@
 package com.example.baidusync.Util.FileUtil;
 
-import cn.hutool.core.lang.UUID;
 import cn.hutool.extra.spring.SpringUtil;
 import com.example.baidusync.Util.FileLog.FileLogEntity;
 import com.example.baidusync.Util.FileLog.FileLogService;
 import com.example.baidusync.Util.NetDiskSync.RequestNetDiskService;
-import com.example.baidusync.Util.SysUtil;
 import com.example.baidusync.Util.TempFileService.TempFileService;
 import com.example.baidusync.core.Bean.SysConst;
 import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
-import net.lingala.zip4j.progress.ProgressMonitor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 
-import javax.annotation.Resource;
-import java.io.File;
-import java.util.Date;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipException;
 
 /**
@@ -35,7 +28,7 @@ import java.util.zip.ZipException;
  */
 
 public class ZipFileUtil {
-    private static ZipParameters zipParameters = new ZipParameters();
+
     public final FileLogService fileLogService = SpringUtil.getBean(FileLogService.class);
     public final TempFileService tempFileService = SpringUtil.getBean(TempFileService.class);
     public RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
@@ -54,7 +47,7 @@ public class ZipFileUtil {
 
 
 
-    public  void zipFile(FileLogEntity fileLog,String name, List<File> fileList, String password) throws ZipException {
+    public  void zipFile(FileLogEntity fileLog,String name, List<File> fileList, String password) throws IOException {
         if (fileList.size() > 0) {
             String fileName = this.rename(name, FILE_ZIP_PREFIX);
 
@@ -67,26 +60,33 @@ public class ZipFileUtil {
             if (nameDir[nameDir.length - 2] != null) {
                 parent += "/" + nameDir[nameDir.length - 1];
             }
-
-
-            fileLog.setZipFileName(fileName);
+            ZipParameters zipParameters = new ZipParameters();
+            String[] zipFileNames = fileName.split("/");
+            String zipFileName = zipFileNames[zipFileNames.length -1 ];
+            fileLog.setZipFileName(zipFileName);
             fileLog.setZipParentName(parent);
             fileLog.setZipPathName(fileName);
             fileLog.setPassword(password);
-
-            ZipFile zipFile = new ZipFile(fileName);
             zipParameters.setEncryptionMethod(EncryptionMethod.AES);
             zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
             zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
             zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setEncryptFiles(true);
-            zipFile.setRunInThread(false);
-            zipFile.setPassword(password.toCharArray());
-            try {
-                zipFile.addFiles(fileList, zipParameters);
 
-            } catch (net.lingala.zip4j.exception.ZipException e) {
-                e.printStackTrace();
+            FileOutputStream outputStream =  new FileOutputStream(fileName);
+            ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream,password.toCharArray(), Charset.defaultCharset());
+            for(File file : fileList){
+
+                zipParameters.setEntrySize(file.length());
+               zipParameters.setFileNameInZip(file.getName());
+               zipOutputStream.putNextEntry(zipParameters);
+               InputStream inputStream = new FileInputStream(file);
+               Integer readLength = null;
+               byte[] buff = new byte[4096];
+               while ((readLength = inputStream.read(buff)) != -1){
+                   zipOutputStream.write(buff,0,readLength);
+               }
+               zipOutputStream.closeEntry();
             }
             fileLogService.up(fileLog);
 

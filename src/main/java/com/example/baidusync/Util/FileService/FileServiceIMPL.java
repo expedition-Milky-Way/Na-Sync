@@ -49,7 +49,7 @@ public class FileServiceIMPL implements FileService {
         setMap.put("size", fileSize);
         setMap.put("tempPath", Directory.getPath());
         setMap.put("parent", parent);
-        if (fileSize <= SysConst.getMaxSize()) {
+        if (fileSize <= SysConst.getMinSize()) {
             BeanUtil.copyProperties(computedMD5(name, Directory, parent), fileAndDigsted);
         } else {
             if (Directory.exists()) {

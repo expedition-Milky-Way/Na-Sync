@@ -16,9 +16,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipException;
@@ -129,7 +127,7 @@ public class ScanFileUtil extends ZipFileUtil {
                 fileLog.setCreateTime(new Date());
                 fileLog.setOriginalFileName(fileName);
                 fileLog.setOriginalPathName(pathGeneral);
-                fileLog.setParent(parent);
+                fileLog.setOriginalParentName(parent);
                 //调整一下网盘上的文件名和目录名，防止被和谐
                 String oneLineName = SysUtil.onlineName(fileName);
                 String onLineParent = SysUtil.onlineParent(parent);
@@ -139,11 +137,13 @@ public class ScanFileUtil extends ZipFileUtil {
                 Integer id = this.fileLogService.add(fileLog);
                 fileLog.setId(id);
 
-                try {
-                    this.zipFile(fileLog, zipName, map.getValue(), PASSWORD);
-                } catch (ZipException e) {
-                    e.printStackTrace();
-                }
+                        try {
+                            this.zipFile(fileLog, zipName, map.getValue(), PASSWORD);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
             }
 
         }
