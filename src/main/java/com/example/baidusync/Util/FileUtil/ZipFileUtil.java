@@ -14,7 +14,6 @@ import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
-
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ public class ZipFileUtil {
     public RequestNetDiskService diskService = SpringUtil.getBean(RequestNetDiskService.class);
 
 
-
     //如果出现同名文件，将会采用  xx(NAME_PREFIX).zip来命名文件
     private static Integer NAME_PREFIX = 1;
     //文件后缀
@@ -47,7 +45,11 @@ public class ZipFileUtil {
 
 
 
+
     public  void zipFile(FileLogEntity fileLog,String name, List<File> fileList, String password) throws IOException {
+
+    public void zipFile(FileLogEntity fileLog, String name, List<File> fileList, String password)  {
+
         if (fileList.size() > 0) {
             String fileName = this.rename(name, FILE_ZIP_PREFIX);
 
@@ -72,7 +74,6 @@ public class ZipFileUtil {
             zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
             zipParameters.setCompressionMethod(CompressionMethod.STORE);
             zipParameters.setEncryptFiles(true);
-
             FileOutputStream outputStream =  new FileOutputStream(fileName);
             ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream,password.toCharArray(), Charset.defaultCharset());
             for(File file : fileList){

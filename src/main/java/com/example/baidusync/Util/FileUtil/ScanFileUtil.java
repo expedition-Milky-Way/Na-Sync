@@ -50,13 +50,13 @@ public class ScanFileUtil extends ZipFileUtil {
 
             @Override
             public int compare(File o1, File o2) {
-                if (o1.isDirectory()&& o2.isFile()) {
+                if (o1.isDirectory() && o2.isFile()) {
                     return 1;
                 }
-                if (o1.isFile() && o2.isDirectory()){
+                if (o1.isFile() && o2.isDirectory()) {
                     return -1;
                 }
-              return 0;
+                return 0;
             }
         });
         for (File item : files) {
@@ -142,8 +142,6 @@ public class ScanFileUtil extends ZipFileUtil {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-
-
             }
 
         }
@@ -194,6 +192,7 @@ public class ScanFileUtil extends ZipFileUtil {
             }
         }
     }
+
     /**
      * 清空缓存文件夹下所有目录
      */
