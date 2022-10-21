@@ -110,7 +110,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                     new Timer().schedule(new TimerTask() {
                         @Override
                         public void run() {
-                            freshToken(SysConst.getRefreshToken());
+                            freshToken();
                         }
                     }, SysConst.getExpireTime());
                     return true;
@@ -155,7 +155,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     /**
      * 请求刷新百度网盘Token
      */
-    public void freshToken(String refreshToken) {
+    public void freshToken() {
         String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=" + SysConst.getRefreshToken()
                 + "&client_id=:cid&client_secret=:sec";
         if (fileSetting.isEmpty()) BeanUtil.copyProperties(fileSettingService.getSetting(), fileSetting);
