@@ -47,9 +47,6 @@ public class ZipFileUtil {
 
 
     public  void zipFile(FileLogEntity fileLog,String name, List<File> fileList, String password) throws IOException {
-
-    public void zipFile(FileLogEntity fileLog, String name, List<File> fileList, String password)  {
-
         if (fileList.size() > 0) {
             String fileName = this.rename(name, FILE_ZIP_PREFIX);
 

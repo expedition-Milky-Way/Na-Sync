@@ -1,32 +1,31 @@
 package com.example.baidusync.Util.NetDiskSync;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.RandomUtil;
+
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+
 import com.example.baidusync.Admin.Entity.FileSetting;
 import com.example.baidusync.Admin.Service.FileSettingMapper.FileSettingMapping;
 import com.example.baidusync.Admin.Service.FileSettingService;
 import com.example.baidusync.Util.FileAndDigsted;
-import com.example.baidusync.Util.FileLog.FileLogEntity;
-import com.example.baidusync.Util.FileLog.FileLogService;
 import com.example.baidusync.Util.FileUtil.ScanFileUtil;
 import com.example.baidusync.Util.SystemLog.LogEntity;
 import com.example.baidusync.Util.SystemLog.LogExecutor;
 import com.example.baidusync.core.Bean.SysConst;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+import com.example.baidusync.core.SysBeanConfig.TimerTask;
 import javax.annotation.Resource;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -42,7 +41,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
     @Resource
     private FileSettingService fileSettingService;
     @Resource
-    private FileLogService fileLogService;
+    private TimerTask timerTask;
 
     //会员类型 ： 0 普通用户， 1：普通会员 2:超级会员
     public static Integer VIP_TYPE = null;
@@ -107,12 +106,7 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
                     isDir = postCreateNetDisk(SysConst.getDefaultNetDiskDir());
                 }
                 if (isDir) {
-                    new Timer().schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            freshToken();
-                        }
-                    }, SysConst.getExpireTime());
+                    timerTask.executor().schedule(()->freshToken(),SysConst.getExpireTime(), TimeUnit.MILLISECONDS);
                     return true;
                 }else{
                     LogEntity log = new LogEntity("RequestNetDiskImpl.accessToken() 118Row","初始化百度网盘文件夹失败",
@@ -465,18 +459,11 @@ public class RequestNetDiskImpl implements RequestNetDiskService {
             if (date != null) {
                 calendar.set(Calendar.HOUR_OF_DAY, date.getHours());
                 calendar.set(Calendar.MINUTE, date.getMinutes());
-                Timer timer = new Timer();
-                Date taskDate = calendar.getTime();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        String runDate = dateFormat.format(new Date());
-                        LogEntity log = new LogEntity("", runDate + "开始运行", LogEntity.LOG_TYPE_INFO);
-                        ScanFileUtil scanFileUtil = new ScanFileUtil(fileSetting.getCachePath(), fileSetting.getPassword());
-                        scanFileUtil.doSomething(fileSetting.getPath());
-                        LogExecutor.addSysLogQueue(log);
-                    }
-                }, taskDate, PERIOD_DAY);
+                timerTask.executor().schedule(()->{ String runDate = dateFormat.format(new Date());
+                    LogEntity log = new LogEntity("", runDate + "开始运行", LogEntity.LOG_TYPE_INFO);
+                    ScanFileUtil scanFileUtil = new ScanFileUtil(fileSetting.getCachePath(), fileSetting.getPassword());
+                    scanFileUtil.doSomething(fileSetting.getPath());
+                    LogExecutor.addSysLogQueue(log);}, calendar.getTimeInMillis(),TimeUnit.MILLISECONDS);
             }
         }
     }

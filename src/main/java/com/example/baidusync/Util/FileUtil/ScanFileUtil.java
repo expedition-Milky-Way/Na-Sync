@@ -123,7 +123,6 @@ public class ScanFileUtil extends ZipFileUtil {
                 String fileName = dirs[dirs.length - 1];
                 String parent = dirs[dirs.length - 2];
                 String zipName = ZIP_PATH + fileName;
-
                 fileLog.setCreateTime(new Date());
                 fileLog.setOriginalFileName(fileName);
                 fileLog.setOriginalPathName(pathGeneral);
@@ -137,11 +136,11 @@ public class ScanFileUtil extends ZipFileUtil {
                 Integer id = this.fileLogService.add(fileLog);
                 fileLog.setId(id);
 
-                        try {
-                            this.zipFile(fileLog, zipName, map.getValue(), PASSWORD);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                try {
+                    this.zipFile(fileLog, zipName, map.getValue(), PASSWORD);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
         }
