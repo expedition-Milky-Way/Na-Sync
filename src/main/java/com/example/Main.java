@@ -98,6 +98,9 @@ public class Main {
             } else {
                 System.out.println(file);
                 String parent = file.getParent();
+                if (parent.contains("\\")) {
+                    parent = parent.replace("\\", "/");
+                }
                 List<File> fileList = null;
                 if (fileMap.get(parent) != null) {
                     fileList = fileMap.get(parent);
@@ -269,11 +272,13 @@ public class Main {
         SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.RC2, key);
         String crypto = aes.encryptHex(parent);
         String name = "";
-        if (crypto.length() > 20) {
-            String[] strs = crypto.split("");
-            for (int i = 0; i < 20; i++) {
-                name += strs[i];
-            }
+        String[] strs = crypto.split("");
+        int index = strs.length;
+        if (strs.length > 20) {
+            index = (strs.length + 1)  >> 2;
+        }
+        for (int i = 0; i < index; i++) {
+            name += strs[i];
         }
         return name;
     }
