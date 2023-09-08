@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- 引入 layui.css -->
+    <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">
+    <script src="/jquery.min.js"></script>
+    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
+
+</head>
+<script>
+    var HttpHost = window.location.url;
+    $(function () {
+        layui.use(['laydate'], function () {
+            let laydate = layui.laydate
+            let dateTime = laydate.render({
+                elem: '#time',
+                type: 'time'
+            });
+        })
+        function firstGetLog(){
+            $.ajax("/getLog", {
+                type: 'POST',
+                responseType: 'json',
+                success: res => {
+                    console.log(res)
+                    if (res!= null){
+                        viewLog(res.data)
+                    }
+
+
+
+                }
+            })
+        }
+
+        //请求日志接口
+        setInterval(() => {
+           firstGetLog()
+
+        }, 10000)
+
+       //渲染日志log
+        function viewLog(data){
+            let types = ['正常运行时', '运行时警告', '运行时错误']
+            let tbody = document.querySelector('tbody')
+            for (let i = 0; i < data.length; i++) {
+                var tr = document.createElement("tr")
+                var time = document.createElement("td")
+                time.innerHTML = data[i].createTime
+                var msg = document.createElement('td')
+                msg.innerHTML = data[i].message
+                var type = document.createElement('td')
+                type.innerHTML = types[data[i].type]
+                tr.appendChild(time)
+                tr.appendChild(msg)
+                tr.appendChild(type)
+                tbody.appendChild(tr)
+            }
+        }
+
+    })
+
+
+    function submitForm() {
+        let path = $("#dirList").val();
+        let time = $("#time").val()
+        let cachePath = $("#cachePath").val()
+        let password = $("#password").val()
+        let appId = $("#app-id").val()
+        let appKey = $("#app-key").val()
+        let secretKey = $("#secret-key").val()
+        let signKey = $("#sign-key").val()
+        let taskNum = $("#task-num").val()
+        console.log(taskNum)
+        console.log(path, time, cachePath, password, appKey, appId, secretKey, signKey)
+        if (path != '' && time != '' && cachePath != '' && password != '' &&
+            appId != '' && appKey != '' && secretKey != '' && signKey != '' && taskNum != '') {
+            if (taskNum > 5) {
+                alert("并行数量越多所耗费的 IO、内存和CPU也会越多")
+                $("#taskText").val("并行数量越多所耗费的 IO、内存和CPU也会越多")
+            }
+            $.ajax("/add", {
+                data: {
+                    "appId": appId,
+                    "secretKey": secretKey,
+                    "appKey": appKey,
+                    "password": password,
+                    "path": path,
+                    "cachePath": cachePath,
+                    "dateTime": time,
+                    "signKey": signKey,
+                    "taskNum": taskNum
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function (res) {
+                    console.log(res)
+                    let code = res.code
+                    let success = res.success
+                    let message = res.message
+                    let data = res.data
+                    let host = "http://" + data.ctx
+                    HttpHost = host
+                    if (code === 200 && success === true) {
+                        let content = layer.open({
+                            type: 2,
+                            content: host + "/netDiskConfirm?url=" + data.qrcode_url,
+                            area: ['560px', '560px'],
+                            closeBtn: 0,
+                            title: '打开百度网盘手机app扫描二维码',
+                            btn: ['确定'],
+                            yes: function (index, layero) {
+                                authConfirm(host)
+                                layer.close(index)
+                            }
+                        })
+
+                    } else {
+                        alert(message)
+                    }
+                }
+            })
+        } else {
+            alert('表单不允许为空')
+        }
+
+    }
+
+    function authConfirm(ctx) {
+        $.ajax(ctx + '/netDiskConfirmOk', {
+            type: 'POST',
+            dataType: 'json',
+            complete: function (res) {
+                console.log(res)
+                let response = res.responseJSON
+                if (response.success === false) {
+                    layer.msg(response.message)
+                }else{
+                    layer.msg("程序启动成功，将会在固定时间段执行任务")
+                }
+            }
+        })
+    }
+
+    //下载日志
+    function downLoadLog() {
+
+    }
+
+</script>
+<body>
+<div id="main">
+    <div class="layui-container">
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">填写文件路径:</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="dirList" class="layui-input custom_input" style="width: 300px"
+                           id="dirList" th:value="${path}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">选择时间</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="time" id="time" class="layui-input custom_input" style="width: 300px"
+                           th:value="${dateTime}">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">填写压缩包存放路径</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input class="layui-input" style="width:300px " name="cachePath" id="cachePath"
+                           th:value="${cachePath}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class=" layui-col-md3">
+                    <span>填写加密密码:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input id="password" type="text" class="layui-input custom_input"
+                           style=" width: 300px" th:value="${password}">
+                </div>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">百度网盘AppId:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="AppId" class="layui-input custom_input"
+                           style=" width: 300px" id="app-id" th:value="${appId}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">百度网盘AppKey:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="appKey" class="layui-input custom_input"
+                           style=" width: 300px" id="app-key" th:value="${appKey}">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">百度网盘SecretKey:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="SecretKey" class="layui-input custom_input" style=" width: 300px" id="secret-key"
+                           th:value="${secretKey}">
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">百度网盘SignKey:&nbsp;</span>
+                </div>
+                <div class="layui-col-md9">
+                    <input name="SignKey" class="layui-input custom_input" style=" width: 300px" id="sign-key"
+                           th:value="${signKey}">
+                </div>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div class="layui-col-md3">
+                    <span style="font-size: 16px">上传并行数量</span>
+                </div>
+                <div class="layui-col-md9">
+                    <select id="task-num" class="layui-select" style="width: 300px">
+                        <option th:each="item:${taskNumList}" th:selected="${taskNum} eq ${item}"
+                                th:text="${item}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <div id="taskText" class="layui-font-red layui-font-16"></div>
+            </div>
+        </div>
+
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md5">
+                <div th:if="${btnState == 0}">
+                    <button class="layui-btn" onclick="submitForm()">添加</button>
+                </div>
+                <div th:if="${btnState == 1}">
+                    <button class="layui-btn" onclick="submitForm()">修改</button>
+                </div>
+            </div>
+            <div class="layui-col-md5">
+                <button class="layui-btn" id="downloadXls" onclick="downLoadLog()">下载运行日志</button>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space2">
+            <div class="layui-col-md3">
+                <div id="systemLog"></div>
+            </div>
+        </div>
+        <div id="sysLogTable">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <td>日期</td>
+                    <td width="400">信息</td>
+                    <td>日志类型</td>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+
+</body>
+<style type="text/css">
+    #main {
+        padding-top: 40px;
+
+    }
+
+</style>
+</html>
