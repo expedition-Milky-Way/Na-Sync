@@ -1,5 +1,6 @@
-package vip.yzxh.Util;
+package vip.yzxh.Util.HttpServerlet;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 @Data
@@ -45,5 +46,11 @@ public class ResponseData {
         this.success = false;
         this.code = DEFAULT_ERROR_CODE;
         this.message = message;
+    }
+
+
+    @Override
+    public String toString() {
+        return JSONObject.toJSONString(this);
     }
 }

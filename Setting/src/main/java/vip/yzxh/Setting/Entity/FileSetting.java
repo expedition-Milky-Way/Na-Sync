@@ -8,8 +8,7 @@ import com.alibaba.fastjson.JSON;
  */
 
 
-public class FileSetting  {
-
+public class FileSetting {
 
 
     private String appId;
@@ -32,6 +31,7 @@ public class FileSetting  {
 
     private Long oneFileSize;
 
+    private Integer version;
 
 
     /**
@@ -52,13 +52,13 @@ public class FileSetting  {
 
     }
 
-    public FileSetting(){
+    public FileSetting() {
 
     }
 
     public FileSetting(String appId, String secretKey, String signKey,
                        String appKey, String password, String path, String cachePath,
-                       String dateTime, Integer taskNum) {
+                       String dateTime, Integer taskNum, Integer version) {
 
         this.appId = appId;
         this.secretKey = secretKey;
@@ -69,9 +69,8 @@ public class FileSetting  {
         this.cachePath = cachePath;
         this.dateTime = dateTime;
         this.taskNum = taskNum;
-
+        this.version = version;
     }
-
 
 
     public String getAppId() {
@@ -157,5 +156,13 @@ public class FileSetting  {
 
     public void setOneFileSize(Long oneFileSize) {
         this.oneFileSize = oneFileSize;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }

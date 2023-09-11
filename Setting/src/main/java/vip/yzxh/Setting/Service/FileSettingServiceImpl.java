@@ -8,51 +8,26 @@ import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 import vip.yzxh.Setting.Entity.FileSetting;
-import vip.yzxh.Util.ConfigFileTemplate;
+import vip.yzxh.Util.Util.ConfigFileTemplate;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class FileSettingServiceImpl implements FileSettingService {
 
 
-
     private final SimpleDateFormat formator = new SimpleDateFormat("yyyy-mm-dd HH:mm");
 
-    /**
-     * @return
-     * @throws IOException
-     * @Author YeungLuhyun Demo
-     * 将文件复制到一个文件夹中，然后将该文件夹压缩
-     */
-    public String zipFile(String path) throws IOException {
-        ZipParameters zipParameters = new ZipParameters();
-        //设置压缩方法
-        zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
-        //设置压缩级别
-        zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
-        //设置加密密码
-        zipParameters.setEncryptFiles(true);
-        //设置加密方式
-        zipParameters.setEncryptionMethod(EncryptionMethod.AES);
-        //AES默认加密强度256
-        zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-        //new File
-        File file = new File(path);
-        //压缩对象
-        ZipFile zipFile = new ZipFile(file);
-        //开始压缩，参数1：对应的路径下,参数2：压缩配置
-//        zipFile.addFolder(new File(ZIP_PATH), zipParameters);
-        return "success";
-    }
+    private static final String SETTING_FILE_NAME = "setting.json";
+
+    private static FileSetting setting;
+
+    private static AtomicInteger version = new AtomicInteger(0);
 
 
     /**
@@ -60,7 +35,11 @@ public class FileSettingServiceImpl implements FileSettingService {
      */
     @Override
     public Object settingFile(FileSetting fileSetting) {
-        ConfigFileTemplate.writeFile(genPath(), fileSetting.toString());
+        if (fileSetting.getVersion() == null) {
+            fileSetting.setVersion(version.incrementAndGet());
+        }
+        setting = fileSetting;
+        ConfigFileTemplate.writeFile(genFilePath(), fileSetting.toString());
         return null;
     }
 
@@ -69,9 +48,12 @@ public class FileSettingServiceImpl implements FileSettingService {
      */
     @Override
     public FileSetting getSetting() {
+        if (setting == null || setting.getVersion() < version.get()) {
+            String jsonString = ConfigFileTemplate.readFile(genFilePath());
+            setting = JSONObject.parseObject(jsonString, FileSetting.class);
+        }
+        return setting;
 
-        String jsonString = ConfigFileTemplate.readFile(new File(path()));
-        return JSONObject.parseObject(jsonString, FileSetting.class);
     }
 
 
@@ -80,19 +62,22 @@ public class FileSettingServiceImpl implements FileSettingService {
      *
      * @return
      */
-    private File genPath() {
+    private File genFilePath() {
         File path = new File(path());
         if (!path.exists()) {
             path.mkdirs();
         }
-        return path;
+        String dir = path.getAbsolutePath();
+        if (dir.contains("\\")) dir = dir.replace("\\", "/");
+        dir += "/" + SETTING_FILE_NAME;
+        return new File(dir);
     }
 
     private String path() {
         String path = "";
         try {
             path = ResourceUtils.getURL("classpath:").getPath();
-            path = new File(path).getAbsolutePath() + "/templates/settings/";
+            path = new File(path).getAbsolutePath() + "/settings/";
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

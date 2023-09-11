@@ -1,7 +1,5 @@
 package vip.yzxh.BaiduPan.NetDisk;
 
-import cn.hutool.core.bean.BeanUtil;
-
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
@@ -11,17 +9,20 @@ import com.alibaba.fastjson.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import vip.yzxh.BaiduPan.BaiduConst.BaiduConst;
+import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
+import vip.yzxh.BaiduPan.BaiduPanResponse.UserMsg;
 import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Setting.Service.FileSettingService;
-import vip.yzxh.Util.FileAndDigsted;
-import vip.yzxh.Util.SysConst;
+import vip.yzxh.Util.Util.FileAndDigsted;
+import vip.yzxh.Util.HttpServerlet.ResponseData;
+import vip.yzxh.Util.Util.SysConst;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.text.ParseException;
+import java.net.HttpCookie;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -32,23 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class RequestNetDiskServiceImpl implements RequestNetDiskService {
 
-
     @Resource
-    private FileSettingService fileSettingService;
+    private FileSettingService settingService;
 
-
-    //会员类型 ： 0 普通用户， 1：普通会员 2:超级会员
-    public static Integer VIP_TYPE = null;
-    /**
-     * 通过netDiskService.VIP_TYPE获取分片最大大小
-     */
-    private static Long[] SIZE_BY_VIP_TYPE = {4194304L, 16777216L, 33554432L};
-    /**
-     * 获取用户可以上传的单个文件的最大大小
-     */
-    private static Long[] ONE_FILE_SIZE_BY_VIP = {4294967296L, 10737418240L, 21474836480L};
-
-    private static FileSetting fileSetting = new FileSetting();
 
     private static AtomicInteger IS_AUTH_OK = new AtomicInteger(0);
     //定时任务  每一天
@@ -63,86 +50,133 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
      * @return qrcode_url 二维码
      */
     @Override
-    public JSONObject deviceCode(String appKey) {
-        String deviceURI = "https://openapi.baidu.com/oauth/2.0/device/code?" +
-                "response_type=device_code&client_id=" + appKey + "&scope=basic,netdisk";
-        HttpResponse deviceResponse = HttpRequest.get(deviceURI).execute();
-        String bodyStr = deviceResponse.body();
-        String body = bodyStr.replace("\\", "");
-        JSONObject jsonObject = JSON.parseObject(body);
-        if (jsonObject.getString("device_code") != null) {
-            String deviceCode = jsonObject.getString("device_code");
-            SysConst.setDeviceCode(deviceCode);
-        } else {
-            //获取token失败，
-            System.out.println("没有扫码，获取Token失败" + jsonObject.toString());
-        }
-        log.info(jsonObject.toString());
-        return jsonObject;
-    }
-
-
-    /**
-     * 获取token
-     */
-    @Override
-    public boolean accessToken() {
-        if (SysConst.getDeviceCode() != null) {
-            JSONObject result = getToken(SysConst.getDeviceCode());
-            if (result.getString("error_description") == null) {
-                SysConst.setAccessToken(result.getString("access_token"));
-                SysConst.setRefreshToken(result.getString("refresh_token"));
-                SysConst.setExpireTime(result.getLong("expires_in"));
-                //查看是否拥有备份目录
-                boolean isDir = false;
-                if (!hasDir(SysConst.getDefaultNetDiskDir())) {
-                    isDir = postCreateNetDisk(SysConst.getDefaultNetDiskDir());
-                }
-                if (isDir) {
-//                    timerTask.executor().schedule(()->freshToken(),SysConst.getExpireTime(), TimeUnit.MILLISECONDS);
-                    return true;
-                }else{
-                    System.out.println("RequestNetDiskImpl.accessToken() 118Row 初始化百度网盘文件夹失败");
-
-                    return false;
-                }
-            } else {
-                //记录日志
-                System.out.println("请求百度网盘token报错：\n "
-                        + result.toString());
-                return false;
+    public TokenResponse deviceCode(String appKey) {
+        String bodyStr = null;
+        HttpCookie cookie = null;
+        HttpResponse deviceResponse = null;
+        try {
+            String deviceURI = "https://openapi.baidu.com/oauth/2.0/device/code?" +
+                    "response_type=device_code&client_id=" + appKey + "&scope=basic,netdisk";
+            deviceResponse = HttpRequest.get(deviceURI).execute();
+            bodyStr = deviceResponse.body();
+            cookie = deviceResponse.getCookie(BaiduConst.RESP_BAIDU_COOKIE);
+        } finally {
+            if (deviceResponse != null) {
+                deviceResponse.close();
             }
         }
-        System.out.println("RequestNetDisk.accessToken():125 row 获取token失败");
-        return false;
+        TokenResponse tokenResponse = null;
+        if (bodyStr != null && cookie != null){
+            String body = bodyStr.replace("\\", "");
+            JSONObject obj = JSONObject.parseObject(body);
+            if (obj.containsKey(BaiduConst.RESP_DEVICE_CODE) && obj.containsKey(BaiduConst.RESP_USER_CODE)) {
+                // 授权并获取token
+                String deviceCode = obj.getString(BaiduConst.RESP_DEVICE_CODE);
+                String userCode = obj.getString(BaiduConst.RESP_USER_CODE);
+                Integer interval = obj.getInteger(BaiduConst.RESP_INTERVAL);
+                tokenResponse = accredit(deviceCode, userCode, interval, cookie);
+            }
+            BaiduConst.setTokenMsg(tokenResponse);
+        }
+        return tokenResponse;
     }
+
+    /**
+     * 授权并获取token
+     *
+     * @param deviceCode 设备码
+     * @param userCode   用户码
+     * @param interval   轮训时间（秒）
+     * @author Yeungluhyun
+     */
+    private TokenResponse accredit(String deviceCode,
+                                   String userCode,
+                                   Integer interval,
+                                   HttpCookie cookies) {
+        // 1. 访问page url
+        HttpResponse mvcRes = null;
+        try {
+            String mvcUrl = "https://openapi.baidu.com/device";
+            mvcRes = HttpRequest.post(mvcUrl)
+                    .cookie(cookies)
+                    .disableCache()
+                    .execute();
+        } finally {
+            if (mvcRes != null) mvcRes.close();
+        }
+
+        //授权
+        HttpResponse accreditRes = null;
+        try {
+            String accreditUrl = "https://openapi.baidu.com/device?code=:code=page&redirect_uri=&force_login=";
+            accreditUrl = accreditUrl.replace(":code", userCode);
+            accreditRes = HttpRequest.get(accreditUrl)
+                    .cookie(cookies)
+                    .disableCache()
+                    .execute();
+        } finally {
+            if (accreditRes != null)
+                accreditRes.close();
+        }
+
+        //获取token相关
+        TokenResponse tokenResponse = null;
+        do {
+            tokenResponse = getToken(deviceCode);
+            try {
+                Thread.sleep(interval * 1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        } while (tokenResponse == null || tokenResponse.getToken() == null);
+        return tokenResponse;
+    }
+
 
     /**
      * 请求百度获取token
+     * https://openapi.baidu.com/oauth/2.0/token?grant_type=device_token&
+     * code=第一步生成的设备码device_code&
+     * client_id=您应用的AppKey&
+     * client_secret=您应用的SecretKey
+     * <p>
+     * 关于应用的相关信息，您可在控制台，点进去您对应的应用，查看
      */
-    private JSONObject getToken(String deviceCode) {
-        JSONObject jsonObject = null;
-        if (!fileSetting.isEmpty()) {
+    private TokenResponse getToken(String deviceCode) {
+        FileSetting setting = settingService.getSetting();
+        HttpResponse response = null;
+        try {
             String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=device_token&" +
-                    "code=" + deviceCode + "&client_id=" + fileSetting.getAppKey() + "&client_secret=" + fileSetting.getSecretKey();
-            HttpResponse response = HttpRequest.post(url).execute();
+                    "code=" + deviceCode + "&client_id=" + setting.getAppKey() + "&client_secret=" + setting.getSecretKey();
+            url = url.replace(":key", setting.getAppKey());
+            response = HttpRequest.post(url).disableCache().execute();
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+        if (response != null) {
             String bodyStr = response.body();
             bodyStr = bodyStr.replace("\\", "");
-            jsonObject = new JSONObject(JSON.parseObject(bodyStr));
-
+            JSONObject json = JSONObject.parseObject(bodyStr);
+            if (json != null && json.containsKey(BaiduConst.RESP_ERROR_NO) && json.getInteger(BaiduConst.RESP_ERROR_NO) == 0) {
+                return JSONObject.parseObject(bodyStr, TokenResponse.class);
+            }
+            System.out.println("请求token异常");
         }
-        return jsonObject;
+
+        return new TokenResponse(false, ResponseData.DEFAULT_ERROR_CODE, "回调异常：：：");
     }
 
     /**
      * 请求刷新百度网盘Token
      */
-    public void freshToken() {
+    public Object freshToken() {
+        FileSetting setting = settingService.getSetting();
         String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=" + SysConst.getRefreshToken()
                 + "&client_id=:cid&client_secret=:sec";
-        if (fileSetting.isEmpty()) BeanUtil.copyProperties(fileSettingService.getSetting(), fileSetting);
-        if (fileSetting.getAppId() != null) url.replace(":cid", fileSetting.getAppId());
-        if (fileSetting.getSecretKey() != null) url.replace(":sec", fileSetting.getSecretKey());
+        if (setting.getAppId() != null) url = url.replace(":cid", setting.getAppId());
+        if (setting.getSecretKey() != null) url = url.replace(":sec", setting.getSecretKey());
         HttpResponse response = HttpRequest.get(url).execute();
         JSONObject resBody = JSON.parseObject(response.body());
         if (resBody.getString("access_token") != null) {
@@ -150,6 +184,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
             SysConst.setRefreshToken(resBody.getString("refresh_token"));
             SysConst.setExpireTime(resBody.getInteger("expires_in").longValue());
         }
+        return null;
     }
 
 
@@ -157,60 +192,63 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
      * 获取用户信息
      */
     @Override
-    public void getBaiduUsInfo() {
-        JSONObject body = null;
-        String token = SysConst.getAccessToken();
-        if (token != null) {
-            body = requestUsInfo(token);
-        } else {
-            JSONObject tokenJson = this.getToken(SysConst.getDeviceCode());
-            if (tokenJson.getString("access_token") != null) {
-                token = tokenJson.getString("access_token");
-                SysConst.setAccessToken(token);
-                body = requestUsInfo(token);
-            } else {
-                System.out.println("请求token有误");
-            }
-
+    public Object getBaiduUsInfo() {
+        TokenResponse tokenResponse = BaiduConst.getTokenMsg();
+        if (tokenResponse == null) {
+            throw new RuntimeException();
         }
-        if (body.getInteger("errno") != 0) {
-            Date date = new Date();
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd HH:mm");
-            log.error(format.format(date) + "获取用户信息失败。或许是token为" + SysConst.getAccessToken() + "的原因");
-        } else {
-            VIP_TYPE = body.getInteger("vip_type");
-            SysConst.setMaxSize(ONE_FILE_SIZE_BY_VIP[VIP_TYPE]);
-            SysConst.setMaxTempSize(SIZE_BY_VIP_TYPE[VIP_TYPE]);
+        UserMsg userMsg = requestUsInfo(tokenResponse.getToken());
+        if (userMsg == null || !userMsg.getSuccess()) {
+            this.freshToken();
+            return getBaiduUsInfo();
         }
-
+        Long tempSize = userMsg.getVipTypeEnums().tempSize;
+        Long oneFileSize = userMsg.getVipTypeEnums().fileSize;
+        SysConst.setMaxSize(oneFileSize);
+        SysConst.setMaxTempSize(tempSize);
+        BaiduConst.setUserMsg(userMsg);
+        return null;
     }
 
 
     /**
      * 请求百度用户信息连接
      */
-    private JSONObject requestUsInfo(String accessToken) {
+    private UserMsg requestUsInfo(String accessToken) {
         String URL = "pan.baidu.com/rest/2.0/xpan/nas?method=uinfo" +
-                "&access_token=" + accessToken;
+                "&access_token=:token";
+        if (accessToken != null && !accessToken.trim().isEmpty()) {
+            return new UserMsg(false, ResponseData.DEFAULT_ERROR_CODE, "token为空");
+        }
+        URL = URL.replace(":token", accessToken);
         HttpResponse response = HttpRequest.get(URL).execute();
         String bodyStr = response.body();
         JSONObject body = JSON.parseObject(bodyStr);
-        return body;
+
+        if (body != null &&
+                body.containsKey(BaiduConst.RESP_ERROR_NO) &&
+                body.getInteger(BaiduConst.RESP_ERROR_NO) == 0) {
+            UserMsg msg = JSONObject.parseObject(body.toJSONString(), UserMsg.class);
+            return msg;
+        }
+        return new UserMsg(false, ResponseData.DEFAULT_ERROR_CODE, body.getString("errmsg"));
+
+
     }
 
     /**
      * 开始上传
      *
-     * @param name           源文件名
-     * @param parent         源文件父路径
-     * @param size           源文件大小
-     * @param fileAndDigsted
+     * @param name            源文件名
+     * @param parent          源文件父路径
+     * @param size            源文件大小
+     * @param fileAndDigested
      */
     @Override
-    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigsted, String tempPath) {
+    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigested, String tempPath) {
         List<String> md5 = null;
         Long totalTempSize = 0L;
-        for (FileAndDigsted item : fileAndDigsted) {
+        for (FileAndDigsted item : fileAndDigested) {
             md5.add(item.getDigsted());
             totalTempSize += item.getSize();
         }
@@ -228,11 +266,11 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         List<Integer> blokList = responseJson.getObject("block_list", ArrayList.class);
         //i. 发送分片文件
         for (Integer item : blokList) {
-            FileAndDigsted tempMessage = fileAndDigsted.get(item);
+            FileAndDigsted tempMessage = fileAndDigested.get(item);
             File temFile = new File(tempMessage.getPath());
             JSONObject sendTempRes = postSendTemp(temFile, netDiskPath, uploadid);
             if (sendTempRes.getInteger("errno") != 0) {
-                System.out.println( "上传分片出现了问题:" + name);
+                System.out.println("上传分片出现了问题:" + name);
 
             }
         }
@@ -245,18 +283,18 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         //目录
         File delDir = new File(tempPath);
         try {
-            for (FileAndDigsted item : fileAndDigsted) {
+            for (FileAndDigsted item : fileAndDigested) {
                 File delFile = new File(item.getPath() + "/" + item.getName());
                 boolean isDel = delFile.delete();
-                System.out.println( "上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"));
+                System.out.println("上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"));
 
             }
             //删除目录
             boolean isDel = delDir.delete();
-            System.out.println( "上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"));
+            System.out.println("上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"));
 
         } catch (SecurityException e) {
-            System.out.println( "上传任务结束,删除" + delDir.getName() + "删除失败，权限报错" + e.getMessage());
+            System.out.println("上传任务结束,删除" + delDir.getName() + "删除失败，权限报错" + e.getMessage());
 
         }
     }
@@ -278,9 +316,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         //开始预上传
         String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
         String token = SysConst.getAccessToken();
-        if (token == null) {
-            accessToken();
-        }
+
         URL += token;
         JSONObject requestBody = new JSONObject();
         requestBody.put("path", netDiskFile + "/" + fileName);
@@ -304,7 +340,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         String url = "d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=";
         String token = SysConst.getAccessToken();
         if (token == null) {
-            accessToken();
+
             token = SysConst.getAccessToken();
         }
         url += token;
@@ -328,7 +364,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         String url = "pan.baidu.com/rest/2.0/xpan/file?method=list&access_token=";
         String token = SysConst.getAccessToken();
         if (token == null) {
-            accessToken();
+
             token = SysConst.getAccessToken();
         }
         url += token;
@@ -362,7 +398,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         String url = "pan.baidu.com/2.0/xpan/file?method=create&access_token=";
         String token = SysConst.getAccessToken();
         if (token == null) {
-            accessToken();
+
             token = SysConst.getAccessToken();
         }
         url += token;
@@ -382,17 +418,16 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
      */
     @Override
     public boolean postCreateNetDisk(String path) {
+        FileSetting setting = settingService.getSetting();
         String url = "pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=";
         JSONObject responseBody = null;
-        if (!fileSetting.isEmpty()) {
-            JSONObject requestBody = new JSONObject();
-            requestBody.put("path", path);
-            requestBody.put("size", SysConst.getDefaultDirSize());
-            requestBody.put("isdir", SysConst.getIsDir());
-            HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
-            String bodyStr = response.body();
-            responseBody = JSON.parseObject(bodyStr);
-        }
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("path", path);
+        requestBody.put("size", SysConst.getDefaultDirSize());
+        requestBody.put("isdir", SysConst.getIsDir());
+        HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
+        String bodyStr = response.body();
+        responseBody = JSON.parseObject(bodyStr);
         if (responseBody != null) {
             if (responseBody.getInteger("errno") > 0) {
                 System.out.println("申请在网盘中创建目录异常：\n" + responseBody.getString("errmsg"));
@@ -406,39 +441,4 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
     }
 
 
-    @Override
-    public Integer setAuthIsOk() {
-        return IS_AUTH_OK.incrementAndGet();
-    }
-
-    /**
-     * 设置定时任务的时间
-     *
-     * @return
-     */
-    @Override
-    public void setSchTask(FileSetting fileSetting) {
-        if (!fileSetting.isEmpty()) {
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat Timeformat = new SimpleDateFormat("HH:mm");
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd HH:mm");
-            Date date = null;
-            try {
-                date = Timeformat.parse(fileSetting.getDateTime());
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            if (date != null) {
-                calendar.set(Calendar.HOUR_OF_DAY, date.getHours());
-                calendar.set(Calendar.MINUTE, date.getMinutes());
-//                timerTask.executor().schedule(()->{
-//                    String runDate = dateFormat.format(new Date());
-//                    System.out.println(runDate + "开始运行");
-//                    ScanFileUtil scanFileUtil = new ScanFileUtil(fileSetting.getCachePath(), fileSetting.getPassword());
-//                    scanFileUtil.doSomething(fileSetting.getPath());
-//            });
-        }
-    }
-
-
-}}
+}

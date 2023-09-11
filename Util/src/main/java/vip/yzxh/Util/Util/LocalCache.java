@@ -1,4 +1,4 @@
-package vip.yzxh.Util;
+package vip.yzxh.Util.Util;
 
 import cn.hutool.core.lang.Dict;
 

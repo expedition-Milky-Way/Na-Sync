@@ -2,37 +2,40 @@ package vip.yzxh.BaiduPan.Admin;
 
 import cn.hutool.core.util.ObjectUtil;
 
-import cn.hutool.extra.spring.SpringUtil;
 import com.alibaba.fastjson.JSONObject;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import vip.yzxh.BaiduPan.AsyncResponses.AsyncResponses;
+import vip.yzxh.BaiduPan.BaiduConst.BaiduConst;
+import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
 import vip.yzxh.BaiduPan.NetDisk.RequestNetDiskService;
 import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Setting.Service.FileSettingService;
-import vip.yzxh.Setting.Service.FileSettingServiceImpl;
-import vip.yzxh.Util.ResponseData;
+import vip.yzxh.Util.HttpServerlet.RequestAndResponse;
+import vip.yzxh.Util.HttpServerlet.ResponseData;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingDeque;
 
 @Controller
 public class AdminController {
 
     @Resource
-    private  FileSettingService fileSettingService;
+    private FileSettingService fileSettingService;
     @Resource
     private RequestNetDiskService requestNetDiskService;
 
-
+    public static Queue<RequestAndResponse> requests = new LinkedBlockingDeque<>();
 
     @RequestMapping("/")
     public String index(HttpServletRequest request, ModelMap modelMap) {
@@ -48,71 +51,30 @@ public class AdminController {
             modelMap.put("taskNum", fileSetting.getTaskNum());
             modelMap.put("dateTime", fileSetting.getDateTime());
         }
-        List<Integer> taskNumList = new ArrayList<>();
-        for (Integer i = 1; i < 11; i++) {
-            taskNumList.add(i);
-        }
+        List<Integer> taskNumList = Arrays.asList(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+
         modelMap.put("taskNumList", taskNumList);
         return "Admin/admin-index";
     }
 
     @PostMapping("/add")
-    @ResponseBody
-    public ResponseData submit(FileSetting setting, HttpServletRequest request) {
-        String ctx = request.getHeader("host");
-        if (setting.isEmpty()) {
-            //返回报错信息
-            return new ResponseData("设置不能为空");
-        }
-        JSONObject jsonObject = requestNetDiskService.deviceCode(setting.getAppKey());
-        if (jsonObject.getString("error_description") != null) {
-            //返回报错信息
-            return new ResponseData("AppKey不正确，检查是否有空格存在或是否有误" + jsonObject.getString("error_description"));
-        }
+    public void submit(FileSetting setting, HttpServletRequest request, HttpServletResponse response) {
 
-        fileSettingService.settingFile(setting);
+            fileSettingService.settingFile(setting);
+            TokenResponse tokenResponse = requestNetDiskService.deviceCode(setting.getAppKey());
 
-        jsonObject.put("ctx", ctx);
-        return new ResponseData(jsonObject);
+            AccreditResponser responser = null;
+            if (tokenResponse != null && tokenResponse.getToken() != null) {
+                responser = new AccreditResponser(new ResponseData(), request,response);
+            } else {
+                responser = new AccreditResponser(new ResponseData(ResponseData.DEFAULT_SUCCESS_MESSAGE), request,response);
+            }
+            AsyncResponses.setAccreditQueue(responser);
     }
 
 
-    /**
-     * 下载日志
-     */
-    @PostMapping("/downLog")
-    @ResponseBody
-    public String down() {
-        return null;
-    }
 
 
-    /**
-     * 打开百度网盘验证
-     *
-     * @param
-     */
-    @RequestMapping("/netDiskConfirm")
-    public String getNetDiskConrim(String url, HttpServletRequest request, ModelMap modelMap) {
-        String ctx = "http://" + request.getHeader("host");
-        modelMap.put("ctx", ctx);
-        modelMap.put("url", url);
-        return "Admin/confirmSettting";
-    }
-
-    @PostMapping("/netDiskConfirmOk")
-    @ResponseBody
-    public ResponseData confirmOk() {
-        requestNetDiskService.setAuthIsOk();
-        boolean isok = requestNetDiskService.accessToken();
-        if (isok) {
-            FileSetting fileSetting = fileSettingService.getSetting();
-            requestNetDiskService.setSchTask(fileSetting);
-            return new ResponseData();
-        } else {
-            return new ResponseData("请确认百度网盘扫描二维码完成后点击确认按钮");
-        }
-    }
 
 
 }

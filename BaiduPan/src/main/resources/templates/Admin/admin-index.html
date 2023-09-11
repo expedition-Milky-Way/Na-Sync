@@ -4,44 +4,45 @@
 <head>
     <!-- 引入 layui.css -->
     <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css">
-    <script src="/jquery.min.js"></script>
+    <script type="text/javascript" src="/jquery.min.js"></script>
     <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
 
 </head>
 <script>
     var HttpHost = window.location.url;
     $(function () {
-        layui.use(['laydate'], function () {
+        layui.use(['laydate','layer'], function () {
             let laydate = layui.laydate
+            let layer = layui.layer
             let dateTime = laydate.render({
                 elem: '#time',
                 type: 'time'
             });
         })
-        function firstGetLog(){
-            $.ajax("/getLog", {
-                type: 'POST',
-                responseType: 'json',
-                success: res => {
-                    console.log(res)
-                    if (res!= null){
-                        viewLog(res.data)
-                    }
 
-
-
-                }
-            })
+        function firstGetLog() {
+            // $.ajax("/getLog", {
+            //     type: 'POST',
+            //     responseType: 'json',
+            //     success: res => {
+            //         console.log(res)
+            //         if (res != null) {
+            //             viewLog(res.data)
+            //         }
+            //
+            //
+            //     }
+            // })
         }
 
         //请求日志接口
         setInterval(() => {
-           firstGetLog()
+            firstGetLog()
 
         }, 10000)
 
-       //渲染日志log
-        function viewLog(data){
+        //渲染日志log
+        function viewLog(data) {
             let types = ['正常运行时', '运行时警告', '运行时错误']
             let tbody = document.querySelector('tbody')
             for (let i = 0; i < data.length; i++) {
@@ -95,14 +96,9 @@
                 type: 'POST',
                 dataType: 'json',
                 success: function (res) {
-                    console.log(res)
-                    let code = res.code
-                    let success = res.success
-                    let message = res.message
-                    let data = res.data
-                    let host = "http://" + data.ctx
-                    HttpHost = host
-                    if (code === 200 && success === true) {
+
+                    if (res.success) {
+                        let host = "http://" + data.ctx
                         let content = layer.open({
                             type: 2,
                             content: host + "/netDiskConfirm?url=" + data.qrcode_url,
@@ -115,18 +111,14 @@
                                 layer.close(index)
                             }
                         })
-
                     } else {
-                        alert(message)
+                        alert('表单不允许为空')
                     }
+
                 }
             })
-        } else {
-            alert('表单不允许为空')
         }
-
     }
-
     function authConfirm(ctx) {
         $.ajax(ctx + '/netDiskConfirmOk', {
             type: 'POST',
@@ -200,7 +192,7 @@
                     <span style="font-size: 16px">百度网盘AppId:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="AppId" class="layui-input custom_input"
+                    <input name="AppId" type="password" class="layui-input custom_input"
                            style=" width: 300px" id="app-id" th:value="${appId}">
                 </div>
             </div>
@@ -209,7 +201,7 @@
                     <span style="font-size: 16px">百度网盘AppKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="appKey" class="layui-input custom_input"
+                    <input name="appKey" type="password" class="layui-input custom_input"
                            style=" width: 300px" id="app-key" th:value="${appKey}">
                 </div>
             </div>
@@ -222,7 +214,8 @@
                     <span style="font-size: 16px">百度网盘SecretKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="SecretKey" class="layui-input custom_input" style=" width: 300px" id="secret-key"
+                    <input name="SecretKey" type="password" class="layui-input custom_input" style=" width: 300px"
+                           id="secret-key"
                            th:value="${secretKey}">
                 </div>
             </div>
@@ -231,7 +224,8 @@
                     <span style="font-size: 16px">百度网盘SignKey:&nbsp;</span>
                 </div>
                 <div class="layui-col-md9">
-                    <input name="SignKey" class="layui-input custom_input" style=" width: 300px" id="sign-key"
+                    <input name="SignKey" type="password" class="layui-input custom_input" style=" width: 300px"
+                           id="sign-key"
                            th:value="${signKey}">
                 </div>
             </div>
@@ -258,9 +252,8 @@
                 <div th:if="${btnState == 0}">
                     <button class="layui-btn" onclick="submitForm()">添加</button>
                 </div>
-                <div th:if="${btnState == 1}">
-                    <button class="layui-btn" onclick="submitForm()">修改</button>
-                </div>
+                <button class="layui-btn" onclick="submitForm()">修改</button>
+
             </div>
             <div class="layui-col-md5">
                 <button class="layui-btn" id="downloadXls" onclick="downLoadLog()">下载运行日志</button>
