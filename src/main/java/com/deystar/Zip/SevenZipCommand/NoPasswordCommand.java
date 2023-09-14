@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @Author YeungLuhyun
  **/
-public class NoPasswordCommand {
+public  class NoPasswordCommand {
 
     private String command = "";
 

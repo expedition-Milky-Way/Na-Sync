@@ -5,6 +5,7 @@ import com.deystar.UserTyper.UserTyper;
 import com.deystar.Zip.Entity.FileListBean;
 import com.deystar.Zip.SevenZipCommand.CommandBuilder;
 import com.deystar.Zip.SevenZipCommand.SevenZipCommand;
+import com.deystar.ZipFourJ.FileToZip;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -35,9 +36,9 @@ public class GoZip {
         try {
             this.zip(command);
         } catch (IOException | InterruptedException e) {
-
-            String message = new RuntimeException(e).getMessage();
-            System.out.println("命令："+command+" 异常："+message);
+            String message = e.getStackTrace()[0].toString();
+            System.out.println("命令：" + command + " 超出长度，转换为zip4j");
+            FileToZip.zip(bean, user);
         }
     }
 
@@ -56,7 +57,8 @@ public class GoZip {
 
         int exitVal = proc.waitFor();
         System.out.println("Process exitValue: " + exitVal);
-        
+        ResultState.success(bean.getZipName());
+        System.out.println(bean.getZipName() + " zip completed");
     }
 
     public GoZip(UserTyper user, FileListBean bean) {

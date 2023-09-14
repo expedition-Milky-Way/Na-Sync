@@ -1,7 +1,9 @@
 package com.deystar.Result;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,12 +15,13 @@ public class ResultState {
     /**
      * 存放压缩包包名的list。只有线程结束才能add到这里
      */
-    private static Set<String> resultList = new HashSet<>();
+    private volatile static List<String> resultList = new ArrayList<>();
 
 
     public static synchronized void success(String path) {
 
         if (!new File(path).exists()) {
+            System.out.println(path + "没压缩完");
             return;
         }
         resultList.add(path);
@@ -27,7 +30,7 @@ public class ResultState {
     }
 
 
-    public static Boolean isAllSuccess(Integer size) {
+    public static synchronized Boolean isAllSuccess(Integer size) {
         return resultList.size() == size;
     }
 

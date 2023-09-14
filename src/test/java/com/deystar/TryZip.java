@@ -14,10 +14,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -76,9 +73,12 @@ public class TryZip {
         ExcelService excelService = new AfterZip();
         excelService.todo(userTyper.getExcelOutput(), fieldBeans);
         //5.等待所有任务完成后关闭线程池
-        while (executor.getActiveCount() > 0 && !executor.getQueue().isEmpty()) {
+        while (!ResultState.isAllSuccess(taskSize)) {
 
         }
         executor.shutdown();
+
     }
+
+
 }

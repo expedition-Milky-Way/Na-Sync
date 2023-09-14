@@ -1,5 +1,7 @@
 package com.deystar.StreamToZip;
 
+import com.deystar.UserTyper.UserTyper;
+import com.deystar.Zip.Entity.FileListBean;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
@@ -13,10 +15,8 @@ import java.util.List;
  */
 public interface StreamZipService {
 
-    void zipOutputStreamExample(File outputZipFile, List<File> filesToAdd, ZipParameters zipParameters, String password)
-            throws IOException;
+    void zipOutputStreamExample(File outputZipFile, FileListBean bean, UserTyper userTyper);
 
 
-    ZipParameters buildZipParameters(boolean encrypt,
-                                     EncryptionMethod encryptionMethod, AesKeyStrength aesKeyStrength);
+
 }
