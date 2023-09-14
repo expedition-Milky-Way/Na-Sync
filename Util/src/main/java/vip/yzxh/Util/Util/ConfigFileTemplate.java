@@ -5,6 +5,7 @@ import java.nio.file.Files;
 
 /**
  * @Author YeungLuhyun
+ * 写入文件和读取文件的工具类
  **/
 public class ConfigFileTemplate {
 

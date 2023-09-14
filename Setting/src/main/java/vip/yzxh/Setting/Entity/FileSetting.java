@@ -21,17 +21,19 @@ public class FileSetting {
 
     private String password;
 
-    private String path;
+    private String path; //需要被压缩的路径
 
-    private String cachePath;
+    private String cachePath; //缓存路径
 
-    private String dateTime;
+    private String dateTime; // 进行上传任务的开始时间
 
     private Integer taskNum; //最大并行任务数量
 
-    private Long oneFileSize;
+    private Long oneFileSize; // 单个文件最大大小
 
-    private Integer version;
+    private Integer version; //版本号
+
+    private String uri; //回调url
 
 
     /**
@@ -58,7 +60,7 @@ public class FileSetting {
 
     public FileSetting(String appId, String secretKey, String signKey,
                        String appKey, String password, String path, String cachePath,
-                       String dateTime, Integer taskNum, Integer version) {
+                       String dateTime, Integer taskNum, Integer version,String uri) {
 
         this.appId = appId;
         this.secretKey = secretKey;
@@ -70,6 +72,7 @@ public class FileSetting {
         this.dateTime = dateTime;
         this.taskNum = taskNum;
         this.version = version;
+        this.uri = uri;
     }
 
 
@@ -145,10 +148,6 @@ public class FileSetting {
         this.taskNum = taskNum;
     }
 
-    @Override
-    public String toString() {
-        return JSON.toJSONString(this);
-    }
 
     public Long getOneFileSize() {
         return oneFileSize;
@@ -165,4 +164,18 @@ public class FileSetting {
     public void setVersion(Integer version) {
         this.version = version;
     }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    @Override
+    public String toString() {
+        return JSON.toJSONString(this);
+    }
+
 }

@@ -1,7 +1,7 @@
-package vip.yzxh.BaiduPan.Admin;
+package vip.yzxh.BaiduPan.Admin.Controller;
 
 import vip.yzxh.Util.HttpServerlet.RequestAndResponse;
-import vip.yzxh.Util.HttpServerlet.ResponseData;
+import vip.yzxh.Util.HttpServerlet.Response.ResponseData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

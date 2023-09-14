@@ -2,12 +2,12 @@ package vip.yzxh.BaiduPan.BaiduPanResponse;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
-import vip.yzxh.Util.HttpServerlet.ResponseData;
+import vip.yzxh.Util.HttpServerlet.Response.ResponseData;
 
 /**
  * @Author YeungLuhyun
  **/
-public class TokenResponse extends ResponseData {
+public class TokenResponse {
 
     @JSONField(name = "expires_in")
     private Integer expires;
@@ -23,16 +23,12 @@ public class TokenResponse extends ResponseData {
 
 
     public TokenResponse(Integer expires, String token, String refreshToken, String scope) {
-        super(true, ResponseData.DEFAULT_SUCCESS_CODE, ResponseData.DEFAULT_SUCCESS_MESSAGE, null);
         this.expires = expires;
         this.token = token;
         this.refreshToken = refreshToken;
         this.scope = scope;
     }
 
-    public TokenResponse(Boolean success, Integer code, String msg) {
-        super(success, code, msg, null);
-    }
 
     public Integer getExpires() {
         return expires;

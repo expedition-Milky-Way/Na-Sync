@@ -8,22 +8,27 @@ import com.alibaba.fastjson.JSONObject;
 
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.stereotype.Service;
 import vip.yzxh.BaiduPan.BaiduConst.BaiduConst;
+import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
 import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
 import vip.yzxh.BaiduPan.BaiduPanResponse.UserMsg;
 import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Setting.Service.FileSettingService;
 import vip.yzxh.Util.Util.FileAndDigsted;
-import vip.yzxh.Util.HttpServerlet.ResponseData;
+import vip.yzxh.Util.HttpServerlet.Response.ResponseData;
 import vip.yzxh.Util.Util.SysConst;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.IOException;
 import java.net.HttpCookie;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 杨名
@@ -36,11 +41,6 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
     @Resource
     private FileSettingService settingService;
 
-
-    private static AtomicInteger IS_AUTH_OK = new AtomicInteger(0);
-    //定时任务  每一天
-    private static final long PERIOD_DAY = 24 * 60 * 60 * 1000;
-
     /**
      * 获取设备码，用户授权码，二维码
      *
@@ -50,86 +50,65 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
      * @return qrcode_url 二维码
      */
     @Override
-    public TokenResponse deviceCode(String appKey) {
+    public DeviceCodeResponse deviceCode(String appKey) {
         String bodyStr = null;
-        HttpCookie cookie = null;
         HttpResponse deviceResponse = null;
         try {
             String deviceURI = "https://openapi.baidu.com/oauth/2.0/device/code?" +
                     "response_type=device_code&client_id=" + appKey + "&scope=basic,netdisk";
             deviceResponse = HttpRequest.get(deviceURI).execute();
             bodyStr = deviceResponse.body();
-            cookie = deviceResponse.getCookie(BaiduConst.RESP_BAIDU_COOKIE);
         } finally {
             if (deviceResponse != null) {
                 deviceResponse.close();
             }
         }
-        TokenResponse tokenResponse = null;
-        if (bodyStr != null && cookie != null){
-            String body = bodyStr.replace("\\", "");
-            JSONObject obj = JSONObject.parseObject(body);
-            if (obj.containsKey(BaiduConst.RESP_DEVICE_CODE) && obj.containsKey(BaiduConst.RESP_USER_CODE)) {
-                // 授权并获取token
-                String deviceCode = obj.getString(BaiduConst.RESP_DEVICE_CODE);
-                String userCode = obj.getString(BaiduConst.RESP_USER_CODE);
-                Integer interval = obj.getInteger(BaiduConst.RESP_INTERVAL);
-                tokenResponse = accredit(deviceCode, userCode, interval, cookie);
-            }
-            BaiduConst.setTokenMsg(tokenResponse);
-        }
-        return tokenResponse;
+        return JSONObject.parseObject(bodyStr, DeviceCodeResponse.class);
     }
 
     /**
-     * 授权并获取token
+     * 通过授权码模式进行授权
      *
-     * @param deviceCode 设备码
-     * @param userCode   用户码
-     * @param interval   轮训时间（秒）
-     * @author Yeungluhyun
+     * @return
      */
-    private TokenResponse accredit(String deviceCode,
-                                   String userCode,
-                                   Integer interval,
-                                   HttpCookie cookies) {
-        // 1. 访问page url
-        HttpResponse mvcRes = null;
-        try {
-            String mvcUrl = "https://openapi.baidu.com/device";
-            mvcRes = HttpRequest.post(mvcUrl)
-                    .cookie(cookies)
-                    .disableCache()
-                    .execute();
-        } finally {
-            if (mvcRes != null) mvcRes.close();
+    @Override
+    public Object getAuthor(FileSetting setting) {
+        String url = "https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=:appKey" +
+                "&redirect_uri=:uri&scope=basic,netdisk&qrcode=1";
+        if (setting == null || setting.getAppKey() == null || setting.getAppId() == null || setting.getUri() == null) {
+            return null;
         }
+        url = url.replace(":appKey", setting.getAppKey())
+                .replace(":uri", "http://deystar.com.cn:8828")
+                .replace(":appId", setting.getAppId());
 
-        //授权
-        HttpResponse accreditRes = null;
+        // 创建http GET请求
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet(url);
+        CloseableHttpResponse response = null;
         try {
-            String accreditUrl = "https://openapi.baidu.com/device?code=:code=page&redirect_uri=&force_login=";
-            accreditUrl = accreditUrl.replace(":code", userCode);
-            accreditRes = HttpRequest.get(accreditUrl)
-                    .cookie(cookies)
-                    .disableCache()
-                    .execute();
-        } finally {
-            if (accreditRes != null)
-                accreditRes.close();
-        }
+            // 执行请求
+            response = httpclient.execute(httpGet);
+            // 判断返回状态是否为200
+            if (response.getStatusLine().getStatusCode() == 200) {
+                //请求体内容
 
-        //获取token相关
-        TokenResponse tokenResponse = null;
-        do {
-            tokenResponse = getToken(deviceCode);
-            try {
-                Thread.sleep(interval * 1000);
-            } catch (InterruptedException e) {
-                break;
             }
-        } while (tokenResponse == null || tokenResponse.getToken() == null);
-        return tokenResponse;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (response != null) {
+                    response.close();
+                }
+                //相当于关闭浏览器
+                httpclient.close();
+            } catch (Exception e) {
+
+            }
+        }
+
+        return null;
     }
 
 
@@ -142,14 +121,16 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
      * <p>
      * 关于应用的相关信息，您可在控制台，点进去您对应的应用，查看
      */
-    private TokenResponse getToken(String deviceCode) {
+    @Override
+    public TokenResponse getToken(String deviceCode) {
         FileSetting setting = settingService.getSetting();
+        TokenResponse tokenResponse = null;
         HttpResponse response = null;
         try {
             String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=device_token&" +
                     "code=" + deviceCode + "&client_id=" + setting.getAppKey() + "&client_secret=" + setting.getSecretKey();
-            url = url.replace(":key", setting.getAppKey());
-            response = HttpRequest.post(url).disableCache().execute();
+
+            response = HttpRequest.get(url).disableCache().execute();
         } finally {
             if (response != null) {
                 response.close();
@@ -159,13 +140,47 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
             String bodyStr = response.body();
             bodyStr = bodyStr.replace("\\", "");
             JSONObject json = JSONObject.parseObject(bodyStr);
-            if (json != null && json.containsKey(BaiduConst.RESP_ERROR_NO) && json.getInteger(BaiduConst.RESP_ERROR_NO) == 0) {
-                return JSONObject.parseObject(bodyStr, TokenResponse.class);
+            if (json != null && !json.containsKey(BaiduConst.RESP_ERROR_NO)) {
+                tokenResponse = JSONObject.parseObject(bodyStr, TokenResponse.class);
+                return tokenResponse.getToken() == null ? null : tokenResponse;
             }
             System.out.println("请求token异常");
         }
 
-        return new TokenResponse(false, ResponseData.DEFAULT_ERROR_CODE, "回调异常：：：");
+        return null;
+    }
+
+    /**
+     * 轮训获取token
+     * 要先扫码，然后再去轮询
+     *
+     * @param deviceCode 设备码
+     * @param expires    超时时间
+     * @param sleep      间隔
+     * @return
+     */
+    @Override
+    public TokenResponse getToken(String deviceCode, Integer expires, Integer sleep) {
+
+        sleep *= 1000;
+        TokenResponse tokenResponse = null;
+        long tt = 0L;
+        while (tt / 1000L <= expires) {
+            long begin = System.currentTimeMillis();
+            tokenResponse = this.getToken(deviceCode);
+            if (tokenResponse != null) {
+                BaiduConst.setTokenMsg(tokenResponse);
+                break;
+            }
+            long end = System.currentTimeMillis();
+            tt += (end - begin) + sleep;
+            try {
+                Thread.sleep(sleep);
+            } catch (InterruptedException ignored) {
+
+            }
+        }
+        return tokenResponse;
     }
 
     /**
@@ -198,7 +213,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
             throw new RuntimeException();
         }
         UserMsg userMsg = requestUsInfo(tokenResponse.getToken());
-        if (userMsg == null || !userMsg.getSuccess()) {
+        if (userMsg == null) {
             this.freshToken();
             return getBaiduUsInfo();
         }
@@ -226,8 +241,8 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         JSONObject body = JSON.parseObject(bodyStr);
 
         if (body != null &&
-                body.containsKey(BaiduConst.RESP_ERROR_NO) &&
-                body.getInteger(BaiduConst.RESP_ERROR_NO) == 0) {
+                !body.containsKey(BaiduConst.RESP_ERROR_NO) &&
+                body.getInteger(BaiduConst.RESP_ERROR_NO) != 0) {
             UserMsg msg = JSONObject.parseObject(body.toJSONString(), UserMsg.class);
             return msg;
         }

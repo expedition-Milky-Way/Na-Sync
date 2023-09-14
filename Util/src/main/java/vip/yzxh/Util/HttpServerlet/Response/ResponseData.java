@@ -1,4 +1,4 @@
-package vip.yzxh.Util.HttpServerlet;
+package vip.yzxh.Util.HttpServerlet.Response;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;

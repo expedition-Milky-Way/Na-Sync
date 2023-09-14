@@ -1,8 +1,12 @@
 package vip.yzxh.BaiduPan.BaiduConst;
 
-import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCode;
+import org.springframework.util.ResourceUtils;
+import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
 import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
 import vip.yzxh.BaiduPan.BaiduPanResponse.UserMsg;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * @Author YeungLuhyun
@@ -13,7 +17,7 @@ public class BaiduConst {
 
     private static UserMsg userMsg;
 
-    private static DeviceCode deviceCode;
+    private static DeviceCodeResponse deviceCode;
 
     private static TokenResponse tokenMsg;
 
@@ -26,7 +30,16 @@ public class BaiduConst {
     public static final String RESP_INTERVAL = "interval";
 
     public static final String RESP_BAIDU_COOKIE = "BAIDUID";
-
+    public static String RESP_BAIDU_HTML(){
+        String path = "";
+        try {
+            path = ResourceUtils.getURL("classpath:").getPath();
+            path = new File(path).getAbsolutePath() + "/templates/BaiduResp/";
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return path;
+    }
     public static synchronized void setUserMsg(UserMsg val) {
         userMsg = val;
     }
@@ -35,13 +48,7 @@ public class BaiduConst {
         return userMsg;
     }
 
-    public static synchronized void setDeviceCode(DeviceCode val) {
-        deviceCode = val;
-    }
 
-    public static synchronized DeviceCode getDeviceCode() {
-        return deviceCode;
-    }
 
     public static TokenResponse getTokenMsg() {
         return tokenMsg;
@@ -50,4 +57,7 @@ public class BaiduConst {
     public static void setTokenMsg(TokenResponse tokenMsg) {
         BaiduConst.tokenMsg = tokenMsg;
     }
+
+
+
 }

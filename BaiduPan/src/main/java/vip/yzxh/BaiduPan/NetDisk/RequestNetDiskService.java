@@ -2,17 +2,24 @@ package vip.yzxh.BaiduPan.NetDisk;
 
 import com.alibaba.fastjson.JSONObject;
 
+import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
 import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
 
+import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Util.Util.FileAndDigsted;
 
 import java.util.List;
 
 
 public interface RequestNetDiskService {
-    TokenResponse deviceCode(String appKey);
+    DeviceCodeResponse deviceCode(String appKey);
 
 
+    Object getAuthor(FileSetting setting);
+
+    TokenResponse getToken(String deviceCode);
+
+    TokenResponse getToken(String deviceCode, Integer expires, Integer sleep);
 
     Object getBaiduUsInfo();
     /**

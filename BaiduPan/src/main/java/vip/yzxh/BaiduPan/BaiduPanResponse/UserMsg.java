@@ -2,7 +2,7 @@ package vip.yzxh.BaiduPan.BaiduPanResponse;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import vip.yzxh.Util.Const.VipTypeEnums;
-import vip.yzxh.Util.HttpServerlet.ResponseData;
+import vip.yzxh.Util.HttpServerlet.Response.ResponseData;
 
 /**
  * @Author YeungLuhyun

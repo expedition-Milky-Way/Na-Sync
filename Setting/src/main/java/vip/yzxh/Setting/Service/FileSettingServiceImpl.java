@@ -35,9 +35,7 @@ public class FileSettingServiceImpl implements FileSettingService {
      */
     @Override
     public Object settingFile(FileSetting fileSetting) {
-        if (fileSetting.getVersion() == null) {
-            fileSetting.setVersion(version.incrementAndGet());
-        }
+        fileSetting.setVersion(version.incrementAndGet());
         setting = fileSetting;
         ConfigFileTemplate.writeFile(genFilePath(), fileSetting.toString());
         return null;

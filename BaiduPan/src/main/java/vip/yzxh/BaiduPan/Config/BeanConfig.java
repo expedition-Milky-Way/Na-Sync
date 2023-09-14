@@ -2,10 +2,8 @@ package vip.yzxh.BaiduPan.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import vip.yzxh.BaiduPan.Admin.AccreditResponser;
-import vip.yzxh.BaiduPan.Admin.AdminController;
+import vip.yzxh.BaiduPan.Admin.Controller.AccreditResponser;
 import vip.yzxh.BaiduPan.AsyncResponses.AsyncResponses;
-import vip.yzxh.Util.HttpServerlet.RequestAndResponse;
 
 import java.io.IOException;
 
