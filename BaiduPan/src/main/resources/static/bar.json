@@ -1,0 +1,43 @@
+{
+  "bar": [
+    {
+      "title": "应用情况",
+      "isRoot": true,
+      "url": null,
+      "subBar": [
+        {
+          "title": "压缩任务",
+          "isRoot": false,
+          "url": "/task/zip"
+        },
+        {
+          "title": "上传任务",
+          "isRoot": false,
+          "url": "/task/upload"
+        },
+        {
+          "title": "云端目录",
+          "isRoot": false,
+          "url": "/files"
+        }
+      ]
+    },
+    {
+      "title": "设置",
+      "isRoot": true,
+      "url": null,
+      "subBar": [
+        {
+          "title": "用户设置",
+          "url": "",
+          "isRoot": false
+        },
+        {
+          "title": "压缩设置",
+          "url": "",
+          "isRoot": false
+        }
+      ]
+    }
+  ]
+}

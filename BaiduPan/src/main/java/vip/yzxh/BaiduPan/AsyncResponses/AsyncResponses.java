@@ -14,23 +14,22 @@ public class AsyncResponses {
     /**
      * 授权请求与回调
      * accredit`s request and result`s return
-     *
      */
-    private static Queue<AccreditResponser> accreditQueue = new LinkedBlockingDeque<>();
+    private static final Queue<AccreditResponser> accreditQueue = new LinkedBlockingDeque<>();
 
 
     public static AccreditResponser getAccreditQueue() {
-        synchronized (accreditQueue){
-            if (accreditQueue.size() > 0){
+        synchronized (accreditQueue) {
+            if (!accreditQueue.isEmpty()) {
                 return accreditQueue.poll();
             }
-           return null;
+            return null;
         }
 
     }
 
     public static void setAccreditQueue(AccreditResponser accreditResponser) {
-        synchronized (accreditQueue){
+        synchronized (accreditQueue) {
             accreditQueue.offer(accreditResponser);
         }
     }

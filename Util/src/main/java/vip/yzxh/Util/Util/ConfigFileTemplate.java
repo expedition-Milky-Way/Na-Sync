@@ -1,6 +1,7 @@
 package vip.yzxh.Util.Util;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 
 /**
@@ -9,14 +10,14 @@ import java.nio.file.Files;
  **/
 public class ConfigFileTemplate {
 
-    public static void writeFile(File writeTo, String content) {
+    public static void writeFile(String writeTo, String content) {
 
         OutputStream stream = null;
         try {
-            stream = Files.newOutputStream(writeTo.toPath());
+            stream = new FileOutputStream(writeTo);
             byte[] bytes = content.getBytes();
             stream.write(bytes, 0, bytes.length);
-            System.out.println(writeTo.getAbsolutePath());
+            System.out.println(writeTo);
         } catch (IOException e) {
             System.out.println(e);
         } finally {
@@ -31,28 +32,27 @@ public class ConfigFileTemplate {
     }
 
 
-    public static String readFile(File needRead) {
-        if (!needRead.exists()) return "";
-        InputStream stream = null;
-        StringBuffer result = new StringBuffer("");
+    public static String readFile(String needRead) {
+        if (!new File(needRead).exists()) return "";
+        BufferedReader in = null;
+        StringBuilder builder = new StringBuilder("");
         try {
-            stream = Files.newInputStream(needRead.toPath());
-            int content ;
-            while ((content = stream.read()) != -1){
-                result.append((char)content);
+            in = new BufferedReader(new InputStreamReader(new FileInputStream(needRead), Charset.forName("utf8")));
+            int c;
+            while ((c = in.read()) != -1) {
+                builder.append((char) c);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }finally {
-            if (stream != null){
+        } finally {
+            if (in != null) {
                 try {
-                    stream.close();
-                    System.gc();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    in.close();
+                } catch (IOException ignored) {
+
                 }
             }
         }
-        return result.toString();
+        return builder.toString();
     }
 }

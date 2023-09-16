@@ -2,18 +2,21 @@ package vip.yzxh.Setting.Service;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
+import org.apache.tomcat.jni.Proc;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Util.Util.ConfigFileTemplate;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -60,7 +63,7 @@ public class FileSettingServiceImpl implements FileSettingService {
      *
      * @return
      */
-    private File genFilePath() {
+    private String genFilePath() {
         File path = new File(path());
         if (!path.exists()) {
             path.mkdirs();
@@ -68,7 +71,7 @@ public class FileSettingServiceImpl implements FileSettingService {
         String dir = path.getAbsolutePath();
         if (dir.contains("\\")) dir = dir.replace("\\", "/");
         dir += "/" + SETTING_FILE_NAME;
-        return new File(dir);
+        return dir;
     }
 
     private String path() {

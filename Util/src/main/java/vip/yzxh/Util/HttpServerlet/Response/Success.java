@@ -19,4 +19,10 @@ public class Success extends ResponseData {
     }
 
 
+    public Success(String message, Object data, String api) {
+        super(true, DEFAULT_SUCCESS_CODE, message, data);
+        this.jump = api;
+    }
+
+
 }

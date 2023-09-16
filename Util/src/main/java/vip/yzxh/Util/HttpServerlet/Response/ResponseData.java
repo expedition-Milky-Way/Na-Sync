@@ -1,9 +1,7 @@
 package vip.yzxh.Util.HttpServerlet.Response;
 
 import com.alibaba.fastjson.JSONObject;
-import lombok.Data;
 
-@Data
 public class ResponseData {
 
     public static Integer DEFAULT_SUCCESS_CODE = 200;
@@ -21,6 +19,8 @@ public class ResponseData {
     public String message;
 
     public Object data;
+
+    public String jump;
 
     public ResponseData(Boolean success,Integer code, String message, Object data) {
         this.success = success;
@@ -42,6 +42,9 @@ public class ResponseData {
         this.data = data;
     }
 
+    /**
+     * 请求失败构造方法
+     */
     public ResponseData(String message){
         this.success = false;
         this.code = DEFAULT_ERROR_CODE;
@@ -52,5 +55,78 @@ public class ResponseData {
     @Override
     public String toString() {
         return JSONObject.toJSONString(this);
+    }
+
+
+    public static Integer getDefaultSuccessCode() {
+        return DEFAULT_SUCCESS_CODE;
+    }
+
+    public static void setDefaultSuccessCode(Integer defaultSuccessCode) {
+        DEFAULT_SUCCESS_CODE = defaultSuccessCode;
+    }
+
+    public static String getDefaultSuccessMessage() {
+        return DEFAULT_SUCCESS_MESSAGE;
+    }
+
+    public static void setDefaultSuccessMessage(String defaultSuccessMessage) {
+        DEFAULT_SUCCESS_MESSAGE = defaultSuccessMessage;
+    }
+
+    public static Integer getDefaultErrorCode() {
+        return DEFAULT_ERROR_CODE;
+    }
+
+    public static void setDefaultErrorCode(Integer defaultErrorCode) {
+        DEFAULT_ERROR_CODE = defaultErrorCode;
+    }
+
+    public static String getDefaultErrorMessage() {
+        return DEFAULT_ERROR_MESSAGE;
+    }
+
+    public static void setDefaultErrorMessage(String defaultErrorMessage) {
+        DEFAULT_ERROR_MESSAGE = defaultErrorMessage;
+    }
+
+    public Boolean getSuccess() {
+        return success;
+    }
+
+    public void setSuccess(Boolean success) {
+        this.success = success;
+    }
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
+    }
+
+    public String getJump() {
+        return jump;
+    }
+
+    public void setJump(String jump) {
+        this.jump = jump;
     }
 }

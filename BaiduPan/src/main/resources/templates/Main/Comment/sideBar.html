@@ -1,0 +1,86 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入 layui.css -->
+
+    <!-- 引入 layui.css -->
+    <link rel="stylesheet" href="https://layui.itze.cn/layui-v2.6.8/layui/css/layui.css">
+
+    <!-- 引入 layui.js -->
+    <script src="https://layui.itze.cn/layui-v2.6.8/layui/layui.js"></script>
+    <script
+            src="https://code.jquery.com/jquery-2.2.4.js"
+            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+            crossorigin="anonymous"></script>
+
+    <title></title>
+</head>
+<body>
+
+<div th:fragment="sideBar">
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <ul id="bar" class='layui-nav layui-nav-tree ' lay-shrink="all" lay-filter='layadmin-system-side-menu'>
+            </ul>
+        </div>
+
+    </div>
+    <script type="text/javascript">
+
+        //JS
+        $(function () {
+
+            layui.use(['element', 'layer', 'jquery'], function () {
+                var element = layui.element;
+                element.render('nav')
+                var layjquery = layui.jquery
+                /**
+                 * 请求一次Bar信息
+                 */
+                $.ajax('/bar', {
+                    dataType: 'json',
+                    success: function (res) {
+                        let barList = res.data.bar;
+                        let html = ""
+                        let hasOpen = false
+                        for (let i = 0; i < barList.length; i++) {
+                            let item = barList[i];
+                            if (!hasOpen && item.subBar !== null && item.subBar.length > 0) {
+                                html += "<li class='layui-nav-item layui-nav-itemed'>"
+                                html += "<a href='javascript:;'>" + item.title + "</a>"
+                                hasOpen = true
+                            } else {
+                                html += "<li class='layui-nav-item'>"
+                                html += "<a class='' href='javascript:;' >" + item.title + "</a>"
+                            }
+                            if (item.isRoot && item.subBar !== null && item.subBar.length > 0) {
+                                html += "<dl class='layui-nav-child'>"
+                                for (let j = 0; j < item.subBar.length; j++) {
+                                    let sub = item.subBar[j];
+                                    html += "<dd><a href='" + sub.url + "'>" + sub.title + "</a></dd>"
+                                }
+                                html += "</dl>"
+                            }
+                            html += "</li>"
+                        }
+                        console.log(html)
+                        // $("#bar").html(html)
+                        layjquery("#bar").html(html)
+                    }
+                })
+
+                element.on('nav(layadmin-system-side-menu)', function (res) {
+                    console.log(res)
+                })
+
+
+            })
+
+        })
+
+
+    </script>
+</div>
+
+</body>
+</html>

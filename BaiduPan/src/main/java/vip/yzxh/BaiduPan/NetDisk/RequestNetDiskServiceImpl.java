@@ -7,12 +7,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 
-import lombok.extern.slf4j.Slf4j;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+
 import org.springframework.stereotype.Service;
 import vip.yzxh.BaiduPan.BaiduConst.BaiduConst;
 import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
@@ -35,7 +31,6 @@ import java.util.*;
  * 请求
  */
 @Service
-@Slf4j
 public class RequestNetDiskServiceImpl implements RequestNetDiskService {
 
     @Resource
@@ -66,50 +61,6 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         return JSONObject.parseObject(bodyStr, DeviceCodeResponse.class);
     }
 
-    /**
-     * 通过授权码模式进行授权
-     *
-     * @return
-     */
-    @Override
-    public Object getAuthor(FileSetting setting) {
-        String url = "https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=:appKey" +
-                "&redirect_uri=:uri&scope=basic,netdisk&qrcode=1";
-        if (setting == null || setting.getAppKey() == null || setting.getAppId() == null || setting.getUri() == null) {
-            return null;
-        }
-        url = url.replace(":appKey", setting.getAppKey())
-                .replace(":uri", "http://deystar.com.cn:8828")
-                .replace(":appId", setting.getAppId());
-
-        // 创建http GET请求
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet(url);
-        CloseableHttpResponse response = null;
-        try {
-            // 执行请求
-            response = httpclient.execute(httpGet);
-            // 判断返回状态是否为200
-            if (response.getStatusLine().getStatusCode() == 200) {
-                //请求体内容
-
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (response != null) {
-                    response.close();
-                }
-                //相当于关闭浏览器
-                httpclient.close();
-            } catch (Exception e) {
-
-            }
-        }
-
-        return null;
-    }
 
 
     /**
@@ -222,7 +173,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         SysConst.setMaxSize(oneFileSize);
         SysConst.setMaxTempSize(tempSize);
         BaiduConst.setUserMsg(userMsg);
-        return null;
+        return userMsg;
     }
 
 

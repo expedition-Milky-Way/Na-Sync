@@ -34,7 +34,7 @@ public class BaiduConst {
         String path = "";
         try {
             path = ResourceUtils.getURL("classpath:").getPath();
-            path = new File(path).getAbsolutePath() + "/templates/BaiduResp/";
+            path = new File(path).getAbsolutePath() + "/BaiduResp/";
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

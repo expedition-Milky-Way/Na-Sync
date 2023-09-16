@@ -23,19 +23,19 @@ public class BeanConfig {
         {
             while (true) {
                 AccreditResponser responser = AsyncResponses.getAccreditQueue();
-                try {
+
                     if (responser!= null){
-                        responser
-                                .getRequestAndResponse()
-                                .getResponse()
-                                .getOutputStream()
-                                .write(responser.getResponseData().toString().getBytes());
+                        try {
+                            responser
+                                    .getRequestAndResponse()
+                                    .getResponse()
+                                    .getOutputStream()
+                                    .write(responser.getResponseData().toString().getBytes());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
 
-                    Thread.sleep(12000);
-                } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
             }
         });
         thread.setDaemon(true);

@@ -15,7 +15,7 @@ public interface RequestNetDiskService {
     DeviceCodeResponse deviceCode(String appKey);
 
 
-    Object getAuthor(FileSetting setting);
+
 
     TokenResponse getToken(String deviceCode);
 
