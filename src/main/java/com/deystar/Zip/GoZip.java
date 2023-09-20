@@ -1,13 +1,16 @@
 package com.deystar.Zip;
 
+import com.deystar.Const.SystemEnums;
 import com.deystar.Result.ResultState;
 import com.deystar.UserTyper.UserTyper;
 import com.deystar.Zip.Entity.FileListBean;
+
 import com.deystar.Zip.SevenZipCommand.CommandBuilder;
-import com.deystar.Zip.SevenZipCommand.SevenZipCommand;
-import com.deystar.ZipFourJ.FileToZip;
+
+import com.deystar.Zip.ZipFourJ.FileToZip;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -17,27 +20,16 @@ public class GoZip {
     private FileListBean bean;
 
     private UserTyper user;
-    SevenZipCommand sevenZipCommand = new CommandBuilder();
+
+    private SystemEnums systemEnums;
 
     public void start() {
-
-        String command;
-        if (user.getIsEncryption()) {
-            command = sevenZipCommand.hasPassword(user.getSevenZipPath())
-                    .outPut(bean.getZipName()).password(user.getPassword())
-                    .append(bean.getFileLit())
-                    .build();
-        } else {
-            command = sevenZipCommand.noPassword(user.getSevenZipPath())
-                    .outPut(bean.getZipName())
-                    .append(bean.getFileLit())
-                    .build();
-        }
+        int superThreadNum = Runtime.getRuntime().availableProcessors();
+        String command = new CommandBuilder().outPut(superThreadNum, bean.getZipName(), systemEnums)
+                .password(user.getPassword()).append(bean.getFileLit()).build();
         try {
             this.zip(command);
         } catch (IOException | InterruptedException e) {
-            String message = e.getStackTrace()[0].toString();
-            System.out.println("命令：" + command + " 超出长度，转换为zip4j");
             FileToZip.zip(bean, user);
         }
     }
@@ -45,25 +37,23 @@ public class GoZip {
     public void zip(String command) throws IOException, InterruptedException {
         Process proc = Runtime.getRuntime().exec(command);
         InputStream stdIn = proc.getInputStream();
-        InputStreamReader isr = new InputStreamReader(stdIn, StandardCharsets.UTF_8);
+        InputStreamReader isr = new InputStreamReader(stdIn, Charset.forName("GBK"));
         BufferedReader br = new BufferedReader(isr);
 
-        String line = null;
-
-
-        while ((line = br.readLine()) != null)
-            System.out.println(line);
+        String line = br.lines().toString();
 
 
         int exitVal = proc.waitFor();
-        System.out.println("Process exitValue: " + exitVal);
+        if (exitVal != 0) {
+            ResultState.error(line + " 压缩失败:\n" + bean.toString());
+            return;
+        }
         ResultState.success(bean.getZipName());
-        System.out.println(bean.getZipName() + " zip completed");
     }
 
-    public GoZip(UserTyper user, FileListBean bean) {
+    public GoZip(UserTyper user, FileListBean bean, SystemEnums enums) {
         this.user = user;
         this.bean = bean;
-
+        this.systemEnums = enums;
     }
 }

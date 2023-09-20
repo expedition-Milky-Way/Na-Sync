@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="WSL - Ubuntu-22.04" type="wsl" uuid="37a1bb6b-0486-4b94-b617-985a3f8ec100">
+        <config>
+          <option name="distributionMsId" value="Ubuntu-22.04" />
+          <option name="projectRootOnTarget" value="{exitCode=0, timeout=false, cancelled=false, stdout=/mnt/e/intalleds/IntelliJ IDEA 2023.2.1/jbr/bin&#10;, stderr=}/scanAndZip" />
+        </config>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/usr/local/src/jdk1.8.0_381" />
+            <option name="javaVersionString" value="1.8.0_381" />
+          </config>
+        </ContributedStateBase>
+      </target>
+      <target name="root@192.168.3.58:22" type="ssh/sftp" uuid="465cb8a0-6a2a-42f8-84dd-cdd144008796">
+        <config>
+          <option name="projectRootOnTarget" value="/root/scanAndZip" />
+          <option name="serverName" value="root@192.168.3.58:22 password" />
+        </config>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/usr/local/src/jdk1.8.0_381" />
+            <option name="javaVersionString" value="1.8.0_381" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>

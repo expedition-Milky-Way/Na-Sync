@@ -1,4 +1,4 @@
-package com.deystar.ZipFourJ;
+package com.deystar.Zip.ZipFourJ;
 
 import com.deystar.Result.ResultState;
 import com.deystar.UserTyper.UserTyper;
@@ -17,19 +17,20 @@ import java.io.IOException;
 public class FileToZip {
 
 
-    public static void zip(FileListBean bean, UserTyper userTyper) {
+    public synchronized static void zip(FileListBean bean, UserTyper userTyper) {
         ZipFile zipFile = null;
         try {
             ZipParameters zipParameters = new ZipParameters();
-
+            zipParameters.setEncryptFiles(userTyper.getIsEncryption() && userTyper.getPassword() != null && !userTyper.getPassword().trim().isEmpty());
             zipFile = new ZipFile(bean.getZipName());
-            if (userTyper.getIsEncryption()) {
+            if (userTyper.getIsEncryption() && userTyper.getPassword() != null && !userTyper.getPassword().trim().isEmpty()) {
                 zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
                 zipFile.setPassword(userTyper.getPassword().toCharArray());
             }
             zipFile.addFiles(bean.getFileLit(), zipParameters);
             ResultState.success(bean.getZipName());
         } catch (IOException e) {
+            ResultState.error(bean.getZipName() + " 压缩失败：\n" + e.getMessage() + bean.toString());
             throw new RuntimeException(e);
         } finally {
             if (zipFile != null) {

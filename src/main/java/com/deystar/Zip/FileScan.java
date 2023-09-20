@@ -14,11 +14,10 @@ import java.util.concurrent.LinkedTransferQueue;
  **/
 public class FileScan {
 
-    private List<FileListBean> fileListBeans = new ArrayList<>();
-    private Map<String, Integer> parentIndex = new HashMap<>();
+    private final List<FileListBean> fileListBeans = new ArrayList<>();
+    private final Map<String, Integer> parentIndex = new HashMap<>();
 
 
-    private Boolean needEncryptionPath = false;
 
     private UserTyper user;
 
@@ -28,48 +27,45 @@ public class FileScan {
      * @param dir
      */
     public void scan(List<File> dir) {
+        if (dir == null || dir.isEmpty()) return;
         for (File file : dir) {
             if (file.isDirectory()) {
-                scan(Arrays.asList(file.listFiles()));
+                scan(Arrays.asList(Objects.requireNonNull(file.listFiles())));
             } else {
 
                 String parent = file.getParent();
-                String simpleUUID = genZipName(parent, user.getZipToPath(), user.getNeedEncryPath());
+
                 Long fileSize = file.length();
                 FileListBean bean = null;
-                if (parentIndex.containsKey(parent)) {
-                    Integer index = parentIndex.get(parent);
-                    if (index >= 0) {
-                        bean = fileListBeans.get(index);
-                    }
+                Integer index = null;
+                if (parentIndex.containsKey(parent) && (index = parentIndex.get(parent)) >= 0) {
+                    bean = fileListBeans.get(index);
+
                 } else {
                     bean = new FileListBean();
-                    bean.setZipName(simpleUUID);
                 }
-                bean.setOriginParent(parent);
+
                 // 检查一下总大小是否超过了可以压缩的大小
                 if (bean.getTotalSize() > user.getOneFileSize()
                         || bean.getTotalSize() + fileSize > user.getOneFileSize()) {
                     bean = new FileListBean();
-                    bean.setZipName(simpleUUID);
                     Integer cf = 1;
                     while (parentIndex.containsKey(parent + "_" + (cf + ""))) {
                         cf++;
                     }
                     parent = parent + "_" + (cf + "");
                 }
+                bean.setOriginParent(parent);
                 // 塞进bean里面
                 if (bean.getParent() == null) bean.setParent(parent);
                 bean.getFileLit().add(file);
                 bean.setTotalSize(bean.getTotalSize() + fileSize);
-
                 if (parentIndex.containsKey(parent)) {
                     fileListBeans.set(parentIndex.get(parent), bean);
                 } else {
                     fileListBeans.add(bean);
                     parentIndex.put(parent, fileListBeans.size() - 1);
                 }
-
             }
         }
     }
@@ -78,9 +74,10 @@ public class FileScan {
      *
      * @param parent 父路径
      * @param needEncryptionPath 是否需要匿名文件名
-     * @return
+     * @return zipName
      */
     public String genZipName(String parent, String zipToPath, boolean needEncryptionPath) {
+        if (parent == null || parent.trim().isEmpty()) return null;
         // 压缩包路径
         String path = zipToPath + "/";
         if (path.contains("\\")) path = path.replace("\\", "/");
@@ -88,9 +85,9 @@ public class FileScan {
         if (needEncryptionPath) return path + IdUtil.simpleUUID() + ".zip";
         //原名压缩
         String[] parentStr = parent.contains("\\") ? parent.split("\\\\") : parent.split("/");
-        parent = parentStr.length > 1 ? parentStr[parentStr.length - 2] + "_" + parentStr[parentStr.length - 1] : parentStr[parentStr.length - 1];
+        parent = parentStr.length > 2 ? parentStr[parentStr.length - 2] + "_" + parentStr[parentStr.length - 1] : parentStr[parentStr.length - 1];
         if (new File(parent + ".zip").exists()) {
-            Integer index = 1;
+            int index = 1;
             while (new File(parent + "(" + index + ").zip").exists()) {
                 index++;
             }
@@ -105,12 +102,21 @@ public class FileScan {
 
     public Queue<FileListBean> getTasks() {
         Queue<FileListBean> queue = new LinkedTransferQueue<>();
-        queue.addAll(this.fileListBeans);
+        for (FileListBean bean : fileListBeans) {
+
+            String name = genZipName(bean.getOriginParent(), user.getZipToPath(), user.getNeedEncryPath());
+            if (name == null){
+                System.out.println("文件异常："+bean.toString());
+            }
+            bean.setZipName(name);
+            queue.add(bean);
+        }
+
         return queue;
     }
 
     public FileScan(UserTyper userTyper) {
         this.user = userTyper;
-        needEncryptionPath = userTyper.getNeedEncryPath();
+
     }
 }

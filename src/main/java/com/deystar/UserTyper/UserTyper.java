@@ -1,5 +1,6 @@
 package com.deystar.UserTyper;
 
+import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
 
 /**
@@ -13,7 +14,7 @@ public class UserTyper {
 
     private String zipToPath;
 
-    private String sevenZipPath;
+
 
     private Boolean isEncryption;
 
@@ -22,19 +23,13 @@ public class UserTyper {
     private String password;
 
 
-    private String excelOutput;
+    private String excelPath;
 
+    private String excelFile;
     private Long oneFileSize; // The value`s unit is Byte
 
     @Override
     public String toString() {
-        return "UserTyper{" +
-                "originPath='" + originPath + '\'' +
-                ", zipToPath='" + zipToPath + '\'' +
-                ", isEncryption=" + isEncryption +
-                ", needEncryPath=" + needEncryPath +
-                ", password='" + password + '\'' +
-                ", excelOutput='" + excelOutput + '\'' +
-                '}';
+        return JSONObject.toJSONString(this);
     }
 }
