@@ -1,6 +1,6 @@
 package vip.yzxh.BaiduPan.AsyncResponses;
 
-import vip.yzxh.BaiduPan.Admin.Controller.AccreditResponser;
+import vip.yzxh.BaiduPan.Setting.Controller.AccreditResponser;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;

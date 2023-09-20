@@ -6,6 +6,11 @@
       "url": null,
       "subBar": [
         {
+          "title": "运行情况",
+          "isRoot": false,
+          "url": "/"
+        },
+        {
           "title": "压缩任务",
           "isRoot": false,
           "url": "/task/zip"
@@ -29,7 +34,7 @@
       "subBar": [
         {
           "title": "用户设置",
-          "url": "",
+          "url": "/setting",
           "isRoot": false
         },
         {

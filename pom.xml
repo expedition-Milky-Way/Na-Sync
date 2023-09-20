@@ -19,6 +19,7 @@
         <module>ZipFile</module>
         <module>Setting</module>
         <module>Util</module>
+        <module>Core</module>
     </modules>
     <properties>
         <maven.source.plugin>3.0.1</maven.source.plugin>
@@ -33,6 +34,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->

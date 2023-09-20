@@ -1,4 +1,4 @@
-package vip.yzxh.BaiduPan.Admin.Service;
+package vip.yzxh.BaiduPan.Setting.Service;
 
 /**
  * @Author YeungLuhyun

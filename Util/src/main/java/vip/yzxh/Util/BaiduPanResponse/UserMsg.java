@@ -1,4 +1,4 @@
-package vip.yzxh.BaiduPan.BaiduPanResponse;
+package vip.yzxh.Util.BaiduPanResponse;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import vip.yzxh.Util.Const.VipTypeEnums;
@@ -34,13 +34,9 @@ public class UserMsg extends ResponseData {
 
     private VipTypeEnums vipTypeEnums;
 
-    /**
-     * 用户 id
-     */
-    private Integer uk;
 
 
-    public UserMsg(String baiduName, String netDiskName, String avatarUrl, Integer vipType, VipTypeEnums vipTypeEnums, Integer uk) {
+    public UserMsg(String baiduName, String netDiskName, String avatarUrl, Integer vipType, VipTypeEnums vipTypeEnums) {
         this.code = DEFAULT_SUCCESS_CODE;
         this.message = DEFAULT_SUCCESS_MESSAGE;
         this.success = true;
@@ -54,7 +50,6 @@ public class UserMsg extends ResponseData {
                 this.vipTypeEnums = e;
             }
         }
-        this.uk = uk;
     }
 
     public UserMsg(Boolean success, Integer code, String msg) {
@@ -101,11 +96,5 @@ public class UserMsg extends ResponseData {
         this.vipTypeEnums = vipTypeEnums;
     }
 
-    public Integer getUk() {
-        return uk;
-    }
 
-    public void setUk(Integer uk) {
-        this.uk = uk;
-    }
 }

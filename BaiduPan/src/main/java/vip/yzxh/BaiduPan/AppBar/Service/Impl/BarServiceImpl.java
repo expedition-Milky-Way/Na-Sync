@@ -25,7 +25,7 @@ public class BarServiceImpl implements BarService {
         try {
             path = ResourceUtils.getURL("classpath:").getPath();
             path = new File(path).getAbsolutePath() + "/static/bar.json";
-            if (path.contains("\\")) path = path.replace("\\","/");
+            if (path.contains("\\")) path = path.replace("\\", "/");
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -45,5 +45,30 @@ public class BarServiceImpl implements BarService {
         return null;
     }
 
+
+    @Override
+    public BarEntity getBar(String api) {
+        BarList barList = this.loadBar();
+        BarEntity resultBar = null;
+        if (barList != null && barList.getBar() != null) {
+            for (BarEntity bar : barList.getBar()) {
+                if (bar.getUrl() == null || bar.getUrl().trim().isEmpty() || !bar.getUrl().equals(api)) {
+                    if (bar.getIsRoot()) {
+                        List<BarEntity> subBars = bar.getSubBar();
+                        for (BarEntity subBar : subBars) {
+                            if (subBar.getUrl().equals(api)) {
+                                return subBar;
+                            }
+                        }
+                    }
+                } else {
+                    resultBar = bar;
+                    break;
+                }
+            }
+        }
+        return resultBar;
+
+    }
 
 }

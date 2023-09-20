@@ -7,13 +7,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 
-
-
 import org.springframework.stereotype.Service;
 import vip.yzxh.BaiduPan.BaiduConst.BaiduConst;
-import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
-import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
-import vip.yzxh.BaiduPan.BaiduPanResponse.UserMsg;
+import vip.yzxh.Util.BaiduPanResponse.DeviceCodeResponse;
+import vip.yzxh.Util.BaiduPanResponse.TokenResponse;
+import vip.yzxh.Util.BaiduPanResponse.UserMsg;
 import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Setting.Service.FileSettingService;
 import vip.yzxh.Util.Util.FileAndDigsted;
@@ -22,8 +20,6 @@ import vip.yzxh.Util.Util.SysConst;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.IOException;
-import java.net.HttpCookie;
 import java.util.*;
 
 /**
@@ -60,7 +56,6 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         }
         return JSONObject.parseObject(bodyStr, DeviceCodeResponse.class);
     }
-
 
 
     /**
@@ -161,19 +156,19 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
     public Object getBaiduUsInfo() {
         TokenResponse tokenResponse = BaiduConst.getTokenMsg();
         if (tokenResponse == null) {
-            throw new RuntimeException();
+            return null;
         }
         UserMsg userMsg = requestUsInfo(tokenResponse.getToken());
-        if (userMsg == null) {
-            this.freshToken();
-            return getBaiduUsInfo();
+        if (userMsg != null && userMsg.getAvatarUrl() != null) {
+            Long tempSize = userMsg.getVipTypeEnums().tempSize;
+            Long oneFileSize = userMsg.getVipTypeEnums().fileSize;
+            SysConst.setMaxSize(oneFileSize);
+            SysConst.setMaxTempSize(tempSize);
+            BaiduConst.setUserMsg(userMsg);
+            return userMsg;
         }
-        Long tempSize = userMsg.getVipTypeEnums().tempSize;
-        Long oneFileSize = userMsg.getVipTypeEnums().fileSize;
-        SysConst.setMaxSize(oneFileSize);
-        SysConst.setMaxTempSize(tempSize);
-        BaiduConst.setUserMsg(userMsg);
-        return userMsg;
+        return null;
+
     }
 
 
@@ -183,7 +178,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
     private UserMsg requestUsInfo(String accessToken) {
         String URL = "pan.baidu.com/rest/2.0/xpan/nas?method=uinfo" +
                 "&access_token=:token";
-        if (accessToken != null && !accessToken.trim().isEmpty()) {
+        if (accessToken == null || accessToken.trim().isEmpty()) {
             return new UserMsg(false, ResponseData.DEFAULT_ERROR_CODE, "token为空");
         }
         URL = URL.replace(":token", accessToken);
@@ -191,9 +186,7 @@ public class RequestNetDiskServiceImpl implements RequestNetDiskService {
         String bodyStr = response.body();
         JSONObject body = JSON.parseObject(bodyStr);
 
-        if (body != null &&
-                !body.containsKey(BaiduConst.RESP_ERROR_NO) &&
-                body.getInteger(BaiduConst.RESP_ERROR_NO) != 0) {
+        if (body != null && body.getInteger(BaiduConst.RESP_ERROR_NO) == 0) {
             UserMsg msg = JSONObject.parseObject(body.toJSONString(), UserMsg.class);
             return msg;
         }

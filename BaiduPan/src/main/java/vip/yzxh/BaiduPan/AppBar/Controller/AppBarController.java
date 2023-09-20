@@ -1,13 +1,11 @@
 package vip.yzxh.BaiduPan.AppBar.Controller;
 
-import cn.hutool.core.lang.hash.Hash;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import vip.yzxh.BaiduPan.AppBar.Service.BarService;
-import vip.yzxh.BaiduPan.BaiduPanResponse.UserMsg;
+import vip.yzxh.Util.BaiduPanResponse.UserMsg;
 import vip.yzxh.BaiduPan.NetDisk.RequestNetDiskService;
 import vip.yzxh.Util.HttpServerlet.Response.ResponseData;
 import vip.yzxh.Util.HttpServerlet.Response.Success;

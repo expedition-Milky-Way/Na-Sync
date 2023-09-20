@@ -1,9 +1,9 @@
 package vip.yzxh.BaiduPan.BaiduConst;
 
 import org.springframework.util.ResourceUtils;
-import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
-import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
-import vip.yzxh.BaiduPan.BaiduPanResponse.UserMsg;
+import vip.yzxh.Util.BaiduPanResponse.DeviceCodeResponse;
+import vip.yzxh.Util.BaiduPanResponse.TokenResponse;
+import vip.yzxh.Util.BaiduPanResponse.UserMsg;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,9 +17,9 @@ public class BaiduConst {
 
     private static UserMsg userMsg;
 
-    private static DeviceCodeResponse deviceCode;
+    private  static DeviceCodeResponse deviceCode ;
 
-    private static TokenResponse tokenMsg;
+    private  static  TokenResponse tokenMsg;
 
     public static final String RESP_DEVICE_CODE = "device_code";
 
@@ -54,8 +54,8 @@ public class BaiduConst {
         return tokenMsg;
     }
 
-    public static void setTokenMsg(TokenResponse tokenMsg) {
-        BaiduConst.tokenMsg = tokenMsg;
+    public static void setTokenMsg(TokenResponse tokenObj) {
+        tokenMsg = tokenObj;
     }
 
 

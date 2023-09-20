@@ -10,7 +10,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
-import sun.font.FontResolver;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +23,6 @@ public class ThymeleafConfig implements WebMvcConfigurer {
     @Bean
     @Description("Thymeleaf template resolver serving HTML 5")
     public ClassLoaderTemplateResolver templateResolver() {
-
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
         templateResolver.setPrefix("templates/");
         templateResolver.setCacheable(false);
@@ -33,6 +31,7 @@ public class ThymeleafConfig implements WebMvcConfigurer {
         templateResolver.setCharacterEncoding("UTF-8");
         Set<String> jsSet = new HashSet<>();
         jsSet.add("static/layui-v2.6.8/layui/layui.js");
+        jsSet.add("static/echarts/echarts.min.js");
         templateResolver.setJavaScriptTemplateModePatterns(jsSet);
         Set<String> cssSet = new HashSet<>();
         cssSet.add("static/layui-v2.6.8/layui/css/layui.css");
@@ -66,8 +65,4 @@ public class ThymeleafConfig implements WebMvcConfigurer {
         return viewResolver;
     }
 
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/").setViewName("Main/Setting/setting");
-   }
 }

@@ -1,48 +1,49 @@
-package vip.yzxh.BaiduPan.Admin.Controller;
+package vip.yzxh.BaiduPan.Setting.Controller;
+
 
 import cn.hutool.core.util.ObjectUtil;
-
-
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
-import vip.yzxh.BaiduPan.AsyncResponses.AsyncResponses;
+import vip.yzxh.BaiduPan.AppBar.Entity.BarEntity;
+import vip.yzxh.BaiduPan.AppBar.Service.BarService;
 import vip.yzxh.BaiduPan.BaiduConst.BaiduConst;
-import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
-import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
+import vip.yzxh.Util.BaiduPanResponse.DeviceCodeResponse;
+import vip.yzxh.Util.BaiduPanResponse.TokenResponse;
 import vip.yzxh.BaiduPan.NetDisk.RequestNetDiskService;
 import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Setting.Service.FileSettingService;
-import vip.yzxh.Util.HttpServerlet.RequestAndResponse;
 import vip.yzxh.Util.HttpServerlet.Response.ResponseData;
 import vip.yzxh.Util.HttpServerlet.Response.Success;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Controller
-@RequestMapping("/author")
-public class AdminController {
+@RequestMapping("/setting")
+public class SettingController {
 
     @Resource
     private FileSettingService fileSettingService;
     @Resource
     private RequestNetDiskService requestNetDiskService;
-
+    @Resource
+    private BarService barService;
     @Resource
     private ThreadPoolTaskExecutor executor;
 
     private static final AtomicInteger tokenGetting = new AtomicInteger(0);
-    private  static ResponseData responseData = null;
+    private static ResponseData responseData = null;
 
-    @GetMapping("/")
-    public String index(HttpServletRequest request, ModelMap modelMap) {
+    @GetMapping()
+    public String setting(HttpServletRequest request, ModelMap modelMap) {
+
+
         FileSetting fileSetting = fileSettingService.getSetting();
         if (ObjectUtil.isNotNull(fileSetting)) {
             modelMap.put("path", fileSetting.getPath());
@@ -56,8 +57,11 @@ public class AdminController {
             modelMap.put("dateTime", fileSetting.getDateTime());
             modelMap.put("uri", fileSetting.getUri());
             modelMap.put("version", fileSetting.getVersion());
+
         }
-        modelMap.put("title", "登录");
+        BarEntity bar = barService.getBar("/setting");
+        modelMap.put("title", bar.getTitle());
+
         List<Integer> taskNumList = Arrays.asList(new Integer[]{1, 2, 3, 4, 5});
 
         modelMap.put("taskNumList", taskNumList);
@@ -73,7 +77,7 @@ public class AdminController {
         DeviceCodeResponse deviceCodeResponse = requestNetDiskService.deviceCode(setting.getAppKey());
 
         executor.execute(() -> {
-           tokenGetting.incrementAndGet();
+            tokenGetting.incrementAndGet();
             Thread.currentThread().setName("设置setting.json");
             fileSettingService.settingFile(setting);
 
@@ -83,7 +87,7 @@ public class AdminController {
                     deviceCodeResponse.getInterval());
             if (tokenDetail != null && tokenDetail.getToken() != null) {
                 BaiduConst.setTokenMsg(tokenDetail);
-                responseData = new Success("验证成功，跳转到应用页面", null, "/index");
+                responseData = new Success();
             } else {
                 responseData = new ResponseData("验证失败");
             }
@@ -101,14 +105,9 @@ public class AdminController {
     @PostMapping()
     @ResponseBody
     public ResponseData canLogin(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException ignored) {
-
-        }
         while (tokenGetting.get() != 0) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(10);
             } catch (InterruptedException ignored) {
             }
         }

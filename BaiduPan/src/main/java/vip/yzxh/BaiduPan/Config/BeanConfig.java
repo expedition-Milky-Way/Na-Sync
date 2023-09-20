@@ -2,7 +2,7 @@ package vip.yzxh.BaiduPan.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import vip.yzxh.BaiduPan.Admin.Controller.AccreditResponser;
+import vip.yzxh.BaiduPan.Setting.Controller.AccreditResponser;
 import vip.yzxh.BaiduPan.AsyncResponses.AsyncResponses;
 
 import java.io.IOException;
@@ -24,17 +24,17 @@ public class BeanConfig {
             while (true) {
                 AccreditResponser responser = AsyncResponses.getAccreditQueue();
 
-                    if (responser!= null){
-                        try {
-                            responser
-                                    .getRequestAndResponse()
-                                    .getResponse()
-                                    .getOutputStream()
-                                    .write(responser.getResponseData().toString().getBytes());
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                if (responser != null) {
+                    try {
+                        responser
+                                .getRequestAndResponse()
+                                .getResponse()
+                                .getOutputStream()
+                                .write(responser.getResponseData().toString().getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
+                }
 
             }
         });
@@ -42,4 +42,6 @@ public class BeanConfig {
         thread.setName("异步response");
         thread.start();
     }
+
+
 }

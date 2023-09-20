@@ -2,10 +2,9 @@ package vip.yzxh.BaiduPan.NetDisk;
 
 import com.alibaba.fastjson.JSONObject;
 
-import vip.yzxh.BaiduPan.BaiduPanResponse.DeviceCodeResponse;
-import vip.yzxh.BaiduPan.BaiduPanResponse.TokenResponse;
+import vip.yzxh.Util.BaiduPanResponse.DeviceCodeResponse;
+import vip.yzxh.Util.BaiduPanResponse.TokenResponse;
 
-import vip.yzxh.Setting.Entity.FileSetting;
 import vip.yzxh.Util.Util.FileAndDigsted;
 
 import java.util.List;

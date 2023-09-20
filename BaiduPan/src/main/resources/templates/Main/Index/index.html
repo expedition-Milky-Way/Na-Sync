@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>百度网盘同步工具</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/static/layui-v2.6.8/layui/css/layui.css}">
+    <script
+            src="https://code.jquery.com/jquery-2.2.4.js"
+            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+            crossorigin="anonymous"></script>
+    <script th:src="@{/static/layui-v2.6.8/layui/layui.js}"></script>
+    <script th:src="@{/static/echarts/echarts.min.js}"></script>
+    <style>
+        .layui-card {
+            align-items: center;
+            height: 100%;
+        }
+
+        .process-line {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding-left: 40px;
+            padding-right: 10px;
+        }
+
+        .table-data{
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding-left: 40px;
+            padding-right: 10px;
+            .panel-content {
+                display: inline-block;
+
+                .panel_title {
+                    font-family: 微软雅黑;
+                    text-align: left;
+                }
+            }
+        }
+
+    </style>
+    <script type="text/javascript">
+
+
+        $(function () {
+
+            const webSocket = new WebSocket("ws://" + location.host + "/taskstatus/12")
+            webSocket.onopen = function (e) {
+
+                //发送心跳
+                setInterval(() => {
+                    webSocket.send("《活着》")
+                }, 1000)
+                //接受信息
+                webSocket.onmessage = function (e) {
+
+                    var json = JSON.parse(e.data).data
+
+                    //如果有仪表数据更新。那就去更新仪表
+                    if (json.hasOwnProperty("appearance")) {
+                        renderEcharts(json.appearance)
+                    }
+                    //压缩任务状态
+                    if (json.hasOwnProperty("zipTask")) {
+                        zipTask(json.zipTask)
+                    }
+                    //上传进度
+                    if (json.hasOwnProperty("upTask")) {
+                        uploadProgress(json.upTask)
+                    }
+                }
+                webSocket.onerror = function (e) {
+                    webSocket.close()
+                }
+
+            }
+            webSocket.OPEN
+        })
+    </script>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+
+
+    <div class="layui-header">
+        <div class="layui-logo layui-hide-xs layui-bg-black layui-layout-left">DupanSync</div>
+        <div th:replace="/Main/Comment/headBar :: pageHead"></div>
+    </div>
+    <div class="layui-body">
+        <div class="layui-card-header">
+            <span th:text="${title}"></span>
+        </div>
+        <div class="layui-card-body">
+            <div class="process-line">
+                <div class="layui-card" style="align-items: center;height: 100%">
+                    <div id="cpu_appearance" style="width: 280px;height: 280px">
+                    </div>
+                </div>
+
+                <div class="layui-card" style="align-items: center;height: 100%">
+                    <div id="memory_appearance" style="width: 280px;height: 280px">
+                    </div>
+                </div>
+            </div>
+            <div class="table-data">
+                <div class="task-table">
+                    <div class="layui-card">
+                        <div class="panel-content">
+                            <div class="panel_title">
+                                <span class="title_name">进行中任务</span>
+                            </div>
+                            <table class="layui-table" style="text-align: center">
+                                <thead>
+                                <tr>
+                                    <td width="150px">开始日期</td>
+                                    <td width="150px">原路径</td>
+                                    <td width="150px">压缩包名</td>
+                                    <td width="150px">状态</td>
+                                </tr>
+                                </thead>
+                                <tbody id="task-pg-body">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="task-table">
+                    <div class="layui-card">
+                        <div class="panel-content">
+                            <div class="panel_title">
+                                <span class="title_name">上传中</span>
+                            </div>
+                            <table class="layui-table" style="text-align: center">
+                                <thead>
+                                <tr>
+                                    <td width="150px">原路径</td>
+                                    <td width="150px"> 压缩包名</td>
+                                    <td width="150px">上传进度</td>
+                                </tr>
+                                </thead>
+                                <tbody id="upload-pg-body">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+<script type="text/javascript">
+    /**
+     * 上传进度
+     */
+    function uploadProgress(data) {
+        var html = ""
+        for (let i = 0; i < data.length; ++i) {
+            html += "<tr>"
+            html += "<td>" + data[i].originPath + "</td>"
+            html += "<td>" + data[i].zipName + "</td>"
+            html += "<td>" + data[i].progress + "</td>"
+            html += "</tr>"
+        }
+        $("#upload-pg-body").html(html)
+    }
+
+    /**
+     * 压缩任务
+     */
+    function zipTask(data) {
+        var html = ""
+        for (let i = 0; i < data.lenght; ++i) {
+            html += "<tr>"
+            html += "<td>" + data[i].createTime + "</td>"
+            html += "<td>" + data[i].originPath + "</td>"
+            html += "<td>" + data[i].zipName + "</td>"
+            html += "<td>" + data[i].status + "</td>"
+            html += "</tr>"
+        }
+        $("#task-pg-body").html(html)
+    }
+
+    /**
+     *  echarts
+     */
+    function renderEcharts(appearance) {
+        console.log(appearance)
+        // 四个仪表
+        for (var key in appearance) {
+
+            var dom = document.getElementById(key + "_appearance")
+            let myChar = echarts.getInstanceByDom(dom)
+
+            myChar = echarts.init(dom)
+
+            var opt = {
+                series: [
+                    {
+                        name: 'Pressure',
+                        type: 'gauge',
+                        progress: {
+                            show: true
+                        },
+                        detail: {
+                            valueAnimation: true,
+                        },
+                        data: [
+                            {
+                                value: appearance[key],
+                                name: key+"%"
+                            }
+                        ],
+                        grid: {
+                            width: '280px',
+                            height: '280px',
+                            position: 'absolute'
+                        }
+                    }
+                ]
+            };
+            myChar.setOption(opt)
+        }
+    }
+</script>
+</html>

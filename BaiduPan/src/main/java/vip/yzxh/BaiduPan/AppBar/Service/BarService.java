@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface BarService {
     BarList loadBar();
+
+    BarEntity getBar(String api);
 }

@@ -1,4 +1,4 @@
-package vip.yzxh.BaiduPan.Admin.Controller;
+package vip.yzxh.BaiduPan.Setting.Controller;
 
 import vip.yzxh.Util.HttpServerlet.RequestAndResponse;
 import vip.yzxh.Util.HttpServerlet.Response.ResponseData;

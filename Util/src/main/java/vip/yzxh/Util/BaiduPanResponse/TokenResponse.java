@@ -1,4 +1,4 @@
-package vip.yzxh.BaiduPan.BaiduPanResponse;
+package vip.yzxh.Util.BaiduPanResponse;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
