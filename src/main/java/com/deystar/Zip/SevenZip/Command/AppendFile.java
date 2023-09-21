@@ -1,4 +1,4 @@
-package com.deystar.Zip.SevenZipCommand;
+package com.deystar.Zip.SevenZip.Command;
 
 import java.io.File;
 import java.util.List;
@@ -8,8 +8,8 @@ import java.util.List;
  */
 public class AppendFile {
 
-    public  StringBuilder fileCommand = new StringBuilder();
-    private StringBuilder command ;
+    private StringBuilder fileCommand = new StringBuilder();
+    private StringBuilder command;
 
     public AppendFile append(String absolutPath) {
         fileCommand.append(" \"").append(absolutPath).append("\"");
@@ -31,7 +31,7 @@ public class AppendFile {
     }
 
 
-    public AppendFile(StringBuilder command){
+    public AppendFile(StringBuilder command) {
         this.command = command;
     }
 }

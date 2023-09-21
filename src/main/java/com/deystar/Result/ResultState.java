@@ -1,5 +1,7 @@
 package com.deystar.Result;
 
+import com.deystar.Zip.Entity.FileListBean;
+
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,26 +15,26 @@ public class ResultState {
     /**
      * 存放压缩包包名的list。只有线程结束才能add到这里
      */
-    private static final List<String> resultList = new ArrayList<>();
-    private static final List<String> errorList = new ArrayList<>();
+    private static final List<FileListBean> resultList = new ArrayList<>();
+    private static final List<FileListBean> errorList = new ArrayList<>();
 
     private static final Queue<String> resultPrint = new LinkedBlockingQueue<>();
 
-    public static synchronized void success(String path) {
-        resultPrint.add(path);
-        resultList.add(path);
+    public static synchronized void success(FileListBean bean) {
+        resultPrint.add("success:"+bean.getParent()+" -> "+bean.getZipName());
+        resultList.add(bean);
     }
 
-    public static synchronized void error(String path) {
-        resultPrint.add(path);
-        errorList.add(path);
+    public static synchronized void error(FileListBean bean) {
+        resultPrint.add("error:"+bean.getParent()+" -> "+bean.getZipName());
+        errorList.add(bean);
     }
 
     public static Integer errorNum() {
         return errorList.size();
     }
 
-    public static List<String> allError() {
+    public static List<FileListBean> allError() {
         return errorList;
     }
 
