@@ -140,6 +140,10 @@ public class FileScan {
 
     }
 
+    public List<FileListBean> getList(){
+        return fileListBeans;
+    }
+
     public FileScan(ZipArgument userTyper) {
         this.user = userTyper;
     }
