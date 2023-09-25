@@ -1,4 +1,4 @@
-package com.deystar.Zip.SevenZip.Command;
+package com.deystar.Zip.SevenZip.Command.ZipCommand;
 
 import java.io.File;
 import java.util.List;

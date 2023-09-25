@@ -1,9 +1,9 @@
-package com.deystar.Zip.SevenZip.RunZipTask;
+package com.deystar.Zip.SevenZip.PackageRunnable.Zip;
 
 import com.deystar.CustomException.SevenZipException.SevenZipException;
 import com.deystar.CustomException.SevenZipException.SevenZipExceptionEnums;
 import com.deystar.Result.ResultState;
-import com.deystar.Zip.Entity.FileListBean;
+import com.deystar.Zip.Bean.FileListBean;
 import com.deystar.Zip.ZipFourJ.FileToZip;
 import com.deystar.ZipArgument.ZipArgument;
 
@@ -16,7 +16,7 @@ import java.nio.charset.Charset;
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)
  */
-public abstract class ZipAbstract implements ZipService {
+public abstract class ZipAbstract implements Runnable {
     protected FileListBean bean;
 
     protected ZipArgument argument;
@@ -50,5 +50,11 @@ public abstract class ZipAbstract implements ZipService {
         }
         ResultState.success(bean);
     }
+
+    @Override
+    public void run() {
+        this.start(command);
+    }
+
 
 }

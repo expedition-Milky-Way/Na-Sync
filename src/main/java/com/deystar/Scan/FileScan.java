@@ -4,7 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.deystar.CustomException.PathException.PathException;
 import com.deystar.CustomException.PathException.PathExceptionEnums;
 import com.deystar.ZipArgument.ZipArgument;
-import com.deystar.Zip.Entity.FileListBean;
+import com.deystar.Zip.Bean.FileListBean;
 
 import java.io.File;
 import java.util.*;
@@ -20,16 +20,16 @@ public class FileScan {
 
     private final Set<String> nameSet = new HashSet<>();
 
-    private ZipArgument user;
+    private ZipArgument zipArgument;
 
     /**
-     * 扫描路径下的所有文件
+     * scan all the file from dir path
      *
-     * @param dir
+     * @param files  a Directory
      */
-    public void scan(List<File> dir) {
-        if (dir == null || dir.isEmpty()) return;
-        for (File file : dir) {
+    public void scan(List<File> files) {
+        if (files == null || files.isEmpty()) return;
+        for (File file : files) {
             if (!file.exists() || !file.canRead()) continue;
             if (file.isDirectory()) {
                 scan(Arrays.asList(Objects.requireNonNull(file.listFiles())));
@@ -57,18 +57,18 @@ public class FileScan {
         String path = zipToPath + "/";
         if (path.contains("\\")) path = path.replace("\\", "/");
         //匿名压缩包
-        if (needEncryptionPath) return path + IdUtil.simpleUUID() + ".zip";
+        if (needEncryptionPath) return path + IdUtil.simpleUUID();
         //原名压缩
         String[] parentStr = parent.contains("\\") ? parent.split("\\\\") : parent.split("/");
         parent = parentStr.length > 2 ? parentStr[parentStr.length - 2] + "_" + parentStr[parentStr.length - 1] : parentStr[parentStr.length - 1];
-        if (!nameSet.add(parent + ".zip")) {
+        if (!nameSet.add(parent)) {
             int index = 1;
-            while (nameSet.add(parent + "(" + index + ").zip")) {
+            while (nameSet.add(parent + "(" + index + ")")) {
                 index++;
             }
-            path += parent + "(" + index + ").zip";
+            path += parent + "(" + index + ")";
         } else {
-            path += parent + ".zip";
+            path += parent;
         }
         return path;
 
@@ -86,7 +86,7 @@ public class FileScan {
         Integer index = null;
         if (parentIndex.containsKey(parent) && (index = parentIndex.get(parent)) >= 0) {
             bean = fileListBeans.get(index);
-            if (bean.getTotalSize() > user.getOneFileSize() || bean.getTotalSize() + fileSize > user.getOneFileSize()) {
+            if (bean.getTotalSize() > zipArgument.getOneFileSize() || bean.getTotalSize() + fileSize > zipArgument.getOneFileSize()) {
                 Integer cf = 1;
                 while (parentIndex.containsKey(parent + "_" + (cf + ""))) {
                     cf++;
@@ -98,7 +98,7 @@ public class FileScan {
             bean = new FileListBean();
         }
         if (bean.getZipName() == null) {
-            bean.setZipName(this.genZipName(parent, user.getZipToPath(), user.getPathAnonymity()));
+            bean.setZipName(this.genZipName(parent, zipArgument.getZipToPath(), zipArgument.getPathAnonymity()));
         }
 
         bean.setOriginParent(parent);
@@ -144,7 +144,7 @@ public class FileScan {
         return fileListBeans;
     }
 
-    public FileScan(ZipArgument userTyper) {
-        this.user = userTyper;
+    public FileScan(ZipArgument zipArgument) {
+        this.zipArgument = zipArgument;
     }
 }

@@ -2,6 +2,7 @@ package com.deystar.Const;
 
 /**
  * @author Yeung Ming Luhyun 杨名 字露煊
+ * executable file enums
  */
 public enum SystemEnums {
 

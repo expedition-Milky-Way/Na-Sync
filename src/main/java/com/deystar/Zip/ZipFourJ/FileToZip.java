@@ -2,7 +2,7 @@ package com.deystar.Zip.ZipFourJ;
 
 import com.deystar.Result.ResultState;
 import com.deystar.ZipArgument.ZipArgument;
-import com.deystar.Zip.Entity.FileListBean;
+import com.deystar.Zip.Bean.FileListBean;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;

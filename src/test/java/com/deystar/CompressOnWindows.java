@@ -3,14 +3,13 @@ package com.deystar;
 import com.deystar.Const.BaiduConstEnums;
 import com.deystar.Const.SystemEnums;
 import com.deystar.Result.ResultState;
-import com.deystar.Zip.SevenZip.Command.CommandBuilder;
-import com.deystar.Zip.SevenZip.RunZipTask.ZipService;
+import com.deystar.Zip.SevenZip.Command.ZipCommand.CommandBuilder;
+import com.deystar.Zip.SevenZip.PackageRunnable.Zip.Suffix.SuffixZip;
 import com.deystar.Zip.ZipExecutor;
 import com.deystar.ZipArgument.ZipArgument;
-import com.deystar.Zip.Entity.FileListBean;
+import com.deystar.Zip.Bean.FileListBean;
 import com.deystar.Scan.FileScan;
-import com.deystar.Zip.SevenZip.RunZipTask.SuffixZip;
-import org.junit.Test;
+
 
 import java.io.File;
 import java.util.Arrays;
@@ -55,8 +54,8 @@ public class CompressOnWindows {
                     .outPut(Runtime.getRuntime().availableProcessors(), zipTask.getZipName())
                     .password(userTyper.getPassword())
                     .append(zipTask.getFileLit()).build();
-            ZipService zipService = new SuffixZip(userTyper, zipTask, command);
-            zipExecutor.execute(zipService);
+            Runnable zipRunner = new SuffixZip(userTyper, zipTask, command);
+            zipExecutor.execute(zipRunner);
         }
         //输出excel
 

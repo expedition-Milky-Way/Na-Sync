@@ -1,8 +1,7 @@
 package com.deystar.Result;
 
-import com.deystar.Zip.Entity.FileListBean;
+import com.deystar.Zip.Bean.FileListBean;
 
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 

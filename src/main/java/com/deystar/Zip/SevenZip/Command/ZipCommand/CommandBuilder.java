@@ -1,4 +1,4 @@
-package com.deystar.Zip.SevenZip.Command;
+package com.deystar.Zip.SevenZip.Command.ZipCommand;
 
 import com.deystar.Const.SystemEnums;
 import com.deystar.CustomException.Argurment.ArgumentException;
