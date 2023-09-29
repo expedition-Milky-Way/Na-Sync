@@ -1,0 +1,38 @@
+
+/*输入框*/
+.c-input{
+    display: inline-flex;
+    flex-wrap: wrap;
+    padding-left: 20px;
+    padding-bottom: 10px;
+    align-items: center;
+    justify-content: center;
+    .c-input-name{
+        padding-top: 4px;
+        align-items:end;
+    }
+
+    .c-input-value{
+        align-items: end;
+    }
+
+}
+
+
+/*设置面板*/
+.setting{
+    padding-top: 40px;
+}
+
+/*设置输入框前面的文字大小*/
+.setting-input-name{
+    font-size: 20px;
+}
+/*设置输入框大小*/
+.setting-input-input{
+    width: 320px;
+}
+
+.custom_select{
+    width: 180px;
+}

@@ -34,12 +34,12 @@
       "subBar": [
         {
           "title": "用户设置",
-          "url": "/setting",
+          "url": "/setting/baidu",
           "isRoot": false
         },
         {
           "title": "压缩设置",
-          "url": "",
+          "url": "/setting/zip",
           "isRoot": false
         }
       ]

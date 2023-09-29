@@ -33,7 +33,7 @@
                         //获取用户信息
                         console.log(res)
                         let userDetail = res.data.user
-                        if (userDetail != null && userDetail !== undefined){
+                        if (userDetail != null){
                             $("#user").html("<img src='"+userDetail.avatarUrl+"' class='layui-nav-img'/>"+userDetail.baiduName)
                         }
                         //渲染菜单

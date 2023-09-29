@@ -4,16 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>vip.yzxh</groupId>
+        <groupId>cn.deystar</groupId>
         <artifactId>baiduSync</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-
-    <groupId>vip.yzxh</groupId>
     <artifactId>BaiduPan</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <dependencies>
         <dependency>
-            <groupId>vip.yzxh</groupId>
+            <groupId>cn.deystar</groupId>
             <artifactId>Setting</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>

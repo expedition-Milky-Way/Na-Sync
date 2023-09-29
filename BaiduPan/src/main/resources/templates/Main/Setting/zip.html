@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NAS上云</title>
+    <link rel="stylesheet" th:href="@{/static/layui-v2.6.8/layui/css/layui.css}">
+    <script
+            src="https://code.jquery.com/jquery-2.2.4.js"
+            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+            crossorigin="anonymous"></script>
+    <script th:src="@{/static/layui-v2.6.8/layui/layui.js}"></script>
+    <link rel="stylesheet" th:href="@{/static/custom/custom.css}">
+    <script type="text/javascript">
+        function confirm() {
+
+
+            let data = {
+                "version": parseInt($('#version').val()),
+                "appId": $('#appId').val(),
+                "appKey": $("#appKey").val(),
+                "secretKey": $("#secretKey").val(),
+                "taskNum": $("#taskNum").val(),
+                "pathEncryption": $("#pathEncryption").val(),
+                "path": $("#path").val(),
+                "cachePath": $("#cachePath").val(),
+                "password": $("#password").val(),
+                "compressThread": $("#compressThread").val(),
+                "isListen": parseInt($("#isListen").val()),
+                "system":parseInt($("#system").val())
+            }
+            console.log(data)
+            $.ajax({
+                url: "http://" + location.host + "/setting/zip",
+                method: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (res) {
+                    console.log(res)
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo layui-hide-xs layui-bg-black layui-layout-left">DupanSync</div>
+        <div th:replace="/Main/Comment/headBar :: pageHead"></div>
+    </div>
+    <div class="layui-body">
+        <div class="layui-card-header layui-card">
+            <span th:text="${title}"></span>
+        </div>
+        <div class="layui-card-body layui-card">
+            <div id="main" class="setting layui-form">
+
+                <form id="queryForm">
+                    <input hidden id="version" th:value="${version}"/>
+                    <input hidden id="appId" th:value="${appId}">
+                    <input hidden id="appKey" th:value="${appKey}">
+                    <input hidden id="secretKey" th:value="${secretKey}">
+                    <input hidden id="signKey" th:value="${signKey}">
+                    <input hidden id="taskNum" th:value="${taskNum}">
+
+                    <div class="layui-container">
+                        <div class="layui-row layui-col-space1">
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="input-name-font">监管的路径：</span>
+                                    </div>
+                                    <div class="c-input-value">
+                                        <input id="path" name="path" style="width: 210px" th:value="${path}"
+                                               class="setting-input-input layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="input-name-font">压缩包路径：</span>
+                                    </div>
+                                    <div class="c-input-value">
+                                        <input id="cachePath" name="cachePath" th:value="${cachePath}"
+                                               style="width: 210px"
+                                               class="setting-input-input layui-input"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-row layui-col-space1">
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="input-name-font">压缩包密码：</span>
+                                    </div>
+                                    <div class="c-input-value">
+                                        <input id="password" name="password" style="width: 210px" th:value="${password}"
+                                               class="setting-input-input layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="layui-name-font">压缩包匿名：</span>
+                                    </div>
+                                    <div class="c-input-value">
+                                        <select class="layui-select custom_select" id="pathEncryption">
+                                            <option value="">压缩包是否匿名</option>
+                                            <option value="true" th:selected="${pathEncryption} eq true">是</option>
+                                            <option value="false" th:selected="${pathEncryption} eq false">否</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-row layui-col-space1">
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="input-name-font">压缩线程数：</span>
+                                    </div>
+                                    <div class="c-input-value">
+                                        <select id="compressThread" name="compressThread"
+                                                class="layui-select custom_select" lay-verify="">
+                                            <option value="">压缩线程数越大CPU占用越高</option>
+                                            <option th:each="item : ${compressCore}"
+                                                    th:selected="${compressThread }eq ${item}" th:text="${item}">
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="input-name-font">触发模式：</span>
+                                    </div>
+                                    <div class="c-input-input">
+                                        <select class="layui-select custom_select" id="isListen">
+                                            <option value="">选择触发备份的模式</option>
+                                            <option value="0" th:selected="${isListen} eq 0">文件有变化执行备份</option>
+                                            <option value="1" th:selected="${isListen} eq 1">定时任务执行备份</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-row layui-col-space1">
+                            <div class="layui-col-md5">
+                                <div class="c-input">
+                                    <div class="c-input-name">
+                                        <span class="input-name-font">操作系统：</span>
+                                    </div>
+                                    <div class="c-input-input">
+                                        <select class="layui-select custom_select" id="system">
+                                            <option value="">选择该应用在哪个系统上运行</option>
+                                            <option value="0" th:selected="${system} eq 0 ">Linux core</option>
+                                            <option value="1" th:selected="${system} eq 1">Windows</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-row layui-col-space1">
+                            <div class="layui-col-md5">
+                                <button type="button" class="layui-btn layui-btn-primary" onclick="confirm()">修改
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
