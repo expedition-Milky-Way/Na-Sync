@@ -28,5 +28,5 @@ public interface CompressUploadService {
      */
     Boolean addUploadTask(String parentPath);
 
-    FileListBean getTaskResult()
+    FileListBean getTaskResult();
 }
