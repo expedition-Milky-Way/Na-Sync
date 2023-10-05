@@ -61,7 +61,7 @@
                 webSocket.onmessage = function (e) {
 
                     var json = JSON.parse(e.data).data
-
+                    console.log(json)
                     //如果有仪表数据更新。那就去更新仪表
                     if (json.hasOwnProperty("appearance")) {
                         renderEcharts(json.appearance)
@@ -118,10 +118,9 @@
                             <table class="layui-table" style="text-align: center">
                                 <thead>
                                 <tr>
-                                    <td width="150px">开始日期</td>
+
                                     <td width="150px">原路径</td>
                                     <td width="150px">压缩包名</td>
-                                    <td width="150px">状态</td>
                                 </tr>
                                 </thead>
                                 <tbody id="task-pg-body">
@@ -182,10 +181,8 @@
         var html = ""
         for (let i = 0; i < data.lenght; ++i) {
             html += "<tr>"
-            html += "<td>" + data[i].createTime + "</td>"
             html += "<td>" + data[i].originPath + "</td>"
             html += "<td>" + data[i].zipName + "</td>"
-            html += "<td>" + data[i].status + "</td>"
             html += "</tr>"
         }
         $("#task-pg-body").html(html)

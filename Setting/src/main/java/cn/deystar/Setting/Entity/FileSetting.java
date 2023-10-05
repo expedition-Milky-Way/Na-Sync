@@ -1,7 +1,7 @@
 package cn.deystar.Setting.Entity;
 
 
-import cn.deystar.Util.ScanAndZip.Util.Const.SystemEnums;
+import cn.deystar.Util.ScanAndZip.Const.SystemEnums;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
 import cn.deystar.Util.BaiduPanResponse.TokenResponse;

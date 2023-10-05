@@ -1,2 +1,3 @@
 org.springframework.context.ApplicationListener=\
-  cn.deystar.BaiduPan.Core.Config.StartBefore.LoadSetting
+  cn.deystar.BaiduPan.Core.Config.StartBefore.LoadSetting\
+  cn.deystar.BaiduPan.Core.Config.StartBefore.TaskStarter

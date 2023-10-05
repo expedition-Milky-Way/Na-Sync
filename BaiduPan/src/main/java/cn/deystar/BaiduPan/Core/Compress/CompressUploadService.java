@@ -1,5 +1,7 @@
 package cn.deystar.BaiduPan.Core.Compress;
 
+import cn.deystar.Util.ScanAndZip.Zip.Bean.FileListBean;
+
 import java.util.List;
 
 /**
@@ -7,11 +9,17 @@ import java.util.List;
  */
 public interface CompressUploadService {
 
+    void getFileOfChange();
+
+    void consumer();
+
     /**
      * 正在执行压缩和上传任务的
      * @return
      */
-    List<Object> getTodo();
+    List<FileListBean> getUploading();
+
+    List<FileListBean> getCompressing();
 
     /**
      * 新增一个任务进行同步
@@ -19,4 +27,6 @@ public interface CompressUploadService {
      * @return
      */
     Boolean addUploadTask(String parentPath);
+
+    FileListBean getTaskResult()
 }

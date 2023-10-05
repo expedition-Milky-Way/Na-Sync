@@ -6,12 +6,12 @@ import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
 import cn.deystar.BaiduPan.Core.OS.watchFile.Service.WatchFileService;
 import cn.deystar.Setting.Entity.FileSetting;
 import cn.deystar.Setting.Service.FileSettingService;
-import cn.deystar.Util.ScanAndZip.Util.Const.SystemEnums;
-import cn.deystar.Util.ScanAndZip.Util.Scan.FileScan;
-import cn.deystar.Util.ScanAndZip.Util.Zip.SevenZip.Command.ZipCommand.CommandBuilder;
-import cn.deystar.Util.ScanAndZip.Util.Zip.SevenZip.PackageRunnable.Zip.Suffix.SuffixZip;
-import cn.deystar.Util.ScanAndZip.Util.Zip.SevenZip.PackageRunnable.Zip.ZipAbstract;
-import cn.deystar.Util.ScanAndZip.Util.ZipArgument.ZipArgument;
+import cn.deystar.Util.ScanAndZip.Const.SystemEnums;
+import cn.deystar.Util.ScanAndZip.Scan.FileScan;
+import cn.deystar.Util.ScanAndZip.Zip.SevenZip.Command.ZipCommand.CommandBuilder;
+import cn.deystar.Util.ScanAndZip.Zip.SevenZip.PackageRunnable.Zip.Suffix.SuffixZip;
+import cn.deystar.Util.ScanAndZip.Zip.SevenZip.PackageRunnable.Zip.ZipAbstract;
+import cn.deystar.Util.ScanAndZip.ZipArgument.ZipArgument;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.springframework.stereotype.Service;
@@ -134,7 +134,6 @@ public class WatchFileServiceImpl extends FileAlterationListenerAdaptor implemen
                         Integer queueIndex = indexMap.get(file.getParent());
                         if (taskQueue.size() > queueIndex && taskQueue.get(queueIndex) != null) {
                             taskQueue.set(queueIndex, zipService);
-
                         }
                     } else {
                         taskQueue.add(zipService);

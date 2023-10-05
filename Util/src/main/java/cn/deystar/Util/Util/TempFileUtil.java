@@ -63,17 +63,17 @@ public class TempFileUtil {
 //
 //    /**
 //     * 切分并写文件
-//     *
-//     * @param filename 文件名
-//     * @param raf      切片文件
-//     * @param index    索引
-//     * @param end      索引
-//     */
-//    private Long write(String filename, RandomAccessFile raf, int index, long begin, long end) {
-//        long enPointer = 0L; //结尾指针
-//        try {
-//            RandomAccessFile in = raf;
-//            RandomAccessFile out = new RandomAccessFile(new File(filename + "_" + index + ".tmp"), "rw");
+////     *
+////     * @param filename 文件名
+////     * @param raf      切片文件
+////     * @param index    索引
+////     * @param end      索引
+////     */
+////    private Long write(String filename, RandomAccessFile raf, int index, long begin, long end) {
+////        long enPointer = 0L; //结尾指针
+////        try {
+////            RandomAccessFile in = raf;
+////            RandomAccessFile out = new RandomAccessFile(new File(filename + "_" + index + ".tmp"), "rw");
 //            byte[] bytes = new byte[Math.toIntExact(SIZE)];
 //            int n = 0;
 //            in.seek(begin);

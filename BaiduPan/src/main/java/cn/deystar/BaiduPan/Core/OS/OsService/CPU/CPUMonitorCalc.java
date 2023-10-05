@@ -37,7 +37,7 @@ public class CPUMonitorCalc {
         preTime = curtime;
         preUsedTime = totalTime;
         float cpuProcess = (float) ((((double) usedTime) / totalPassedTime / osMxBean.getAvailableProcessors()) * 100);
-        return new BigDecimal(cpuProcess).setScale(1,BigDecimal.ROUND_HALF_DOWN);
+        return new BigDecimal(cpuProcess).setScale(2,BigDecimal.ROUND_HALF_DOWN);
     }
 
 }

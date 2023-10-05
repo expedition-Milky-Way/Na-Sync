@@ -1,20 +1,32 @@
 package cn.deystar.BaiduPan.Core.BaiduRequest.Upload;
 
+import cn.deystar.BaiduPan.BaiduConst.BaiduConst;
+import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
 import cn.deystar.Setting.Entity.FileSetting;
 import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Util.BaiduPanResponse.*;
+import cn.deystar.Util.ScanAndZip.Zip.Bean.FileListBean;
+import cn.deystar.Util.SplitFile.Bean.ChunkBean;
+import cn.deystar.Util.SplitFile.Bean.TempBean;
 import cn.deystar.Util.Util.FileAndDigsted;
+import cn.deystar.Util.Util.FileToChar;
 import cn.deystar.Util.Util.SysConst;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.annotation.JSONField;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 
 import javax.annotation.Resource;
+import javax.print.DocFlavor;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.net.URL;
+import java.time.chrono.MinguoDate;
+import java.util.*;
 
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)
@@ -24,150 +36,131 @@ public class UploadService {
 
     @Resource
     FileSettingService settingService;
-
-    /**
-     * 在网盘上创建这个文件
-     *
-     * @param path
-     * @param size
-     * @param isDir
-     * @param blokList
-     * @param uploadId
-     * @return
-     */
-
-    public JSONObject upalodBefore(String path, Long size, Integer isDir,
-                                     List<String> blokList, String uploadId) {
-        FileSetting setting = settingService.getSetting();
-        if (setting == null
-                || setting.getToken() == null
-                || setting.getToken().isAllNotNull())
-        {
-            return null;
-        }
-        String url = "pan.baidu.com/2.0/xpan/file?method=create&access_token=";
-        url += setting.getToken();
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("path", path);
-        requestBody.put("size", String.valueOf(size));
-        requestBody.put("isdir", String.valueOf(isDir.intValue()));
-        requestBody.put("block_list", blokList);
-        requestBody.put("uploadid", uploadId);
-        HttpResponse response = HttpRequest.post(url).body(requestBody.toString()).execute();
-        JSONObject resBody = JSON.parseObject(response.body());
-        return resBody;
-    }
-
-
-
-    /**
-     * 开始上传
-     *
-     * @param name            源文件名
-     * @param parent          源文件父路径
-     * @param size            源文件大小
-     * @param fileAndDigested
-     */
-    public void goSend(String name, String parent, Long size, List<FileAndDigsted> fileAndDigested, String tempPath) {
-        List<String> md5 = null;
-        Long totalTempSize = 0L;
-        for (FileAndDigsted item : fileAndDigested) {
-            md5.add(item.getDigsted());
-            totalTempSize += item.getSize();
-        }
-        System.out.println("文件：" + name + "大小为" + size + "缓存文件总大小" + totalTempSize);
-        //预上传
-
-        //3.发起预上传请求
-        JSONObject responseJson = postNetDist(name, parent, md5, size.intValue());
-        if (responseJson.getInteger("errno") != 0) {
-            System.out.println("预上传错误：" + responseJson.toString());
-        }
-
-        String netDiskPath = responseJson.getString("path");
-        String uploadid = responseJson.getString("uploadid");
-        List<Integer> blokList = responseJson.getObject("block_list", ArrayList.class);
-        //i. 发送分片文件
-        for (Integer item : blokList) {
-            FileAndDigsted tempMessage = fileAndDigested.get(item);
-            File temFile = new File(tempMessage.getPath());
-            JSONObject sendTempRes = postSendTemp(temFile, netDiskPath, uploadid);
-            if (sendTempRes.getInteger("errno") != 0) {
-                System.out.println("上传分片出现了问题:" + name);
-
-            }
-        }
-        //i.在网盘上面创建这个文件，完成上传
-        String netDiskDir = SysConst.getDefaultNetDiskDir();
-        String filePath = netDiskDir + "/" + parent + "/" + name;
-//        postCreateFile(filePath, size, SysConst.getIsNotDir(), md5, uploadid);
-        //删除缓存文件，记录文件原名和改名后的文件名
-        //i.删除缓存文件和目录l
-        //目录
-        File delDir = new File(tempPath);
-        try {
-            for (FileAndDigsted item : fileAndDigested) {
-                File delFile = new File(item.getPath() + "/" + item.getName());
-                boolean isDel = delFile.delete();
-                System.out.println("上传任务结束,删除" + delFile.getName() + (isDel ? "成功" : "失败"));
-
-            }
-            //删除目录
-            boolean isDel = delDir.delete();
-            System.out.println("上传任务结束,删除" + delDir.getName() + (isDel ? "成功" : "失败"));
-
-        } catch (SecurityException e) {
-            System.out.println("上传任务结束,删除" + delDir.getName() + "删除失败，权限报错" + e.getMessage());
-
-        }
-    }
+    @Resource
+    UserRequestService userRequestService;
+    @Value("${baidu-netdisk.path}")
+    private String baiduPath;
 
     /**
      * 预上传
      *
+     * @param bean
      * @return
      */
-    public JSONObject postNetDist(String fileName, String parent, List<String> md5, Integer size) {
-        //开始预上传
-        String URL = "pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=";
-        String token = SysConst.getAccessToken();
-
-        URL += token;
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("path", parent + "/" + fileName);
-        requestBody.put("size", size);
-        requestBody.put("isdir", SysConst.getIsNotDir());
-        requestBody.put("block_list", md5);
-        requestBody.put("autoinit", 1);
-        HttpResponse response = HttpRequest.post(URL).execute();
-        JSONObject resBody = JSON.parseObject(response.body());
-        return resBody;
+    public ReadyToUploadResponse readyToUpload(ChunkBean bean) {
+        FileSetting setting = settingService.getSetting();
+        ReadyToUploadResponse response = null;
+        if (setting != null && !setting.isAllNotNull()) {
+            String token = setting.getToken().getAccessToken();
+            UserMsg userMsg = userRequestService.getBaiduUsInfo(token);
+            if (userMsg != null) {
+                String url = "http://pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=:token";
+                Map<String, Object> body = new HashMap<>();
+                body.put("size", bean.getSize());
+                body.put("isdir", 0);
+                String netDiskPath = baiduPath + bean.getPath() + bean.getFileName();
+                body.put("path", netDiskPath);
+                body.put("block_list", bean.getBlockList());
+                body.put("autoint", 1);
+                String respStr = HttpRequest.post(url).body(body.toString()).execute().body();
+                response = JSONObject.parseObject(respStr, ReadyToUploadResponse.class);
+            }
+        }
+        return response;
     }
 
     /**
-     * 发送切片文件
+     * 上传分片
      *
-     * @param file
-     * @param path
-     * @param uploadId
+     * @param bean
+     * @param readyResponse
+     * @return
      */
-    public JSONObject postSendTemp(File file, String path, String uploadId) {
-        String url = "d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=";
-        String token = SysConst.getAccessToken();
-        if (token == null) {
+    public Boolean postSendFile(TempBean bean, Integer beanIndex, ReadyToUploadResponse readyResponse) {
+        String url = "http://d.pcs.baidu.com/rest/2.0/pcs/superfile2?method&upload&access_token=:token" +
+                "&path=:path&type=tempfile&uploadid=:uploadId&partseq=:index";
+        FileSetting setting = settingService.getSetting();
+        if (setting != null && !setting.isAllNotNull()) return false;
+        UserMsg userMsg = userRequestService.getBaiduUsInfo(setting.getToken().getAccessToken());
+        if (userMsg == null || !userMsg.isAllNotNull()) return false;
 
-            token = SysConst.getAccessToken();
+        //Token校验有效
+        url = url.replace(":token", setting.getToken().getAccessToken())
+                .replace(":path", readyResponse.getPath())
+                .replace(":uploadId", readyResponse.getUploadId() + "")
+                .replace(":index", beanIndex + "");
+        try {
+            char[] file = FileToChar.readFileToCharArray(bean.getChunk().getPath());
+            Map<String, Object> body = new HashMap<>();
+            body.put("file", file);
+            String responseString = HttpRequest.post(url).body(String.valueOf(body)).execute().body();
+            TempUploadResponse response = JSONObject.parseObject(responseString, TempUploadResponse.class);
+            if (response == null || response.getErrno() != 0) {
+                System.out.println("上传任务出错");
+                return false;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        url += token;
-        url += "&type=tmpfile&path=" + path + "&uploadid=" + uploadId + "&partsq=0";
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("file", file);
-        HttpResponse response = HttpRequest.post(url).body(jsonObject.toString()).execute();
-        JSONObject resBody = JSON.parseObject(response.body());
-        return resBody;
+        return true;
     }
 
+    /**
+     * when all chunk was upload complete. invoke this method can be created the file on netdisk
+     *
+     * @param chunkBean
+     * @return
+     */
+    public CreateFileResponse createFile(ChunkBean chunkBean, ReadyToUploadResponse readyToUploadResponse) {
+        if (readyToUploadResponse == null && chunkBean == null) return null;
+        String url = "http://pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=:token";
+        FileSetting setting = settingService.getSetting();
+        if (setting == null || !setting.isAllNotNull()) return null;
+        url = url.replace(":token", setting.getToken().getAccessToken());
+        Map<String, Object> body = new HashMap<>();
+        body.put("path", readyToUploadResponse.getPath());
+        body.put("size", chunkBean.getSize());
+        body.put("isdir", BaiduConst.DIRECTORY_NO);
+        body.put("block_list", chunkBean.getBlockList());
+        body.put("uploadid", readyToUploadResponse.getUploadId());
+        body.put("rtype", BaiduConst.RE_TYPE_DO_NOT_ANYTHING);
 
+        String httpResponse = HttpRequest.post(url).execute().body();
+        return JSONObject.parseObject(httpResponse, CreateFileResponse.class);
+    }
+
+    /**
+     * @param bean FileListBean
+     * @return StepByUploadResponse`s instance
+     */
+    public StepByUploadResponse oneStepUpload(FileListBean bean) {
+        String url = "http://d.pcs.baidu.com/rest/2.0/pcs/file?method=upload&access_token=:token" +
+                "path=:path";
+        FileSetting setting = settingService.getSetting();
+        if (setting == null || !setting.isAllNotNull()) return null;
+        String netDiskPath = baiduPath;
+        String[] parent = bean.getParent().split("/");
+        netDiskPath += parent[parent.length - 1] + "/";
+        String token = setting.getToken().getAccessToken();
+        url = url.replace(":token", token);
+        url = url.replace(":path", netDiskPath);
+
+        //上传
+        HttpResponse httpResponse = null;
+        StepByUploadResponse response = null;
+        try {
+            //将文件转化为字符串
+            char[] file = FileToChar.readFileToCharArray(bean.getZipName());
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("file", file);
+            httpResponse = HttpRequest.post(url).body(body.toString()).execute();
+            response = JSONObject.parseObject(httpResponse.body(), StepByUploadResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return response;
+    }
 
 
 }

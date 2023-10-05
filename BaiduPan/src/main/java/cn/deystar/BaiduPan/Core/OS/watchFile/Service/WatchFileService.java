@@ -1,6 +1,6 @@
 package cn.deystar.BaiduPan.Core.OS.watchFile.Service;
 
-import cn.deystar.Util.ScanAndZip.Util.Zip.SevenZip.PackageRunnable.Zip.ZipAbstract;
+import cn.deystar.Util.ScanAndZip.Zip.SevenZip.PackageRunnable.Zip.ZipAbstract;
 
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)

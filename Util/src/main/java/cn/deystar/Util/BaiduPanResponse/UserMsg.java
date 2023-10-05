@@ -34,6 +34,12 @@ public class UserMsg {
     private VipTypeEnums vipTypeEnums;
 
 
+    public Boolean isAllNotNull() {
+        return this.baiduName != null && !this.baiduName.trim().isEmpty() &&
+                this.netDiskName != null && !this.netDiskName.trim().isEmpty() &&
+                this.avatarUrl != null && !this.avatarUrl.trim().isEmpty() &&
+                this.vipType != null;
+    }
 
     public UserMsg(String baiduName, String netDiskName, String avatarUrl, Integer vipType, VipTypeEnums vipTypeEnums) {
 
@@ -48,7 +54,9 @@ public class UserMsg {
             }
         }
     }
-    public UserMsg(){}
+
+    public UserMsg() {
+    }
 
     public String getBaiduName() {
         return baiduName;
