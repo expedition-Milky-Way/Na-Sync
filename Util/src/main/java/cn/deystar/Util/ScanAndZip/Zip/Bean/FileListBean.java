@@ -14,15 +14,35 @@ import java.util.List;
 
 public class FileListBean {
 
+    /**
+     * 原文件路径
+     */
     private String originParent;
+
+
     private String parent;
 
+    /**
+     * 原文件列表
+     */
     private List<File> fileLit;
 
+    /**
+     * 压缩文件的绝对路径
+     */
     private String zipName;
 
+    /**
+     * 文件总大小
+     */
     private Long totalSize;
+
+    /**
+     * task状态
+     */
     private CompressStatus status;
+
+
 
     private Integer uploadPercent;
     public FileListBean() {

@@ -33,7 +33,7 @@ public class SysConst {
     //百度网盘默认上传的文件夹
     private static String DEFAULT_NET_DISK_DIR = "/nasBackUpByYZXH";
     //是文件目录
-    private static Integer IS_DIR = 1;
+    public static final String  IS_DIR = "1";
     //不是文件目录
     private static Integer IS_NOT_DIR = 0;
     //默认文件夹大小
@@ -133,13 +133,7 @@ public class SysConst {
         MAX_TEMP_SIZE = maxTempSize;
     }
 
-    public static Integer getIsDir() {
-        return IS_DIR;
-    }
 
-    public static void setIsDir(Integer isDir) {
-        IS_DIR = isDir;
-    }
 
     public static Integer getIsNotDir() {
         return IS_NOT_DIR;

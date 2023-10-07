@@ -1,8 +1,9 @@
 package cn.deystar.BaiduPan.Core.Config.GlobalBean;
 
 
-import cn.deystar.BaiduPan.Core.Compress.CompressUploadService;
 import cn.deystar.BaiduPan.Core.OS.watchFile.Service.impl.WatchFileServiceImpl;
+
+import org.apache.commons.io.monitor.FileAlterationListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ public class BeanConfig {
     private FileSettingService fileSettingService;
 
 
+
     @Value("${default-pool.core}")
     private Integer coreSize;
     @Value("${default-pool.max}")
@@ -45,7 +47,6 @@ public class BeanConfig {
     }
 
 
-
     /**
      * 装配文件监听
      */
@@ -54,15 +55,16 @@ public class BeanConfig {
         FileMonitor service = new FileMonitor(500L);
         if (fileSettingService.getSetting() != null && fileSettingService.getSetting().getPath() != null) {
             File file = new File(fileSettingService.getSetting().getPath());
-            service.monitor(file, new WatchFileServiceImpl());
+            service.monitor(file,new WatchFileServiceImpl());
             try {
                 service.start();
-            } catch (Exception ignored) {
-
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return service;
     }
+
 
     /**
      * 设置登录状态时的不可重入锁（每次并发只有一个用户能够成功登录）

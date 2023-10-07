@@ -5,7 +5,6 @@ import java.util.List;
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)
  * 一个文件和文件的分片集合对象
- *
  */
 public class ChunkBean {
 
@@ -18,19 +17,21 @@ public class ChunkBean {
 
     private String path;
 
-    private Integer size;
+    private Long size;
+
+    private String absoluteFile;
 
 
-    public String[] getBlockList(){
-        if (beanList== null) return null;
+    public String[] getBlockList() {
+        if (beanList == null) return null;
         String[] result = new String[beanList.size()];
-        for (int i = 0 ;i< beanList.size();i++){
-            result[i] =beanList.get(i).getDigest();
+        for (int i = 0; i < beanList.size(); i++) {
+            result[i] = beanList.get(i).getDigest();
         }
         return result;
     }
 
-    public String getBlockString(Integer index){
+    public String getBlockString(Integer index) {
         if (beanList == null) return null;
         return beanList.get(index).getDigest();
     }
@@ -67,11 +68,27 @@ public class ChunkBean {
         this.path = path;
     }
 
-    public Integer getSize() {
+    public Long getSize() {
         return size;
     }
 
-    public void setSize(Integer size) {
+    public void setSize(Long size) {
         this.size = size;
+    }
+
+    public String getAbsoluteFile() {
+        if (this.absoluteFile == null || this.absoluteFile.trim().isEmpty()) {
+            if (this.getPath().endsWith("/") || this.getPath().endsWith("\\")) {
+                this.setAbsoluteFile(this.getPath() + this.getFileName());
+            } else {
+                this.setAbsoluteFile((this.path.contains("\\") ? this.path + "\\" : this.path + "/")
+                        + this.getFileName());
+            }
+        }
+        return absoluteFile;
+    }
+
+    public void setAbsoluteFile(String absoluteFile) {
+        this.absoluteFile = absoluteFile;
     }
 }

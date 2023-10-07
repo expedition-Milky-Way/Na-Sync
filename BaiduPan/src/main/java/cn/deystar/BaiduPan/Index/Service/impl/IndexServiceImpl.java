@@ -1,6 +1,6 @@
 package cn.deystar.BaiduPan.Index.Service.impl;
 
-import cn.deystar.BaiduPan.Core.Compress.CompressUploadService;
+import cn.deystar.BaiduPan.Core.Compress.CompressService;
 import cn.deystar.Util.ScanAndZip.Zip.Bean.FileListBean;
 import org.springframework.stereotype.Service;
 import cn.deystar.BaiduPan.Index.Service.IndexService;
@@ -20,8 +20,7 @@ import java.util.Map;
 @Service
 public class IndexServiceImpl implements IndexService {
 
-    @Resource
-    CompressUploadService compressUploadService;
+
 
 
     @Override
@@ -32,8 +31,10 @@ public class IndexServiceImpl implements IndexService {
                 //1. 获取系统运行情况
                 OSstatusBean os = OperatingTemplate.getOsStatus();
                 //2. 获取任务
-                List<FileListBean> compressing = compressUploadService.getCompressing();
-                List<FileListBean> uploading = compressUploadService.getUploading();
+//                List<FileListBean> compressing = compressService.getCompressing();
+//                List<FileListBean> uploading = compressService.getUploading();
+                List<FileListBean> compressing = null;
+                List<FileListBean> uploading = null;
                 WebSocketController controller = new WebSocketController();
                 data.put("appearance", os);
                 data.put("compressing", compressing);

@@ -11,7 +11,7 @@ public class TempBean {
 
 
     /**
-     * 摘要
+     * 摘要 md5
      */
     private String digest;
 

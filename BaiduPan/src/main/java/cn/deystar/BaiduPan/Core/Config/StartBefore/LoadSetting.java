@@ -1,5 +1,6 @@
 package cn.deystar.BaiduPan.Core.Config.StartBefore;
 
+import cn.deystar.Setting.Service.FileSettingServiceImpl;
 import cn.hutool.extra.spring.SpringUtil;
 import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
 import org.springframework.context.ApplicationListener;
@@ -13,7 +14,7 @@ import cn.deystar.Setting.Service.FileSettingService;
  */
 public class LoadSetting implements ApplicationListener<ApplicationContextInitializedEvent>, Ordered {
 
-    FileSettingService settingService = (FileSettingService) SpringUtil.getBean(SettingController.class);
+    FileSettingService settingService = new FileSettingServiceImpl();
     @Override
     public void onApplicationEvent(ApplicationContextInitializedEvent event) {
         settingService.getSetting();
@@ -21,6 +22,6 @@ public class LoadSetting implements ApplicationListener<ApplicationContextInitia
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return 0;
     }
 }

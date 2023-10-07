@@ -39,11 +39,11 @@ public class FileSetting {
 
     private Integer taskNum; //上传最大并行任务数量
 
-    private Long oneFileSize; // 单个文件最大大小
+
 
     private Integer version; //版本号
 
-    private String uri; //回调url
+
 
     private TokenResponse token;
     private Integer compressThread;
@@ -69,8 +69,8 @@ public class FileSetting {
     public FileSetting(String appId, String secretKey,
                        String signKey, String appKey, String password,
                        String path, String cachePath,
-                       Integer taskNum, Long oneFileSize, Integer version,
-                       String uri, TokenResponse token, Integer compressThread,
+                       Integer taskNum, Integer version,
+                       TokenResponse token, Integer compressThread,
                        Integer isListen, SystemEnums systemEnums) {
         this.appId = appId;
         this.secretKey = secretKey;
@@ -80,9 +80,7 @@ public class FileSetting {
         this.path = path;
         this.cachePath = cachePath;
         this.taskNum = taskNum;
-        this.oneFileSize = oneFileSize;
         this.version = version;
-        this.uri = uri;
         this.token = token;
         this.compressThread = compressThread;
         this.isListen = isListen;
@@ -99,9 +97,7 @@ public class FileSetting {
                 this.password != null && !this.password.trim().isEmpty() &&
                 this.path != null && !this.path.trim().isEmpty() &&
                 this.cachePath != null && !this.cachePath.trim().isEmpty() &&
-                this.oneFileSize != null && this.oneFileSize > 0L &&
                 this.version != null && this.version > 0L &&
-                this.uri != null && !this.uri.trim().isEmpty() &&
                 this.compressThread != null && this.compressThread > 0 &&
                 this.isListen != null && this.isListen > -1 &&
                 this.token != null && this.token.isAllNotNull() &&
@@ -181,14 +177,6 @@ public class FileSetting {
     }
 
 
-    public Long getOneFileSize() {
-        return oneFileSize;
-    }
-
-    public void setOneFileSize(Long oneFileSize) {
-        this.oneFileSize = oneFileSize;
-    }
-
     public Integer getVersion() {
         return version;
     }
@@ -197,13 +185,7 @@ public class FileSetting {
         this.version = version;
     }
 
-    public String getUri() {
-        return uri;
-    }
 
-    public void setUri(String uri) {
-        this.uri = uri;
-    }
 
 
     public Integer getCompressThread() {

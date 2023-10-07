@@ -6,14 +6,12 @@ import cn.deystar.Util.SplitFile.Bean.TempBean;
 import cn.hutool.crypto.digest.DigestUtil;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.List;
 
 /**
@@ -30,106 +28,89 @@ public class SplitFileService {
      * @param chunkSize    A Chunk`s size
      * @return
      */
-    public synchronized ChunkBean splitFile(FileListBean fileListBean, String outPut, Integer chunkSize) {
+    public synchronized ChunkBean splitFile(FileListBean fileListBean, String outPut,Long chunkSize) throws IOException {
         //1. 判断缓存路径是否存在，如果不存在就创建路径
         if (outPut == null || outPut.trim().isEmpty()) return null;
         if (fileListBean == null) return null;
         if (chunkSize == null || chunkSize < 1L) return null;
         File directory = new File(outPut);
-        if (!directory.exists()) directory.mkdirs();
+        if (!directory.exists()) {
+            if (directory.mkdirs()) {
+                System.out.println("The "+outPut+" directory create success");
 
-        //2. 计算分片个数  单个文件的大小 / chunkSize;
-        BigDecimal fileSize = new BigDecimal(fileListBean.getTotalSize());
-        BigDecimal chunkSizeDecimal = fileSize.divide(new BigDecimal(chunkSize), RoundingMode.HALF_DOWN);
-        Long chunkNum = chunkSizeDecimal.longValue();
+                //2. 计算分片个数  单个文件的大小 / chunkSize;
+                int chunkNum = new BigDecimal(fileListBean.getTotalSize())
+                        .divide(new BigDecimal(chunkSize), RoundingMode.HALF_UP)
+                        .intValue();
 
-        // 3. 开始分片
-        ChunkBean chunkBean = new ChunkBean();
-        chunkBean.setSize(Math.toIntExact(fileListBean.getTotalSize()));
-        chunkBean.setPath(outPut);
+                // 3. 开始分片
+                ChunkBean chunkBean = new ChunkBean();
+                chunkBean.setSize(fileListBean.getTotalSize());
+                chunkBean.setPath(outPut);
+                chunkBean.setDigest(DigestUtil.md5Hex(new File(fileListBean.getZipName())));
 
-        chunkBean.setDigest(DigestUtil.md5Hex(new File(fileListBean.getZipName())));
-        List<TempBean> tempBeans = new ArrayList<>();
-        RandomAccessFile sourceFile = null;
+                //3.1切割
+                RandomAccessFile sourceFile = new RandomAccessFile(fileListBean.getZipName(), "r");
+                long offSet = 0L;
+                for (int i = 0; i < chunkNum; i++) {
 
-        try {
-            sourceFile = new RandomAccessFile(fileListBean.getZipName(), "r");
-            long offSet = 0L;
-            for (int i = 0; i < chunkNum; i++) {
-                //切割
-                String chunkName = chunkNameGenerator(outPut, fileListBean.getZipName(), i);
-                long begin = offSet;
-                long end = (long) (i + 1) * chunkSize;
-                offSet = write(chunkName, chunkSize, sourceFile, i, begin, end);
-                //切割完成后塞进对象
-                TempBean tempBean = new TempBean();
-                File chunkFile = new File(chunkName);
-                tempBean.setChunk(chunkFile);
-                tempBean.setDigest(DigestUtil.md5Hex(chunkFile));
-                tempBeans.add(tempBean);
-
-            }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (sourceFile != null) {
-                try {
-                    sourceFile.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    String chunkName = chunkNameGenerator(outPut, fileListBean.getZipName(), i);
+                    long begin = offSet;
+                    long end =  (i + 1) * chunkSize;
+                    offSet = write(chunkName, chunkSize, sourceFile, begin, end);
                 }
+
+                List<TempBean> tempBeans = new ArrayList<>();
+                for (File chunkFile : directory.listFiles()){
+                    TempBean tempBean = new TempBean();
+                    tempBean.setChunk(chunkFile);
+                    tempBean.setDigest(DigestUtil.md5Hex(chunkFile));
+                    tempBeans.add(tempBean);
+                }
+                chunkBean.setBeanList(tempBeans);
+
+                // 3.获取分片文件的原文件
+                String fileName = fileListBean.getZipName();
+                if (fileName.contains("\\") || fileName.contains("/")) {
+                    fileName = fileName.replace("\\", "/");
+                    String[] fileNameStrs = fileName.split("/");
+                    fileName = fileNameStrs[fileNameStrs.length - 1];
+                }
+
+                chunkBean.setFileName(fileName);
+
+                sourceFile.close();
+
+                return chunkBean;
             }
         }
-        chunkBean.setBeanList(tempBeans);
-        String fileName = fileListBean.getZipName();
-        if (fileName.contains("\\") || fileName.contains("/")) {
-            fileName = fileName.replace("\\", "/");
-            String[] fileNameStrs = fileName.split("/");
-            fileName = fileNameStrs[fileNameStrs.length - 1];
-        }
-        chunkBean.setFileName(fileName);
-
-        return chunkBean;
+        throw new IOException("The directory create error");
     }
 
 
-    private String chunkNameGenerator(String outPut, String zipNameAndPath, Integer chunkIndex) {
-        StringBuilder pathBuilder = null;
-        String name = null;
-
-        if (outPut.endsWith("/"))
-            if (zipNameAndPath.contains("\\"))
-                zipNameAndPath = zipNameAndPath.replace("\\", "/");
-        if (outPut.contains("\\"))
-            outPut = outPut.replace("\\", "/");
-        pathBuilder = new StringBuilder(outPut);
-        if (!outPut.endsWith("/")) pathBuilder.append("/");
-
-        List<String> strs = Arrays.asList(zipNameAndPath.split("/"));
-        name = strs.get(strs.size() - 1);
-        if (name.contains(".")) name = name.split("\\.")[0];
-
-        pathBuilder.append(name);
-        if (chunkIndex > 0) {
-            pathBuilder.append("(").append(chunkIndex).append(")");
-        }
-        return pathBuilder.toString();
+    private String chunkNameGenerator(String outPut, String fileName, Integer index) {
+        String[] strs = fileName.contains("\\") ? fileName.split("\\\\") : fileName.split("/");
+        String[] nameStrs = strs[strs.length - 1].split("\\.");
+        String name = nameStrs[0];
+        return (outPut.endsWith("/") || outPut.endsWith("\\") ?
+                outPut : (outPut.replace("\\", "/")) + "/")
+                + name + "_" + index + ".tmp";
     }
 
     /**
-     * 切分并写文件
+     * write chunk file
      *
-     * @param filename 文件名
-     * @param raf      切片文件
-     * @param index    索引
-     * @param end      索引
+     * @param filename the file`s output name. those must contain the output path
+     * @param raf      source file
+     * @param begin    index
+     * @param end      index
      */
-    private Long write(String filename, Integer size, RandomAccessFile raf, int index, long begin, long end) {
-        long enPointer = 0L; //结尾指针
+    private Long write(String filename, long size, RandomAccessFile raf, long begin, long end) {
+        long enPointer = 0L;// 结尾指针
         try {
             RandomAccessFile in = raf;
-            RandomAccessFile out = new RandomAccessFile(new File(filename + "_" + index + ".tmp"), "rw");
-            byte[] bytes = new byte[size];
+            RandomAccessFile out = new RandomAccessFile(new File(filename), "rw");
+            byte[] bytes = new byte[(int) size];
             int n = 0;
             in.seek(begin);
             while (in.getFilePointer() <= end && (n = in.read(bytes)) != -1) {
@@ -138,7 +119,7 @@ public class SplitFileService {
             enPointer = in.getFilePointer();
             out.close();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
         return enPointer;
     }

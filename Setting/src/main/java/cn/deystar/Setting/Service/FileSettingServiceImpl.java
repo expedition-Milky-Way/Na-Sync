@@ -88,6 +88,9 @@ public class FileSettingServiceImpl implements FileSettingService {
             if (setting.getSystem() != null) {
                 update.setSystem(setting.getSystem());
             }
+            if (setting.getToken() != null){
+                update.setToken(setting.getToken());
+            }
             if (setting.getSystemEnums() != null)
                 update.setSystemEnums(setting.getSystemEnums());
             setting.setVersion(version.incrementAndGet());

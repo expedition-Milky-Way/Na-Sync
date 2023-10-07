@@ -112,7 +112,7 @@ public class TokenService {
     /**
      * 请求刷新百度网盘Token
      */
-    public Object freshToken() {
+    public TokenResponse freshToken() {
         FileSetting setting = settingService.getSetting();
         String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=" + SysConst.getRefreshToken()
                 + "&client_id=:cid&client_secret=:sec";

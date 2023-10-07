@@ -18,7 +18,6 @@ import cn.deystar.Util.HttpServerlet.Response.ResponseData;
 import cn.deystar.Util.HttpServerlet.Response.Success;
 import cn.deystar.Util.HttpServerlet.Response.Warning;
 import cn.deystar.BaiduPan.Core.OS.watchFile.Monitor.FileMonitorService;
-import cn.deystar.BaiduPan.Core.OS.watchFile.Service.WatchFileService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -62,7 +61,6 @@ public class SettingController {
             modelMap.put("signKey", fileSetting.getSignKey());
             modelMap.put("taskNum", fileSetting.getTaskNum());
             modelMap.put("dateTime", fileSetting.getDateTime());
-            modelMap.put("uri", fileSetting.getUri());
             modelMap.put("version", fileSetting.getVersion());
             modelMap.put("compressThread", fileSetting.getCompressThread());
             modelMap.put("isListen", fileSetting.getIsListen());
@@ -81,7 +79,7 @@ public class SettingController {
     public ResponseData submit(@RequestBody FileSetting setting) {
         DeviceCodeResponse deviceCodeResponse = tokenService.deviceCode(setting.getAppKey());
         if (deviceCodeResponse != null && deviceCodeResponse.isAllNotNull()) {
-            fileSettingService.settingFile(setting);
+            fileSettingService.updateSetting(setting);
             executor.execute(() -> {
                 tokenGetting.incrementAndGet();
                 Thread.currentThread().setName("设置setting.json");
@@ -157,6 +155,24 @@ public class SettingController {
     @PostMapping("zip")
     @ResponseBody
     public ResponseData zipSettingSave(@RequestBody FileSetting setting) {
+        if (setting != null && setting.getCachePath() != null && setting.getPath() != null) {
+            if (setting.getPath().equals(setting.getCachePath())) {
+                return new Warning("缓存路径不能与被监听的路径相同");
+            }
+            String path = setting.getPath().replace("\\", "/");
+            String cachePath = setting.getCachePath().replace("\\", "/");
+            String[] pathString = path.split("/");
+            String[] cachePathString = cachePath.split("/");
+            Integer containsNum = 0;
+            for (int i = 0 ;i < Math.min(pathString.length,cachePathString.length);i++){
+                if (pathString[i].equals(cachePathString[i])){
+                    containsNum++;
+                }
+            }
+            if (containsNum == pathString.length) {
+                return new Warning("缓存路径不能是被监听路径的子目录");
+            }
+        }
         fileSettingService.updateSetting(setting);
         //更改文件监听
         String nowWatchPath = fileMonitorService.nowWatch();

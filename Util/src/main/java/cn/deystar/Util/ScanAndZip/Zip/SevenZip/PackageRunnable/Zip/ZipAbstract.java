@@ -9,6 +9,7 @@ import cn.deystar.Util.ScanAndZip.ZipArgument.ZipArgument;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)
@@ -55,6 +56,7 @@ public abstract class ZipAbstract implements Callable<FileListBean> {
     public FileListBean call() {
         return this.start(command);
     }
+
 
     private void beforeError() {
         synchronized (this.bean){

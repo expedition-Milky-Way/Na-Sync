@@ -91,6 +91,14 @@ public class UserMsg {
     }
 
     public VipTypeEnums getVipTypeEnums() {
+        if (this.vipTypeEnums == null){
+            VipTypeEnums[] enums = VipTypeEnums.values();
+            for (VipTypeEnums e : enums) {
+                if (e.type.equals(vipType)) {
+                    this.vipTypeEnums = e;
+                }
+            }
+        }
         return vipTypeEnums;
     }
 

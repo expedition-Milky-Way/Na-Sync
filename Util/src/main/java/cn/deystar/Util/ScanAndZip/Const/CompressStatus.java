@@ -8,11 +8,13 @@ public enum CompressStatus {
 
     WAIT_FOR(0, "等待压缩"),
 
+
+
     COMPRESSING(1, "正在压缩"),
 
     SUCCESS(200, "压缩完成"),
 
-    UPLOADING(100, "正在上传"),
+
 
     ERROR(500, "压缩失败");
 
