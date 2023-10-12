@@ -1,14 +1,15 @@
 package cn.com.deystar.Zip.SevenZip.PackageRunnable.Zip.Suffix;
 
 import cn.com.deystar.Zip.Bean.FileListBean;
-import cn.com.deystar.Zip.SevenZip.PackageRunnable.Zip.ZipAbstract;
+import cn.com.deystar.Zip.SevenZip.PackageRunnable.Core.ZipServiceImpl;
 import cn.com.deystar.ZipArgument.ZipArgument;
+
+import java.util.concurrent.Callable;
 
 /**
  * @Author YeungLuhyun
  **/
-public class SuffixZip extends ZipAbstract {
-
+public class SuffixZip extends ZipServiceImpl implements Callable<FileListBean> {
 
 
     public SuffixZip(ZipArgument argument, FileListBean bean, String command) {
@@ -18,5 +19,8 @@ public class SuffixZip extends ZipAbstract {
     }
 
 
-
+    @Override
+    public FileListBean call()  {
+        return  this.start(command);
+    }
 }

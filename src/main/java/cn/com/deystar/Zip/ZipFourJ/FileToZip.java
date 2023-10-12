@@ -1,5 +1,6 @@
 package cn.com.deystar.Zip.ZipFourJ;
 
+import cn.com.deystar.Const.CompressStatus;
 import cn.com.deystar.Result.ResultState;
 import cn.com.deystar.Zip.Bean.FileListBean;
 import cn.com.deystar.ZipArgument.ZipArgument;
@@ -7,6 +8,7 @@ import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
 
+import java.io.File;
 import java.io.IOException;
 
 
@@ -17,7 +19,7 @@ import java.io.IOException;
 public class FileToZip {
 
 
-    public synchronized static void zip(FileListBean bean, ZipArgument userTyper) {
+    public synchronized static FileListBean zip(FileListBean bean, ZipArgument userTyper) {
         ZipFile zipFile = null;
         try {
             ZipParameters zipParameters = new ZipParameters();
@@ -28,17 +30,20 @@ public class FileToZip {
                 zipFile.setPassword(userTyper.getPassword().toCharArray());
             }
             zipFile.addFiles(bean.getFileLit(), zipParameters);
-            ResultState.success(bean);
+            bean.setStatus(CompressStatus.SUCCESS);
         } catch (IOException e) {
-            ResultState.error(bean);
-            throw new RuntimeException(e);
+            bean.setStatus(CompressStatus.ERROR);
+            File eFile = new File(bean.getZipName());
+            if (eFile.exists()) eFile.delete();
         } finally {
             if (zipFile != null) {
                 try {
                     zipFile.close();
+                    System.gc();
                 } catch (IOException ignored) {
                 }
             }
         }
+        return bean;
     }
 }

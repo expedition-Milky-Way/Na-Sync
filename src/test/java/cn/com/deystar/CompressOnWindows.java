@@ -29,8 +29,8 @@ public class CompressOnWindows {
 
         userTyper.setEncryption(false);
         userTyper.setPathAnonymity(false);
-        userTyper.setOriginPath("C:\\Users\\YeungLuhyun\\Desktop\\测试\\重要数据迁移");
-        userTyper.setZipToPath("E:\\WorkSpace\\toZip");
+        userTyper.setOriginPath("C:\\Users\\YeungLuhyun\\Desktop\\测试");
+        userTyper.setZipToPath("C:\\Users\\YeungLuhyun\\Desktop\\测试toZip");
 
         userTyper.setOneFileSize(BaiduConstEnums.SVIP.size);
         //2.扫描文件
@@ -46,29 +46,20 @@ public class CompressOnWindows {
         Integer queueSize = taskSize - 5 > core ? taskSize - 5 : core;
         ZipExecutor zipExecutor = new ZipExecutor(core, max, queueSize);
 
-        while(!list.isEmpty())
-
-        {
+        while (!list.isEmpty()) {
             FileListBean zipTask = list.poll();
             String command = new CommandBuilder(SystemEnums.Windows)
                     .outPut(Runtime.getRuntime().availableProcessors(), zipTask.getZipName())
                     .password(userTyper.getPassword())
                     .append(zipTask.getFileLit()).build();
-            Runnable zipRunner = new SuffixZip(userTyper, zipTask, command);
-            zipExecutor.execute(zipRunner);
+            SuffixZip suffixZip = new SuffixZip(userTyper, new CustomFileBean(), command);
+
+            suffixZip.call();
+
         }
         //输出excel
 
         //5.等待所有任务完成后关闭线程池
-        while(!ResultState.isAllSuccess(taskSize)&&(ResultState.successNum()+ResultState.errorNum())!=taskSize)
-
-        {
-            String result = ResultState.getResult();
-            if (result != null) {
-                System.out.println(result);
-            }
-        }
-        zipExecutor.shutdown();
 
 
     }

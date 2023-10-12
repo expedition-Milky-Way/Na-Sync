@@ -1,5 +1,7 @@
 package cn.com.deystar.Zip.Bean;
 
+import cn.com.deystar.Const.CompressStatus;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ public class FileListBean {
     private String zipName;
 
     private Long totalSize;
-
+    private CompressStatus status;
     public FileListBean() {
         this.fileLit = new ArrayList<>();
         this.totalSize = 0L;
@@ -71,5 +73,13 @@ public class FileListBean {
                 "\"fileList\":" + fileLit + "\n" +
                 "\"zipName\":" + zipName + "\n" +
                 "\"totalSize\":" + totalSize + "\n}";
+    }
+
+    public CompressStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(CompressStatus status) {
+        this.status = status;
     }
 }
