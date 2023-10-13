@@ -4,18 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.com.deystar</groupId>
+    <groupId>cn.deystar</groupId>
     <artifactId>scanzip</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
 
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>easyexcel</artifactId>
-            <version>2.2.6</version>
-            <scope>compile</scope>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -96,7 +90,6 @@
                             <addClasspath>true</addClasspath>
                             <useUniqueVersions>false</useUniqueVersions>
                             <classpathPrefix>*/*</classpathPrefix>
-                            <mainClass>com.deystar.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
