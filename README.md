@@ -60,7 +60,7 @@
 <thead>
 <tr>
 <th>类名</th>
-<th>包路径</th>
+
 <th>压缩类型</th>
 <th>使用</th>
 <th>注意</th>
@@ -69,7 +69,7 @@
 <tbody>
 <tr>
 <td>ZipCommandBuilder</td>
-<td>cn.deystar.Compress.Command.ZipCommand.ZipCommandBuilder</td>
+
 <td>zip</td>
 <td>这个类将会返回String 类型的命令。需要准备参数
 SystemEnums枚举，password(如果不需要加密，可以填入参数null),设备的超线程数数量，压缩包输出路径，文件（绝对路径）或文件列表</td>
