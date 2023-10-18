@@ -37,28 +37,27 @@ public class Scheduling {
         FileSetting setting = settingService.getSetting();
         if (setting == null || !setting.isAllNotNull()) return;
 
-        TokenResponse tokenDetail = setting.getToken();
+        TokenResponse tokenDetail = settingService.getToken();
 
 
-            Long createTimeSecond = tokenDetail.getCreateTimeForDate().getTime() / 1000L;
-            Long expiresTimeSecond = tokenDetail.getExpires().longValue();
+        Long createTimeSecond = tokenDetail.getCreateTimeForDate().getTime() / 1000L;
+        Long expiresTimeSecond = tokenDetail.getExpires().longValue();
 
-            Long expires = createTimeSecond + expiresTimeSecond;
-            Long beAboutToExpires = (long) (26 * Math.pow(60,2)); //26Hours
+        Long expires = createTimeSecond + expiresTimeSecond;
+        Long beAboutToExpires = (long) (26 * Math.pow(60, 2)); //26Hours
 
-            Long now = new Date().getTime();
-            if (now <= expires || (expires+beAboutToExpires) >= now){
-                settingService.holdOn();
-                TokenResponse tokenResponse = tokenService.freshToken();
-                if (tokenResponse != null && tokenResponse.getAccessToken()!= null ){
-                    setting.setToken(tokenResponse);
-                    settingService.updateSetting(setting);
-                }
-                settingService.goOn();
+        Long now = new Date().getTime();
+        if (now <= expires || (expires + beAboutToExpires) >= now) {
+            settingService.holdOn();
+            TokenResponse tokenResponse = tokenService.freshToken();
+            if (tokenResponse != null && tokenResponse.getAccessToken() != null) {
+                setting.setToken(tokenResponse);
+                settingService.updateSetting(setting);
             }
+            settingService.goOn();
+        }
 
     }
-
 
 
 }

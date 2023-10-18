@@ -8,15 +8,18 @@ import org.springframework.util.ResourceUtils;
 import cn.deystar.Setting.Entity.FileSetting;
 import cn.deystar.Util.Util.ConfigFileTemplate;
 
+import javax.annotation.Resource;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
 
 @Service
 public class FileSettingServiceImpl implements FileSettingService {
 
-
+    @Resource
+    Lock updateLock;
     private final SimpleDateFormat formator = new SimpleDateFormat("yyyy-mm-dd HH:mm");
 
     private static final String SETTING_FILE_NAME = "setting.json";
@@ -25,53 +28,59 @@ public class FileSettingServiceImpl implements FileSettingService {
 
     private static AtomicInteger version = new AtomicInteger(0);
 
-    private Object lock = new Object();
+    private final Object tokenLock = new Object();
 
     @Override
     public FileSetting updateSetting(FileSetting setting) {
-            FileSetting update = getSetting();
-            if (update == null) update = new FileSetting();
-            if (setting.getAppId() != null && !setting.getAppId().trim().isEmpty())
-                update.setAppId(setting.getAppId());
-            if (setting.getAppKey() != null && !setting.getAppKey().trim().isEmpty()) {
-                update.setAppKey(setting.getAppKey());
+            try {
+                updateLock.lock();
+                FileSetting update = getSetting();
+                if (update == null) update = new FileSetting();
+                if (setting.getAppId() != null && !setting.getAppId().trim().isEmpty())
+                    update.setAppId(setting.getAppId());
+                if (setting.getAppKey() != null && !setting.getAppKey().trim().isEmpty()) {
+                    update.setAppKey(setting.getAppKey());
+                }
+                if (setting.getSecretKey() != null && !setting.getSecretKey().trim().isEmpty()) {
+                    update.setSecretKey(setting.getSecretKey());
+                }
+                if (setting.getPassword() != null && !setting.getPassword().trim().isEmpty()) {
+                    update.setPassword(setting.getPassword());
+                }
+                if (setting.getSignKey() != null && !setting.getSignKey().trim().isEmpty()) {
+                    update.setSignKey(setting.getSignKey());
+                }
+                if (setting.getCompressThread() != null && setting.getCompressThread() > 0) {
+                    update.setCompressThread(setting.getCompressThread());
+                }
+                if (setting.getTaskNum() != null && setting.getTaskNum() > 0) {
+                    update.setTaskNum(setting.getTaskNum());
+                }
+                if (setting.getIsListen() != null && setting.getIsListen() > -1) {
+                    update.setIsListen(setting.getIsListen());
+                }
+                if (setting.getPath() != null && !setting.getPath().trim().isEmpty()) {
+                    update.setPath(setting.getPath());
+                }
+                if (setting.getCachePath() != null && !setting.getCachePath().trim().isEmpty()) {
+                    update.setCachePath(setting.getCachePath());
+                }
+                if (setting.getPathEncryption() != null) update.setPathEncryption(setting.getPathEncryption());
+                if (setting.getSystem() != null) {
+                    update.setSystem(setting.getSystem());
+                }
+                if (setting.getToken() != null) {
+                    update.setToken(setting.getToken());
+                }
+                if (setting.getSystemEnums() != null)
+                    update.setSystemEnums(setting.getSystemEnums());
+                setting.setVersion(version.incrementAndGet());
+                update.setDateTime(formator.format(new Date()));
+                return (FileSetting) this.settingFile(update);
+            }finally {
+                updateLock.unlock();
             }
-            if (setting.getSecretKey() != null && !setting.getSecretKey().trim().isEmpty()) {
-                update.setSecretKey(setting.getSecretKey());
-            }
-            if (setting.getPassword() != null && !setting.getPassword().trim().isEmpty()) {
-                update.setPassword(setting.getPassword());
-            }
-            if (setting.getSignKey() != null && !setting.getSignKey().trim().isEmpty()) {
-                update.setSignKey(setting.getSignKey());
-            }
-            if (setting.getCompressThread() != null && setting.getCompressThread() > 0) {
-                update.setCompressThread(setting.getCompressThread());
-            }
-            if (setting.getTaskNum() != null && setting.getTaskNum() > 0) {
-                update.setTaskNum(setting.getTaskNum());
-            }
-            if (setting.getIsListen() != null && setting.getIsListen() > -1) {
-                update.setIsListen(setting.getIsListen());
-            }
-            if (setting.getPath() != null && !setting.getPath().trim().isEmpty()) {
-                update.setPath(setting.getPath());
-            }
-            if (setting.getCachePath() != null && !setting.getCachePath().trim().isEmpty()) {
-                update.setCachePath(setting.getCachePath());
-            }
-            if (setting.getPathEncryption() != null) update.setPathEncryption(setting.getPathEncryption());
-            if (setting.getSystem() != null) {
-                update.setSystem(setting.getSystem());
-            }
-            if (setting.getToken() != null) {
-                update.setToken(setting.getToken());
-            }
-            if (setting.getSystemEnums() != null)
-                update.setSystemEnums(setting.getSystemEnums());
-            setting.setVersion(version.incrementAndGet());
-            update.setDateTime(formator.format(new Date()));
-            return (FileSetting) this.settingFile(update);
+
     }
 
     /**
@@ -128,16 +137,16 @@ public class FileSettingServiceImpl implements FileSettingService {
 
     @Override
     public TokenResponse getToken() {
-        synchronized (lock) {
+        synchronized (tokenLock) {
             return setting.getToken();
         }
     }
 
     @Override
     public void holdOn() {
-        synchronized (lock) {
+        synchronized (tokenLock) {
             try {
-                lock.wait();
+                tokenLock.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -146,8 +155,8 @@ public class FileSettingServiceImpl implements FileSettingService {
 
     @Override
     public void goOn() {
-        synchronized (lock) {
-            lock.notify();
+        synchronized (tokenLock) {
+            tokenLock.notify();
         }
     }
 }

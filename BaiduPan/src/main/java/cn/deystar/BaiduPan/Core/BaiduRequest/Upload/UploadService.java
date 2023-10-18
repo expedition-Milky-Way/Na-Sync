@@ -55,6 +55,7 @@ public class UploadService {
     @Value("${baidu-netdisk.path}")
     private String baiduPath;
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     /**
      * 预上传
      *
@@ -62,30 +63,24 @@ public class UploadService {
      * @return
      */
     public ReadyToUploadResponse readyToUpload(ChunkBean bean) {
-        FileSetting setting = settingService.getSetting();
-        ReadyToUploadResponse response = null;
-        if (setting != null && setting.isAllNotNull()) {
-            String token = setting.getToken().getAccessToken();
-            UserMsg userMsg = userRequestService.getBaiduUsInfo(token);
-            if (userMsg != null) {
-                String url = "http://pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=:token";
-                url = url.replace(":token", token);
+        TokenResponse tokenDetail = settingService.getToken();
+        String url = "http://pan.baidu.com/rest/2.0/xpan/file?method=precreate&access_token=:token";
+        url = url.replace(":token", tokenDetail.getAccessToken());
 
-                Map<String,String> body = new HashMap<>();
-                body.put("path",URLEncoder.encode(bean.getOriginFileName()));
-                body.put("isdir",BaiduConst.NOT_DIR_STR);
-                body.put("size",bean.getSize()+"");
-                body.put("autoinit",1+"");
-                body.put("block_list",bean.getBlockListString());
-                body.put("rtype",BaiduConst.RE_TYPE_COVER+""); //只要冲突就覆盖
-                String respStr = HttpRequest.post(url)
-                        .body(FormByUrlEncodeUtil.wwwFormUrlEncode(body))
-                        .execute()
-                        .body();
-                response = JSONObject.parseObject(respStr, ReadyToUploadResponse.class);
-            }
-        }
-        return response;
+        Map<String, String> body = new HashMap<>();
+        body.put("path", URLEncoder.encode(bean.getOriginFileName()));
+        body.put("isdir", BaiduConst.NOT_DIR_STR);
+        body.put("size", bean.getSize() + "");
+        body.put("autoinit", 1 + "");
+        body.put("block_list", bean.getBlockListString());
+        body.put("rtype", BaiduConst.RE_TYPE_COVER + ""); //只要冲突就覆盖
+        String respStr = HttpRequest.post(url)
+                .body(FormByUrlEncodeUtil.wwwFormUrlEncode(body))
+                .execute()
+                .body();
+        return JSONObject.parseObject(respStr, ReadyToUploadResponse.class);
+
+
     }
 
     /**
@@ -100,7 +95,7 @@ public class UploadService {
         String url = "https://d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&access_token=:token" +
                 "&path=:path&type=tempfile&uploadid=:uploadId&partseq=:index";
         TokenResponse tokenResponse = settingService.getToken();
-        if (tokenResponse == null ){
+        if (tokenResponse == null) {
             System.out.println("token为空");
             return false;
         }
@@ -135,18 +130,18 @@ public class UploadService {
     public CreateFileResponse createFile(ChunkBean chunkBean, ReadyToUploadResponse readyToUploadResponse) {
         if (readyToUploadResponse == null && chunkBean == null) return null;
         String url = "https://pan.baidu.com/rest/2.0/xpan/file?method=create&access_token=:token";
-        FileSetting setting = settingService.getSetting();
-        if (setting == null || !setting.isAllNotNull()) return null;
-        url = url.replace(":token", setting.getToken().getAccessToken());
+        TokenResponse tokenDetail = settingService.getToken();
+
+        url = url.replace(":token", tokenDetail.getAccessToken());
 
 
-        Map<String,String> body = new HashMap<>();
+        Map<String, String> body = new HashMap<>();
         body.put("path", URLEncoder.encode(chunkBean.getOriginFileName()));
-        body.put("size", chunkBean.getSize()+"");
+        body.put("size", chunkBean.getSize() + "");
         body.put("isdir", BaiduConst.NOT_DIR_STR);
-        body.put("block_list",chunkBean.getBlockListString());
+        body.put("block_list", chunkBean.getBlockListString());
         body.put("uploadid", readyToUploadResponse.getUploadId());
-        body.put("rtype", BaiduConst.RE_TYPE_COVER+"");
+        body.put("rtype", BaiduConst.RE_TYPE_COVER + "");
         String httpResponse = null;
         try {
             httpResponse = HttpRequest.post(url)
@@ -169,33 +164,32 @@ public class UploadService {
     public StepByUploadResponse oneStepUpload(FileListBean bean) {
         String url = "http://d.pcs.baidu.com/rest/2.0/pcs/file?method=upload&access_token=:token" +
                 "path=:path";
-        FileSetting setting = settingService.getSetting();
-        if (setting == null || !setting.isAllNotNull()) return null;
+        StepByUploadResponse response = null;
+
         String netDiskPath = baiduPath;
         String[] parent = bean.getParent().split("/");
         netDiskPath += parent[parent.length - 1] + "/";
-        String token = setting.getToken().getAccessToken();
-        url = url.replace(":token", token);
-        url = url.replace(":path", netDiskPath);
+        TokenResponse tokenDetail = settingService.getToken();
+        if (tokenDetail != null && tokenDetail.isAllNotNull()) {
+            url = url.replace(":token", tokenDetail.getAccessToken());
+            url = url.replace(":path", netDiskPath);
+            //上传
+            HttpResponse httpResponse = null;
 
-        //上传
-        HttpResponse httpResponse = null;
-        StepByUploadResponse response = null;
-        try {
-            //将文件转化为字符串
-            char[] file = FileToChar.readFileToCharArray(bean.getZipName());
+            try {
+                //将文件转化为字符串
+                char[] file = FileToChar.readFileToCharArray(bean.getZipName());
 
-            Map<String, Object> body = new HashMap<>();
-            body.put("file", file);
-            httpResponse = HttpRequest.post(url).body(body.toString()).execute();
-            response = JSONObject.parseObject(httpResponse.body(), StepByUploadResponse.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                Map<String, Object> body = new HashMap<>();
+                body.put("file", file);
+                httpResponse = HttpRequest.post(url).body(body.toString()).execute();
+                response = JSONObject.parseObject(httpResponse.body(), StepByUploadResponse.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return response;
     }
-
-
 
 
 }

@@ -1,6 +1,7 @@
 package cn.deystar.BaiduPan.AppBar.Controller;
 
 import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
+import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,10 +35,10 @@ public class AppBarController {
     @GetMapping()
     @ResponseBody
     public ResponseData barData() {
-        FileSetting setting = settingService.getSetting();
+        TokenResponse tokenDetail = settingService.getToken();
         Map<String, Object> result = new HashMap<>();
-        if (setting != null && setting.getToken() != null && setting.getToken().isAllNotNull()) {
-            UserMsg userMsg = (UserMsg) userRequestService.getBaiduUsInfo(setting.getToken().getAccessToken());
+        if (tokenDetail!= null && tokenDetail.isAllNotNull()) {
+            UserMsg userMsg = (UserMsg) userRequestService.getBaiduUsInfo(tokenDetail.getAccessToken());
             result.put("user", userMsg);
         }
         result.put("bar", barService.loadBar());

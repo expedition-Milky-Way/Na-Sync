@@ -6,6 +6,7 @@ import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
 import cn.deystar.BaiduPan.Core.Compress.CompressService;
 import cn.deystar.Setting.Entity.FileSetting;
 import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 import cn.deystar.Util.BaiduPanResponse.UserMsg;
 import cn.deystar.Util.ScanAndZip.Const.SystemEnums;
 import cn.deystar.Util.ScanAndZip.Scan.FileScan;
@@ -110,27 +111,33 @@ public class WatchFileServiceImpl extends FileAlterationListenerAdaptor  {
         zipArgument.setZipToPath(setting.getCachePath());
         zipArgument.setEncryption(setting.getPassword() != null && !setting.getPassword().trim().isEmpty());
         zipArgument.setPathAnonymity(setting.getPathEncryption() != null ? setting.getPathEncryption() : false);
-        UserMsg userMsg = userRequestService.getBaiduUsInfo(setting.getToken().getAccessToken());
-        zipArgument.setOneFileSize(userMsg.getVipTypeEnums().fileSize);
-        FileScan scan = new FileScan(zipArgument);
 
-        File parentFile = new File(parent);
-        if (!parentFile.exists()) return;
-        //扫描
-        scan.scan(Arrays.asList(Objects.requireNonNull(parentFile.listFiles())));
-        SystemEnums systemEnums = setting.getSystemEnums();
-        if (!scan.getList().isEmpty()) {
-            scan.getList().forEach(item -> {
-                String command = new CommandBuilder(systemEnums)
-                        .outPut(setting.getCompressThread(), item.getZipName())
-                        .password(setting.getPassword())
-                        .append(item.getFileLit())
-                        .build();
-                //压缩
-                ZipAbstract zipService = new SuffixZip(zipArgument, item, command);
-               compressService.addTask(zipService);
-            });
+        TokenResponse tokenDetail = settingService.getToken();
+
+        if (tokenDetail!= null && tokenDetail.isAllNotNull()){
+            UserMsg userMsg = userRequestService.getBaiduUsInfo(tokenDetail.getAccessToken());
+            zipArgument.setOneFileSize(userMsg.getVipTypeEnums().fileSize);
+            FileScan scan = new FileScan(zipArgument);
+
+            File parentFile = new File(parent);
+            if (!parentFile.exists()) return;
+            //扫描
+            scan.scan(Arrays.asList(Objects.requireNonNull(parentFile.listFiles())));
+            SystemEnums systemEnums = setting.getSystemEnums();
+            if (!scan.getList().isEmpty()) {
+                scan.getList().forEach(item -> {
+                    String command = new CommandBuilder(systemEnums)
+                            .outPut(setting.getCompressThread(), item.getZipName())
+                            .password(setting.getPassword())
+                            .append(item.getFileLit())
+                            .build();
+                    //压缩
+                    ZipAbstract zipService = new SuffixZip(zipArgument, item, command);
+                    compressService.addTask(zipService);
+                });
+            }
         }
+
     }
 
 

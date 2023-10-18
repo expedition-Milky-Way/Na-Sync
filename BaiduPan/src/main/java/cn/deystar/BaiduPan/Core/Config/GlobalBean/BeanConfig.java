@@ -71,12 +71,12 @@ public class BeanConfig {
 
 
     /**
-     * 全局锁
+     * 更新锁
      *
      * @return
      */
     @Bean
-    public Lock loginLock() {
+    public Lock updateLock() {
         return new ReentrantLock(false);
     }
 
