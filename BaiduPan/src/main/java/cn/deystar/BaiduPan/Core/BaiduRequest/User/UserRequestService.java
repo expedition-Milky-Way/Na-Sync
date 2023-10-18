@@ -5,6 +5,7 @@ import cn.deystar.Util.BaiduPanResponse.UserMsg;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Component;
 
@@ -32,10 +33,12 @@ public class UserRequestService {
         HttpResponse response = HttpRequest.get(URL).execute();
         String bodyStr = response.body();
         JSONObject body = JSON.parseObject(bodyStr);
-
-        if (body != null && body.getInteger(BaiduConst.RESP_ERROR_NO) == 0) {
-            return JSONObject.parseObject(body.toJSONString(), UserMsg.class);
+        UserMsg userMsg = null;
+        try {
+            userMsg = JSONObject.parseObject(body.toJSONString(), UserMsg.class);
+        }catch (JSONException e){
+            e.printStackTrace();
         }
-        return null;
+        return userMsg;
     }
 }

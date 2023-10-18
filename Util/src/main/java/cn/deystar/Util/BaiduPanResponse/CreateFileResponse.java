@@ -1,6 +1,7 @@
 package cn.deystar.Util.BaiduPanResponse;
 
 import cn.deystar.Util.Const.BaiduCategory;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 
 import javax.print.attribute.standard.MediaSize;
@@ -42,8 +43,8 @@ public class CreateFileResponse {
 
     private String path;
 
-
-    private Integer size;
+    @JSONField(name = "size")
+    private Long size;
 
     @JSONField(name = "ctime")
     private Long createTime;
@@ -54,6 +55,10 @@ public class CreateFileResponse {
     @JSONField(name = "isdir")
     private Integer isDirectory;
 
+    @Override
+    public String toString(){
+        return JSONObject.toJSONString(this);
+    }
 
     public Integer getErrno() {
         return errno;
@@ -117,11 +122,11 @@ public class CreateFileResponse {
         this.path = path;
     }
 
-    public Integer getSize() {
+    public Long getSize() {
         return size;
     }
 
-    public void setSize(Integer size) {
+    public void setSize(Long size) {
         this.size = size;
     }
 

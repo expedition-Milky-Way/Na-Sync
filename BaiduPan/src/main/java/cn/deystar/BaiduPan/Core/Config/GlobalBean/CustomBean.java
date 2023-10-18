@@ -13,14 +13,22 @@ import org.springframework.context.annotation.Configuration;
  * @author Ming Yeung Luhyun (杨名 字 露煊)
  */
 @Configuration
-public class ThreadStartBean {
+public class CustomBean {
 
+    /**
+     * 压缩
+     * @return
+     */
     @Bean
     public CompressService compressService(){
         return new CompressServiceImpl();
     }
 
 
+    /**
+     * 上传
+     * @return
+     */
     @Bean
     public UploadTaskService uploadTaskService(){
         return new UploadTaskServiceImpl();

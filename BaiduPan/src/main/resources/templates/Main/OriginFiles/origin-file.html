@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NAS上云</title>
+    <link rel="stylesheet" th:href="@{/static/layui-v2.6.8/layui/css/layui.css}">
+    <script
+            src="https://code.jquery.com/jquery-2.2.4.js"
+            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+            crossorigin="anonymous"></script>
+    <script th:src="@{/static/layui-v2.6.8/layui/layui.js}"></script>
+    <link rel="stylesheet" th:href="@{/static/custom/custom.css}">
+    <style type="text/css">
+        .file_box {
+            text-align: left;
+            display: grid;
+        }
+    </style>
+    <script type="text/javascript">
+        $(function () {
+            layui.use(['form', 'dropdown', 'layer', 'element'], function () {
+                var form = layui.form
+                var dorpdown = layui.dropdown
+                var layer = layui.layer
+                var element = layui.element
+
+                form.on("select(sortChange)", function (data) {
+                    $("#queryForm").submit()
+                })
+
+                dorpdown.render({
+                    elem: '.file_menu',
+                    data: [
+                        {
+                            title: '删除',
+                            id: 2
+                        },
+                        {
+                            title: '下载',
+                            id: 3
+                        }
+                    ],
+                    click: function (obj) {
+                        let e = this.elem[0]
+                        if (obj.id === 2) {
+                            del(e.getAttribute("path"))
+                        }
+                    }
+                })
+            })
+        })
+
+        function goToFolder(e) {
+            let isDir = e.getAttribute("isDir")
+            console.log(isDir)
+            if (parseInt(isDir) === 1) {
+                let path = e.getAttribute("path")
+                $("#path").val(path)
+                $("#queryForm").submit()
+            }
+
+        }
+
+        function jumpToFolder(e) {
+            let originPath = $("#originPath")[0].getAttribute('bPath')
+            let clickedPath = e.getAttribute("bPath")
+            if (originPath === clickedPath){
+                $("#path").val(originPath)
+            }else{
+                $('#path').val(originPath+clickedPath)
+            }
+
+            $("#queryForm").submit()
+        }
+
+        function del(path) {
+            $.ajax({
+                url: "http://" + location.host + "/origin?path=" + path,
+                method: 'delete',
+                dataType: 'json',
+                timeout: 2000,
+                success: function (res) {
+                    console.log(res)
+                    layer.msg(res.message)
+                    if (res.success) {
+                        location.reload()
+                    }
+                },
+                error: function (res) {
+                    layer.msg("网络异常")
+                }
+            })
+        }
+
+    </script>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo layui-hide-xs layui-bg-black layui-layout-left">DupanSync</div>
+        <div th:replace="/Main/Comment/headBar :: pageHead"></div>
+    </div>
+    <div class="layui-body">
+        <div class="layui-card-header layui-card">
+            <span class="layui-breadcrumb" lay-separator=">">
+                <a id="originPath" th:text="${title}" th:bPath="${originPath}" onclick="jumpToFolder(this)"></a>
+                    <a th:each="item : ${pathList}"
+                       th:text="${item.split('/')[item.split('/').length - 1]}" th:bPath="${item}"
+                       href="#" type="button" onclick="jumpToFolder(this)"
+                    ></a>
+            </span>
+        </div>
+        <div class="layui-card-body layui-card">
+            <div class="layui-form">
+                <form th:action="@{/origin}" method="get" id="queryForm">
+                    <input hidden id="path" name="path" th:value="${path}">
+                    <input hidden id="page" name="page" th:value="${page}">
+                    <input hidden id="total" name="total" th:value="${total}">
+                    <input hidden id="onceNum" name="onceNum" th:value="${onceNum}">
+                    <div class="layui-card">
+                        <select id="sortName" name="sortName" class="layui-select custom_select"
+                                lay-filter="sortChange">
+                            <option value="">选择排序方式</option>
+                            <option th:each="item : ${sortMaps}"
+                                    th:selected="${sortName} eq ${item.name}"
+                                    th:value="${item.name}"
+                                    th:text="${item.detail}"></option>
+                        </select>
+                    </div>
+
+
+                    <div class="layui-container">
+                        <span th:if="${listEmpty}">文件空空如也 ~ </span>
+                        <div class="layui-row" th:if="${!listEmpty}" th:each="item :${fileList}">
+                            <div class="layui-col-md1" th:each="jtem : ${item}">
+                                <a th:isDir="${jtem.getIsDir()}" th:path="${jtem.path}" onclick="goToFolder(this)">
+                                    <div class="file_box">
+                                        <img style="width: 96px;height: 96px" th:src="${jtem.getImg()}"/>
+                                        <span style="width: 120px" th:text="${jtem.serverFileName}"></span>
+                                    </div>
+                                </a>
+                                <a href="#" class="file_menu" th:path="${jtem.getPath()}">
+                                    <i class="layui-icon layui-icon-more-vertical"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

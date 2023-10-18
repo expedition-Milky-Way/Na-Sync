@@ -114,7 +114,8 @@ public class TokenService {
      */
     public TokenResponse freshToken() {
         FileSetting setting = settingService.getSetting();
-        String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=" + SysConst.getRefreshToken()
+        TokenResponse tokenResponse = settingService.getToken();
+        String url = "https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=" + tokenResponse.getRefreshToken()
                 + "&client_id=:cid&client_secret=:sec";
         if (setting.getAppId() != null) url = url.replace(":cid", setting.getAppId());
         if (setting.getSecretKey() != null) url = url.replace(":sec", setting.getSecretKey());

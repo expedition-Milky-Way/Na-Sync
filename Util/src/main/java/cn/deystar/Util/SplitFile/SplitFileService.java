@@ -10,9 +10,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import java.util.ArrayList;
-
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)
@@ -28,73 +26,90 @@ public class SplitFileService {
      * @param chunkSize    A Chunk`s size
      * @return
      */
-    public synchronized ChunkBean splitFile(FileListBean fileListBean, String outPut,Long chunkSize) throws IOException {
+    public  ChunkBean splitFile(FileListBean fileListBean, String outPut, Long chunkSize) throws IOException {
         //1. 判断缓存路径是否存在，如果不存在就创建路径
         if (outPut == null || outPut.trim().isEmpty()) return null;
         if (fileListBean == null) return null;
         if (chunkSize == null || chunkSize < 1L) return null;
         File directory = new File(outPut);
-        if (!directory.exists()) {
-            if (directory.mkdirs()) {
-                System.out.println("The "+outPut+" directory create success");
-
-                //2. 计算分片个数  单个文件的大小 / chunkSize;
-                int chunkNum = new BigDecimal(fileListBean.getTotalSize())
-                        .divide(new BigDecimal(chunkSize), RoundingMode.HALF_UP)
-                        .intValue();
-
-                // 3. 开始分片
-                ChunkBean chunkBean = new ChunkBean();
-                chunkBean.setSize(fileListBean.getTotalSize());
-                chunkBean.setPath(outPut);
-                chunkBean.setDigest(DigestUtil.md5Hex(new File(fileListBean.getZipName())));
-
-                //3.1切割
-                RandomAccessFile sourceFile = new RandomAccessFile(fileListBean.getZipName(), "r");
-                long offSet = 0L;
-                for (int i = 0; i < chunkNum; i++) {
-
-                    String chunkName = chunkNameGenerator(outPut, fileListBean.getZipName(), i);
-                    long begin = offSet;
-                    long end =  (i + 1) * chunkSize;
-                    offSet = write(chunkName, chunkSize, sourceFile, begin, end);
-                }
-
-                List<TempBean> tempBeans = new ArrayList<>();
-                for (File chunkFile : directory.listFiles()){
-                    TempBean tempBean = new TempBean();
-                    tempBean.setChunk(chunkFile);
-                    tempBean.setDigest(DigestUtil.md5Hex(chunkFile));
-                    tempBeans.add(tempBean);
-                }
-                chunkBean.setBeanList(tempBeans);
-
-                // 3.获取分片文件的原文件
-                String fileName = fileListBean.getZipName();
-                if (fileName.contains("\\") || fileName.contains("/")) {
-                    fileName = fileName.replace("\\", "/");
-                    String[] fileNameStrs = fileName.split("/");
-                    fileName = fileNameStrs[fileNameStrs.length - 1];
-                }
-
-                chunkBean.setFileName(fileName);
-
-                sourceFile.close();
-
-                return chunkBean;
-            }
+        if (directory.exists()) {
+            return null;
         }
-        throw new IOException("The directory create error");
+        if (!directory.mkdirs()) {
+            throw new RuntimeException("create the directory error");
+        }
+        System.out.println("The " + outPut + " directory create success");
+
+        //2. 计算分片个数  单个文件的大小 / chunkSize;
+        int chunkNum = new BigDecimal(fileListBean.getTotalSize())
+                .divide(new BigDecimal(chunkSize), RoundingMode.UP)
+                .intValue();
+
+        // 3. 开始分片
+        ChunkBean chunkBean = new ChunkBean();
+        chunkBean.setSize(fileListBean.getTotalSize());
+        chunkBean.setPath(outPut);
+        chunkBean.setDigest(DigestUtil.md5Hex(new File(fileListBean.getZipName())));
+
+        //3.1切割
+        RandomAccessFile sourceFile = new RandomAccessFile(fileListBean.getZipName(), "r");
+        long offSet = 0L;
+        for (int i = 0; i < chunkNum; i++) {
+
+            String chunkName = chunkNameGenerator(outPut, i);
+            long begin = offSet;
+            long end = (i + 1) * chunkSize;
+            offSet = write(chunkName, chunkSize, sourceFile, begin, end);
+        }
+        sourceFile.close();
+
+        List<File> chunkFiles = sortChunkFile(new ArrayList<>(Arrays.asList(directory.listFiles())));
+        for (File chunkFile : chunkFiles) {
+            if (chunkFile.length() <= 0L){
+                chunkFile.delete();
+            }else{
+                TempBean tempBean = new TempBean();
+                tempBean.setChunk(chunkFile);
+                tempBean.setDigest(DigestUtil.md5Hex(chunkFile));
+                chunkBean.addBean(tempBean);
+            }
+
+
+        }
+
+
+        // 3.获取分片文件的原文件
+        String fileName = fileListBean.getZipName();
+        if (fileName.contains("\\") || fileName.contains("/")) {
+            fileName = fileName.replace("\\", "/");
+            String[] fileNameStrs = fileName.split("/");
+            fileName = fileNameStrs[fileNameStrs.length - 1];
+        }
+
+        chunkBean.setFileName(fileName);
+
+        return chunkBean;
+
     }
 
+    private List<File> sortChunkFile(List<File> chunkFiles) {
+        if (chunkFiles == null) return chunkFiles;
+        Collections.sort(chunkFiles, new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                Integer o1Index = Integer.valueOf(o1.getName().split("\\.")[0]);
+                Integer o2Index = Integer.valueOf(o2.getName().split("\\.")[0]);
+                return -o2Index.compareTo(o1Index);
+            }
+        });
+        return chunkFiles;
+    }
 
-    private String chunkNameGenerator(String outPut, String fileName, Integer index) {
-        String[] strs = fileName.contains("\\") ? fileName.split("\\\\") : fileName.split("/");
-        String[] nameStrs = strs[strs.length - 1].split("\\.");
-        String name = nameStrs[0];
-        return (outPut.endsWith("/") || outPut.endsWith("\\") ?
-                outPut : (outPut.replace("\\", "/")) + "/")
-                + name + "_" + index + ".tmp";
+    private String chunkNameGenerator(String outPut, Integer index) {
+
+        return (outPut.endsWith("\\") || outPut.endsWith("/") ? outPut + index : outPut + "/" + index)
+                + ".tmp";
+
     }
 
     /**
@@ -110,10 +125,11 @@ public class SplitFileService {
         try {
             RandomAccessFile in = raf;
             RandomAccessFile out = new RandomAccessFile(new File(filename), "rw");
-            byte[] bytes = new byte[(int) size];
+            byte[] bytes = new byte[1024]; //设置大了可能会出现问题
             int n = 0;
             in.seek(begin);
-            while (in.getFilePointer() <= end && (n = in.read(bytes)) != -1) {
+
+            while (in.getFilePointer() < end && (n = in.read(bytes)) != -1) {
                 out.write(bytes, 0, n);
             }
             enPointer = in.getFilePointer();

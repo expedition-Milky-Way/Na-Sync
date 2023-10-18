@@ -17,9 +17,7 @@ public class ReadyToUploadResponse {
     private Integer errno;
 
 
-    private String path;
-
-    @JSONField(name = "upload_id")
+    @JSONField(name = "uploadid")
     private String uploadId;
 
 
@@ -30,6 +28,16 @@ public class ReadyToUploadResponse {
     @JSONField(name = "block_list")
     private String blockList;
 
+    public ReadyToUploadResponse() {
+    }
+
+    public ReadyToUploadResponse(Integer errno, String uploadId, Integer returnType, String blockList) {
+        this.errno = errno;
+
+        this.uploadId = uploadId;
+        this.returnType = returnType;
+        this.blockList = blockList;
+    }
 
     public Integer getErrno() {
         return errno;
@@ -39,13 +47,6 @@ public class ReadyToUploadResponse {
         this.errno = errno;
     }
 
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
 
     public String getUploadId() {
         return uploadId;
@@ -69,5 +70,15 @@ public class ReadyToUploadResponse {
 
     public void setBlockList(String blockList) {
         this.blockList = blockList;
+    }
+
+
+    @Override
+    public String toString() {
+        return "{" +
+                "\"errno\":" + this.errno + "," +
+                "\"uploadId\":\"" + this.uploadId + "\"," +
+                "\"returnType\":\"" + this.returnType + "\"," +
+                "\"blockList\":\"" + this.blockList + "\"}";
     }
 }

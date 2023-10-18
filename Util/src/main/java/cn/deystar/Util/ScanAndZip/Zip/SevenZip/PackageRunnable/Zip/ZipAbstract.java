@@ -8,6 +8,7 @@ import cn.deystar.Util.ScanAndZip.ZipArgument.ZipArgument;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -31,7 +32,7 @@ public abstract class ZipAbstract implements Callable<FileListBean> {
 
         }
         InputStream stdIn = proc.getInputStream();
-        InputStreamReader isr = new InputStreamReader(stdIn, Charset.forName("GBK"));
+        InputStreamReader isr = new InputStreamReader(stdIn, StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
         String line = null;
 

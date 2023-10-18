@@ -15,13 +15,12 @@ public class FileToChar {
         StringBuilder fileData = new StringBuilder(1000);
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
 
-        char[] buf = new char[10];
+        char[] buf = new char[4096];
         int numRead = 0;
         while ((numRead = reader.read(buf)) != -1) {
-            System.out.println(numRead);
             String readData = String.valueOf(buf, 0, numRead);
             fileData.append(readData);
-            buf = new char[1024];
+            buf = new char[4096];
         }
 
         reader.close();

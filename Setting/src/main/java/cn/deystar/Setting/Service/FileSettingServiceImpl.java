@@ -1,6 +1,7 @@
 package cn.deystar.Setting.Service;
 
 
+import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
@@ -26,33 +27,8 @@ public class FileSettingServiceImpl implements FileSettingService {
 
     private Object lock = new Object();
 
-    /**
-     * 设置fileSetting
-     */
-    @Override
-    public Object settingFile(FileSetting fileSetting) {
-        fileSetting.setVersion(version.incrementAndGet());
-        setting = fileSetting;
-        ConfigFileTemplate.writeFile(genFilePath(), fileSetting.toString());
-        return fileSetting;
-    }
-
-    /**
-     * 获取setting
-     */
-    @Override
-    public FileSetting getSetting() {
-        if (setting == null || setting.getVersion() < version.get()) {
-            String jsonString = ConfigFileTemplate.readFile(genFilePath());
-            setting = JSONObject.parseObject(jsonString, FileSetting.class);
-        }
-        return setting;
-
-    }
-
     @Override
     public FileSetting updateSetting(FileSetting setting) {
-        synchronized (lock) {
             FileSetting update = getSetting();
             if (update == null) update = new FileSetting();
             if (setting.getAppId() != null && !setting.getAppId().trim().isEmpty())
@@ -88,7 +64,7 @@ public class FileSettingServiceImpl implements FileSettingService {
             if (setting.getSystem() != null) {
                 update.setSystem(setting.getSystem());
             }
-            if (setting.getToken() != null){
+            if (setting.getToken() != null) {
                 update.setToken(setting.getToken());
             }
             if (setting.getSystemEnums() != null)
@@ -96,8 +72,30 @@ public class FileSettingServiceImpl implements FileSettingService {
             setting.setVersion(version.incrementAndGet());
             update.setDateTime(formator.format(new Date()));
             return (FileSetting) this.settingFile(update);
+    }
 
+    /**
+     * 设置fileSetting
+     */
+    @Override
+    public Object settingFile(FileSetting fileSetting) {
+        fileSetting.setVersion(version.incrementAndGet());
+        setting = fileSetting;
+        ConfigFileTemplate.writeFile(genFilePath(), fileSetting.toString());
+        return fileSetting;
+    }
+
+    /**
+     * 获取setting
+     */
+    @Override
+    public FileSetting getSetting() {
+        if (setting == null || setting.getVersion() < version.get()) {
+            String jsonString = ConfigFileTemplate.readFile(genFilePath());
+            setting = JSONObject.parseObject(jsonString, FileSetting.class);
         }
+        return setting;
+
     }
 
 
@@ -128,4 +126,28 @@ public class FileSettingServiceImpl implements FileSettingService {
         return path;
     }
 
+    @Override
+    public TokenResponse getToken() {
+        synchronized (lock) {
+            return setting.getToken();
+        }
+    }
+
+    @Override
+    public void holdOn() {
+        synchronized (lock) {
+            try {
+                lock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void goOn() {
+        synchronized (lock) {
+            lock.notify();
+        }
+    }
 }

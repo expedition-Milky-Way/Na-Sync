@@ -1,6 +1,8 @@
 package cn.deystar.BaiduPan.Core.Config.Thymeleaf;
 
 
+import cn.deystar.Util.Const.BaiduCategory;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
@@ -41,6 +43,14 @@ public class ThymeleafConfig implements WebMvcConfigurer {
         cssSet.add("static/layui-v2.6.8/layui/css/modules/layer/default/layer.css");
         templateResolver.setCSSTemplateModePatterns(cssSet);
         templateResolver.setCacheable(false);
+        Set<String> raw = new HashSet<>();
+        for (BaiduCategory value : BaiduCategory.values()) {
+            if (value.img!= null && !value.img.isEmpty()){
+                raw.add(value.img);
+            }
+        }
+
+        templateResolver.setRawTemplateModePatterns(raw);
         return templateResolver;
     }
 

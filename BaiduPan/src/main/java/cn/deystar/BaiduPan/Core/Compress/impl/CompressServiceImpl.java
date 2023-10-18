@@ -1,6 +1,5 @@
 package cn.deystar.BaiduPan.Core.Compress.impl;
 
-import cn.deystar.BaiduPan.Core.BaiduRequest.Upload.UploadService;
 import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
 import cn.deystar.BaiduPan.Core.Compress.CompressService;
 import cn.deystar.BaiduPan.Core.Upload.UploadTaskService;
@@ -14,13 +13,7 @@ import cn.deystar.Util.ScanAndZip.Zip.SevenZip.Command.ZipCommand.CommandBuilder
 import cn.deystar.Util.ScanAndZip.Zip.SevenZip.PackageRunnable.Zip.Suffix.SuffixZip;
 import cn.deystar.Util.ScanAndZip.Zip.SevenZip.PackageRunnable.Zip.ZipAbstract;
 import cn.deystar.Util.ScanAndZip.ZipArgument.ZipArgument;
-import cn.deystar.Util.SplitFile.SplitFileService;
 import cn.hutool.extra.spring.SpringUtil;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
-import javafx.concurrent.Task;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -82,19 +75,23 @@ public class CompressServiceImpl implements CompressService {
                             }
                         }
                     }
-                    executor.execute(() -> {
-                        if (zipService != null) {
+                    if (zipService != null) {
+                        executor.execute(() -> {
                             taskCount.incrementAndGet();
                             FileListBean bean = this.compressAndUpload(zipService);
                             if (bean != null) {
+                                synchronized (compressing){
+                                    compressing.remove(bean.getZipName());
+                                }
+
                                 uploadTaskService.addTask(bean);
                             }
                             taskCount.decrementAndGet();
-                            synchronized (zipService){
+                            synchronized (zipService) {
                                 zipService.notify();
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });
@@ -108,61 +105,22 @@ public class CompressServiceImpl implements CompressService {
      * @param zipAbstract
      */
     private FileListBean compressAndUpload(ZipAbstract zipAbstract) {
-
+        FileListBean bean = null;
         if (todoSet.add(zipAbstract.getBean().getZipName())) {
 
             zipAbstract.setStatus(CompressStatus.COMPRESSING);
-
-            compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
-            todoSet.remove(zipAbstract.getBean().getZipName());
-            return zipAbstract.call();
-
-        }
-        return null;
-    }
-
-
-    @Override
-    public Boolean addUploadTask(String parentPath) {
-        File directory = new File(parentPath);
-        Boolean result = false;
-        if (!directory.exists() && directory.listFiles().length < 1) {
-            return result;
-        }
-        FileSetting fileSetting = settingService.getSetting();
-        if (fileSetting == null || !fileSetting.isAllNotNull()) {
-            return result;
-        }
-        UserMsg userMsg = userRequestService.getBaiduUsInfo(fileSetting.getToken().getAccessToken());
-        // 1. 进行文件扫描
-        ZipArgument zipArgument = new ZipArgument();
-        zipArgument.setEncryption(fileSetting.getPassword() != null && !fileSetting.getPassword().trim().isEmpty());
-        zipArgument.setOneFileSize(userMsg.getVipTypeEnums().fileSize);
-        zipArgument.setOriginPath(parentPath);
-        zipArgument.setPassword(fileSetting.getPassword());
-        zipArgument.setZipToPath(fileSetting.getCachePath());
-        zipArgument.setPathAnonymity(fileSetting.getPathEncryption());
-
-        FileScan scanInstance = new FileScan(zipArgument);
-        List<FileListBean> waitOfCompress = scanInstance.getList();
-
-        if (waitOfCompress != null && !waitOfCompress.isEmpty()) {
-            for (FileListBean bean : waitOfCompress) {
-                String command = new CommandBuilder(fileSetting.getSystemEnums())
-                        .outPut(fileSetting.getCompressThread(), bean.getZipName())
-                        .password(fileSetting.getPassword())
-                        .append(bean.getFileLit())
-                        .build();
-                ZipAbstract zipService = new SuffixZip(zipArgument, bean, command);
-                synchronized (lock) {
-                    result = zipQueue.offer(zipService);
-                }
-                if (!result) {
-                    break;
-                }
+            synchronized (compressing){
+                compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
             }
+
+            bean = zipAbstract.call();
+            synchronized (compressing){
+                compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
+            }
+
+
         }
-        return result;
+        return bean;
     }
 
 
@@ -171,5 +129,15 @@ public class CompressServiceImpl implements CompressService {
         synchronized (lock) {
             zipQueue.offer(zipService);
         }
+    }
+
+    @Override
+    public List<FileListBean> getCompressing() {
+
+        if (compressing.isEmpty()) return new ArrayList<>();
+        synchronized (compressing){
+            return new ArrayList<>(compressing.values());
+        }
+
     }
 }

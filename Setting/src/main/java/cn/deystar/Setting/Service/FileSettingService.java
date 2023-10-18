@@ -2,6 +2,7 @@ package cn.deystar.Setting.Service;
 
 
 import cn.deystar.Setting.Entity.FileSetting;
+import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 
 public interface FileSettingService {
 
@@ -12,4 +13,10 @@ public interface FileSettingService {
 
 
     FileSetting updateSetting(FileSetting setting);
+
+    TokenResponse getToken();
+
+    void holdOn();
+
+    void goOn();
 }

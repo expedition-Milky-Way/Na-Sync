@@ -60,11 +60,7 @@ public class SettingController {
             modelMap.put("secretKey", fileSetting.getSecretKey());
             modelMap.put("signKey", fileSetting.getSignKey());
             modelMap.put("taskNum", fileSetting.getTaskNum());
-            modelMap.put("dateTime", fileSetting.getDateTime());
             modelMap.put("version", fileSetting.getVersion());
-            modelMap.put("compressThread", fileSetting.getCompressThread());
-            modelMap.put("isListen", fileSetting.getIsListen());
-            modelMap.put("token", fileSetting.getToken());
         }
         BarEntity bar = barService.getBar("/setting/baidu");
         modelMap.put("title", bar.getTitle());
@@ -77,25 +73,46 @@ public class SettingController {
     @PutMapping(value = "baidu")
     @ResponseBody
     public ResponseData submit(@RequestBody FileSetting setting) {
-        DeviceCodeResponse deviceCodeResponse = tokenService.deviceCode(setting.getAppKey());
-        if (deviceCodeResponse != null && deviceCodeResponse.isAllNotNull()) {
-            fileSettingService.updateSetting(setting);
-            executor.execute(() -> {
-                tokenGetting.incrementAndGet();
-                Thread.currentThread().setName("设置setting.json");
-                TokenResponse tokenDetail = tokenService.getToken(
-                        deviceCodeResponse.getDeviceCode(),
-                        deviceCodeResponse.getExpires(),
-                        deviceCodeResponse.getInterval());
-                if (tokenDetail != null && tokenDetail.getAccessToken() != null) {
-                    setting.setToken(tokenDetail);
+        //关键参数判空
+        if (setting.getAppId() != null && !setting.getAppId().trim().isEmpty() &&
+                setting.getAppKey() != null && !setting.getAppKey().isEmpty() &&
+                setting.getSecretKey() != null && !setting.getSecretKey().isEmpty() &&
+                setting.getSignKey() != null && !setting.getSignKey().trim().isEmpty()) {
+            FileSetting oldSetting = fileSettingService.getSetting();
+            //对比设置
+            if (!oldSetting.getSignKey().equals(setting.getSignKey()) &&
+                    !oldSetting.getSecretKey().equals(setting.getSecretKey()) &&
+                    !oldSetting.getAppKey().equals(setting.getAppKey()) &&
+                    !oldSetting.getAppId().equals(setting.getAppId()))
+            { //按照正常逻辑重新授权
+                DeviceCodeResponse deviceCodeResponse = tokenService.deviceCode(setting.getAppKey());
+
+                if (deviceCodeResponse != null && deviceCodeResponse.isAllNotNull()) {
+                    fileSettingService.updateSetting(setting);
+                    executor.execute(() -> {
+                        tokenGetting.incrementAndGet();
+                        Thread.currentThread().setName("设置setting.json");
+                        TokenResponse tokenDetail = tokenService.getToken(
+                                deviceCodeResponse.getDeviceCode(),
+                                deviceCodeResponse.getExpires(),
+                                deviceCodeResponse.getInterval());
+                        if (tokenDetail != null && tokenDetail.getAccessToken() != null) {
+                            setting.setToken(tokenDetail);
+                        }
+                        tokenGetting.decrementAndGet();
+                        fileSettingService.updateSetting(setting);
+                    });
+                    return new Success(deviceCodeResponse);
                 }
-                tokenGetting.decrementAndGet();
+
+                return new Warning("请输入正确的appId appKey SecretKey SignKey");
+            }else{
+                //如果appId等关键百度网盘信息没有改变，就直接更新setting
                 fileSettingService.updateSetting(setting);
-            });
-            return new Success(deviceCodeResponse);
+                return new Success();
+            }
         }
-        return new Warning("请输入正确的appId appKey SecretKey SignKey");
+        return new Warning("请填写所有内容");
     }
 
     /**
@@ -129,12 +146,7 @@ public class SettingController {
             modelMap.put("compressThread", setting.getCompressThread());
             modelMap.put("isListen", setting.getIsListen());
             modelMap.put("password", setting.getPassword());
-            modelMap.put("token", setting.getToken());
-            modelMap.put("appId", setting.getAppId());
-            modelMap.put("appKey", setting.getAppKey());
-            modelMap.put("secretKey", setting.getSecretKey());
-            modelMap.put("signKey", setting.getSignKey());
-            modelMap.put("taskNum", setting.getTaskNum());
+
             modelMap.put("pathEncryption", setting.getPathEncryption());
             modelMap.put("system", setting.getSystem());
         }
@@ -164,8 +176,8 @@ public class SettingController {
             String[] pathString = path.split("/");
             String[] cachePathString = cachePath.split("/");
             Integer containsNum = 0;
-            for (int i = 0 ;i < Math.min(pathString.length,cachePathString.length);i++){
-                if (pathString[i].equals(cachePathString[i])){
+            for (int i = 0; i < Math.min(pathString.length, cachePathString.length); i++) {
+                if (pathString[i].equals(cachePathString[i])) {
                     containsNum++;
                 }
             }

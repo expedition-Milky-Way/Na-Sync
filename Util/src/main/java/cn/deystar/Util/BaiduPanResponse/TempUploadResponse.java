@@ -1,5 +1,6 @@
 package cn.deystar.Util.BaiduPanResponse;
 
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 
 /**
@@ -9,25 +10,24 @@ import com.alibaba.fastjson.annotation.JSONField;
 public class TempUploadResponse {
 
 
-    private Integer errno;
+    @JSONField(name = "uploadid")
+    private String uploadId;
 
     @JSONField(name = "md5")
     private String digest;
 
+    /**
+     * 上传到第几个分片
+     */
+    @JSONField(name = "partseq")
+    private String partSeq;
+
     public TempUploadResponse() {
     }
 
-    public TempUploadResponse(Integer errno, String digest) {
-        this.errno = errno;
-        this.digest = digest;
-    }
-
-    public Integer getErrno() {
-        return errno;
-    }
-
-    public void setErrno(Integer errno) {
-        this.errno = errno;
+    @Override
+    public String toString(){
+        return JSONObject.toJSONString(this);
     }
 
     public String getDigest() {
@@ -36,5 +36,21 @@ public class TempUploadResponse {
 
     public void setDigest(String digest) {
         this.digest = digest;
+    }
+
+    public String getUploadId() {
+        return uploadId;
+    }
+
+    public void setUploadId(String uploadId) {
+        this.uploadId = uploadId;
+    }
+
+    public Integer getPartSeq() {
+        return Integer.valueOf(this.partSeq);
+    }
+
+    public void setPartSeq(String partSeq) {
+        this.partSeq = partSeq;
     }
 }

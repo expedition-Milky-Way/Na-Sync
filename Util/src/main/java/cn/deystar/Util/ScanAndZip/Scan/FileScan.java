@@ -103,7 +103,7 @@ public class FileScan {
             bean.setZipName(this.genZipName(parent, user.getZipToPath(), user.getPathAnonymity()));
         }
 
-        bean.setOriginParent(parent);
+        bean.setSourceParent(parent);
         // 塞进bean里面
         if (bean.getParent() == null) bean.setParent(parent);
         bean.getFileLit().add(file);

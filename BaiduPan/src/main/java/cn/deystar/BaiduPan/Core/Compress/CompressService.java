@@ -11,7 +11,9 @@ import java.util.List;
 public interface CompressService {
 
 
-    Boolean addUploadTask(String parentPath);
+
 
     void addTask(ZipAbstract zipService);
+
+    List<FileListBean> getCompressing();
 }

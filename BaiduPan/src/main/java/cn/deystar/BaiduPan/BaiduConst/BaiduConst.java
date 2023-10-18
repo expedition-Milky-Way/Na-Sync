@@ -31,17 +31,37 @@ public class BaiduConst {
 
     public static final String RESP_BAIDU_COOKIE = "BAIDUID";
 
+    /**
+     * 覆盖，需要与预上传precreate接口中的rtype保持一致
+     */
     public static final Integer RE_TYPE_COVER = 3;
 
+    /**
+     * path冲突且block_list不同才重命名
+     */
     public static final Integer RE_TYPE_COVER_BY_PATH = 2;
 
+    /**
+     * 只要path冲突即重命名
+     */
     public static final Integer RE_TYPE_RENAME = 1;
 
+    /**
+     * 返回文件冲突错误
+     */
     public static final Integer RE_TYPE_DO_NOT_ANYTHING = 0;
 
-    public static final Integer DIRECTORY_NO = 0;
 
-    public static final Integer DIRECTORY_YES = 1;
+
+    //是文件目录
+    public static final String IS_DIR_STR = "1";
+    public static final Integer IS_DIR_INT = 1;
+    //不是文件目录
+    public static String NOT_DIR_STR = "0";
+
+    public static Integer NOT_DIR_INT = 0;
+
+
 
     public static String RESP_BAIDU_HTML() {
         String path = "";

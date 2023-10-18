@@ -17,7 +17,7 @@ public class FileListBean {
     /**
      * 原文件路径
      */
-    private String originParent;
+    private String sourceParent;
 
 
     private String parent;
@@ -28,7 +28,7 @@ public class FileListBean {
     private List<File> fileLit;
 
     /**
-     * 压缩文件的绝对路径
+     * 压缩文件绝对路径+文件名
      */
     private String zipName;
 
@@ -45,17 +45,18 @@ public class FileListBean {
 
 
     private Integer uploadPercent;
+
     public FileListBean() {
         this.fileLit = new ArrayList<>();
         this.totalSize = 0L;
     }
 
-    public String getOriginParent() {
-        return originParent;
+    public String getSourceParent() {
+        return sourceParent;
     }
 
-    public void setOriginParent(String originParent) {
-        this.originParent = originParent;
+    public void setSourceParent(String originParent) {
+        this.sourceParent = originParent;
     }
 
     public String getParent() {
@@ -92,7 +93,7 @@ public class FileListBean {
 
     @Override
     public String toString() {
-        return "{\"originParent\":\"" + originParent + "\"\n" +
+        return "{\"originParent\":\"" + sourceParent + "\"\n" +
                 "\"parent\":\"" + parent + "\"\n" +
                 "\"fileList\":" + fileLit + "\n" +
                 "\"zipName\":" + zipName + "\n" +

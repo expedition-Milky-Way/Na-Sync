@@ -1,0 +1,10 @@
+ {
+          "title": "压缩任务",
+          "isRoot": false,
+          "url": "/task/zip"
+        },
+        {
+          "title": "上传任务",
+          "isRoot": false,
+          "url": "/task/upload"
+        },

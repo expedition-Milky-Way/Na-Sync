@@ -15,6 +15,9 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -47,6 +50,7 @@ public class BeanConfig {
     }
 
 
+
     /**
      * 装配文件监听
      */
@@ -67,7 +71,7 @@ public class BeanConfig {
 
 
     /**
-     * 设置登录状态时的不可重入锁（每次并发只有一个用户能够成功登录）
+     * 全局锁
      *
      * @return
      */
@@ -85,6 +89,7 @@ public class BeanConfig {
     public ServerEndpointExporter exporter() {
         return new ServerEndpointExporter();
     }
+
 
 
 }
