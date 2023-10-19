@@ -14,12 +14,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class FileSettingServiceImpl implements FileSettingService {
-
-    @Resource
-    Lock updateLock;
+    private static final Lock updateLock = new ReentrantLock(false);
     private final SimpleDateFormat formator = new SimpleDateFormat("yyyy-mm-dd HH:mm");
 
     private static final String SETTING_FILE_NAME = "setting.json";
