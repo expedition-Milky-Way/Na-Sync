@@ -1,10 +1,9 @@
 package cn.deystar.BaiduPan.Core.BaiduRequest.Token;
 
-import cn.deystar.Setting.Entity.FileSetting;
-import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Setting.Setting.Entity.FileSetting;
+import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.Util.BaiduPanResponse.DeviceCodeResponse;
 import cn.deystar.Util.BaiduPanResponse.TokenResponse;
-import cn.deystar.Util.Util.SysConst;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;

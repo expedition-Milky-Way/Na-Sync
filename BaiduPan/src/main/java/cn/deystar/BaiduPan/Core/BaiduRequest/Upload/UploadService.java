@@ -2,44 +2,27 @@ package cn.deystar.BaiduPan.Core.BaiduRequest.Upload;
 
 import cn.deystar.BaiduPan.BaiduConst.BaiduConst;
 import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
-import cn.deystar.Setting.Entity.FileSetting;
-import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.Util.BaiduPanResponse.*;
 import cn.deystar.Util.ScanAndZip.Zip.Bean.FileListBean;
 import cn.deystar.Util.SplitFile.Bean.ChunkBean;
 import cn.deystar.Util.SplitFile.Bean.TempBean;
-import cn.deystar.Util.Util.FileAndDigsted;
 import cn.deystar.Util.Util.FileToChar;
 import cn.deystar.Util.Util.FormByUrlEncodeUtil;
-import cn.deystar.Util.Util.SysConst;
-import cn.hutool.db.handler.HandleHelper;
-import cn.hutool.http.ContentType;
-
-import java.io.DataOutputStream;
-import java.net.HttpURLConnection;
 
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.annotation.JSONField;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 
 import javax.annotation.Resource;
-import javax.print.DocFlavor;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.time.chrono.MinguoDate;
 import java.util.*;
 
 /**

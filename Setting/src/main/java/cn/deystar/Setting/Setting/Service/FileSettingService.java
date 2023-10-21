@@ -1,7 +1,7 @@
-package cn.deystar.Setting.Service;
+package cn.deystar.Setting.Setting.Service;
 
 
-import cn.deystar.Setting.Entity.FileSetting;
+import cn.deystar.Setting.Setting.Entity.FileSetting;
 import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 
 public interface FileSettingService {

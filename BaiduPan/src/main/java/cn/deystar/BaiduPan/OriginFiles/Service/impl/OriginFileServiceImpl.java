@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -65,14 +67,14 @@ public class OriginFileServiceImpl implements OriginFileService {
             if (size <= colMax) {
                 colNum = 1;
             } else {
-                colNum = (int) Math.ceil(size.doubleValue() / colMax.doubleValue());
+                colNum = new BigDecimal(size).divide(new BigDecimal(colMax), RoundingMode.UP).intValue();
             }
-            Integer step = size / colNum;
-            for (int i = 0; i < colNum; i+=step) {
 
+            for (int i = 0; i < colNum; i++) {
+                Integer fromIndex = i* colMax;
                 Integer toIndex = i * colMax + colMax;
                 if (toIndex > allFiles.size()) toIndex = allFiles.size();
-                List<OriginFileResponse> ofSubList = allFiles.subList(i * colMax, toIndex);
+                List<OriginFileResponse> ofSubList = allFiles.subList(fromIndex, toIndex);
 
                 List<OriginFiles> fileList = new ArrayList<>();
 

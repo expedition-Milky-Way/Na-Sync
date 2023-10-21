@@ -4,8 +4,8 @@ import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
 
 
 import cn.deystar.BaiduPan.Core.Compress.CompressService;
-import cn.deystar.Setting.Entity.FileSetting;
-import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Setting.Setting.Entity.FileSetting;
+import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 import cn.deystar.Util.BaiduPanResponse.UserMsg;
 import cn.deystar.Util.ScanAndZip.Const.SystemEnums;

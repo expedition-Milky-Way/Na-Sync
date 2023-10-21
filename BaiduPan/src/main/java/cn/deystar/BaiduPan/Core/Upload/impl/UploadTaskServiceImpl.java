@@ -5,8 +5,8 @@ import cn.deystar.BaiduPan.Core.BaiduRequest.NetDiskPath.NetDiskPathService;
 import cn.deystar.BaiduPan.Core.BaiduRequest.Upload.UploadService;
 
 import cn.deystar.BaiduPan.Core.Upload.UploadTaskService;
-import cn.deystar.Setting.Entity.FileSetting;
-import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Setting.Setting.Entity.FileSetting;
+import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.Util.BaiduPanResponse.CreateFileResponse;
 import cn.deystar.Util.BaiduPanResponse.ReadyToUploadResponse;
 import cn.deystar.Util.BaiduPanResponse.StepByUploadResponse;
@@ -18,8 +18,6 @@ import cn.deystar.Util.SplitFile.Bean.ChunkBean;
 import cn.deystar.Util.SplitFile.Bean.TempBean;
 import cn.deystar.Util.SplitFile.SplitFileService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.annotation.Resource;
@@ -27,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;

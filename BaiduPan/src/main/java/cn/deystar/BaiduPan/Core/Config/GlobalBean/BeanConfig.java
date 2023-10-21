@@ -3,11 +3,10 @@ package cn.deystar.BaiduPan.Core.Config.GlobalBean;
 
 import cn.deystar.BaiduPan.Core.OS.watchFile.Service.impl.WatchFileServiceImpl;
 
-import org.apache.commons.io.monitor.FileAlterationListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.BaiduPan.Core.OS.watchFile.Monitor.FileMonitor;
 import cn.deystar.BaiduPan.Core.OS.watchFile.Monitor.FileMonitorService;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -15,9 +14,6 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 

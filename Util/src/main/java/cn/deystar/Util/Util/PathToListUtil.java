@@ -36,7 +36,13 @@ public class PathToListUtil {
     public static List<String> genPathList(String path){
         if (path== null || path.trim().isEmpty()) return new ArrayList<>();
         String[] pathStr = path.replace("\\", "/").split("/");
-        return new ArrayList<>(Arrays.asList(pathStr));
+        StringBuilder builder = new StringBuilder();
+        List<String> result = new ArrayList<>();
+        for (int i = 0;i< pathStr.length;i++){
+            builder.append(pathStr[i]).append("/");
+            result.add(builder.toString());
+        }
+        return result;
     }
 
 

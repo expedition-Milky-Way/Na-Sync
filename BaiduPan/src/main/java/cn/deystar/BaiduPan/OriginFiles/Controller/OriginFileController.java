@@ -4,18 +4,11 @@ import cn.deystar.BaiduPan.Core.BaiduRequest.NetDiskPath.NetDiskPathService;
 import cn.deystar.BaiduPan.OriginFiles.Bean.OriginFiles;
 import cn.deystar.BaiduPan.OriginFiles.Enums.Sort;
 import cn.deystar.BaiduPan.OriginFiles.Service.OriginFileService;
-import cn.deystar.Setting.Entity.FileSetting;
-import cn.deystar.Setting.Service.FileSettingService;
 import cn.deystar.Util.BaiduPanResponse.DeleteResponse;
-import cn.deystar.Util.BaiduPanResponse.OriginFileResponse;
-import cn.deystar.Util.BaiduPanResponse.TokenResponse;
-import cn.deystar.Util.Beans.PathLinkList.PathLinkList;
 import cn.deystar.Util.HttpServerlet.Response.ResponseData;
 import cn.deystar.Util.HttpServerlet.Response.Success;
 import cn.deystar.Util.HttpServerlet.Response.Warning;
 import cn.deystar.Util.Util.PathToListUtil;
-import cn.hutool.db.handler.HandleHelper;
-import org.junit.platform.commons.annotation.Testable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -75,18 +68,11 @@ public class OriginFileController {
         if (path != null && !path.trim().isEmpty()) {
             path = path.replace(defaultPath, "");
         }
-        StringBuilder builder = new StringBuilder();
-        List<String> paths = new ArrayList<>();
+
+
         List<String> directories = PathToListUtil.genPathList(path);
-        for (int i = 0; i < directories.size(); i++) {
-            builder.append(directories.get(i));
-            paths.add(builder.toString());
-            if (i != directories.size() - 1) {
-                builder.append("/");
-            }
-        }
         modelMap.put("originPath", defaultPath);
-        modelMap.put("pathList", paths);
+        modelMap.put("pathList", directories);
         modelMap.put("listEmpty", fileList == null || fileList.isEmpty());
         modelMap.put("fileList", fileList);
         modelMap.put("path", path);

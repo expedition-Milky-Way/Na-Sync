@@ -10,7 +10,11 @@
           "isRoot": false,
           "url": "/"
         },
-
+        {
+          "title": "本地目录",
+          "isRoot": false,
+          "url": "/local"
+        },
         {
           "title": "云端目录",
           "isRoot": false,

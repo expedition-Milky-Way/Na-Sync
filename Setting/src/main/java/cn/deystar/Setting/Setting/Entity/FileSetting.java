@@ -1,4 +1,4 @@
-package cn.deystar.Setting.Entity;
+package cn.deystar.Setting.Setting.Entity;
 
 
 import cn.deystar.Util.ScanAndZip.Const.SystemEnums;

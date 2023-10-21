@@ -1,15 +1,13 @@
 package cn.deystar.BaiduPan.Core.Config.Scheduling;
 
 import cn.deystar.BaiduPan.Core.BaiduRequest.Token.TokenService;
-import cn.deystar.Setting.Entity.FileSetting;
-import cn.deystar.Setting.Service.FileSettingService;
+import cn.deystar.Setting.Setting.Entity.FileSetting;
+import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.Util.BaiduPanResponse.TokenResponse;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
