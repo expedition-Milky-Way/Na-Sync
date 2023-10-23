@@ -8,7 +8,7 @@ import cn.deystar.BaiduPan.Index.Service.IndexService;
 import cn.deystar.BaiduPan.WebSocket.WebSocketController;
 import cn.deystar.Util.Beans.OSstatus.OSstatusBean;
 import cn.deystar.Util.HttpServerlet.Response.Success;
-import cn.deystar.BaiduPan.Core.OS.OsService.OperatingTemplate;
+import cn.deystar.BaiduPan.Core.Client.System.OperatingTemplate;
 
 import javax.annotation.Resource;
 import java.util.HashMap;

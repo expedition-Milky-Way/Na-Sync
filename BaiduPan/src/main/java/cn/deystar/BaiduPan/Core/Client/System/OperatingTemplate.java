@@ -1,8 +1,8 @@
-package cn.deystar.BaiduPan.Core.OS.OsService;
+package cn.deystar.BaiduPan.Core.Client.System;
 
-import cn.deystar.BaiduPan.Core.OS.OsService.CPU.CPUMonitorCalc;
+import cn.deystar.BaiduPan.Core.Client.System.CPU.CPUMonitorCalc;
 import cn.deystar.Util.Beans.OSstatus.OSstatusBean;
-import cn.deystar.BaiduPan.Core.OS.OsService.Memory.MemoryMonitor;
+import cn.deystar.BaiduPan.Core.Client.System.Memory.MemoryMonitor;
 
 import java.math.BigDecimal;
 

@@ -1,14 +1,14 @@
 package cn.deystar.BaiduPan.Core.Config.GlobalBean;
 
 
-import cn.deystar.BaiduPan.Core.OS.watchFile.Service.impl.WatchFileServiceImpl;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Service.impl.WatchFileServiceImpl;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import cn.deystar.Setting.Setting.Service.FileSettingService;
-import cn.deystar.BaiduPan.Core.OS.watchFile.Monitor.FileMonitor;
-import cn.deystar.BaiduPan.Core.OS.watchFile.Monitor.FileMonitorService;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Monitor.FileMonitor;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Monitor.FileMonitorService;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 

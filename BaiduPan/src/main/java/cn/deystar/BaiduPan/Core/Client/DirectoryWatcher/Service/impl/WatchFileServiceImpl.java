@@ -1,4 +1,4 @@
-package cn.deystar.BaiduPan.Core.OS.watchFile.Service.impl;
+package cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Service.impl;
 
 import cn.deystar.BaiduPan.Core.BaiduRequest.User.UserRequestService;
 

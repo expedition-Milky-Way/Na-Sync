@@ -1,7 +1,6 @@
 package cn.deystar.BaiduPan.Core.Upload.impl;
 
 import cn.deystar.BaiduPan.BaiduConst.BaiduConst;
-import cn.deystar.BaiduPan.Core.BaiduRequest.NetDiskPath.NetDiskPathService;
 import cn.deystar.BaiduPan.Core.BaiduRequest.Upload.UploadService;
 
 import cn.deystar.BaiduPan.Core.Upload.UploadTaskService;
@@ -51,8 +50,6 @@ public class UploadTaskServiceImpl implements UploadTaskService {
     @Resource
     private UploadService uploadService;
 
-    @Resource
-    private NetDiskPathService netDiskPathService;
 
     private static final Map<String, FileListBean> uploadingBean = new HashMap<>();
     private static final Queue<FileListBean> queue = new LinkedBlockingQueue<>();

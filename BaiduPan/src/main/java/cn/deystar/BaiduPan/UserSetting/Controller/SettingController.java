@@ -2,7 +2,7 @@ package cn.deystar.BaiduPan.UserSetting.Controller;
 
 
 import cn.deystar.BaiduPan.Core.BaiduRequest.Token.TokenService;
-import cn.deystar.BaiduPan.Core.OS.watchFile.Service.impl.WatchFileServiceImpl;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Service.impl.WatchFileServiceImpl;
 import cn.hutool.core.util.ObjectUtil;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Controller;
@@ -17,7 +17,7 @@ import cn.deystar.Setting.Setting.Service.FileSettingService;
 import cn.deystar.Util.HttpServerlet.Response.ResponseData;
 import cn.deystar.Util.HttpServerlet.Response.Success;
 import cn.deystar.Util.HttpServerlet.Response.Warning;
-import cn.deystar.BaiduPan.Core.OS.watchFile.Monitor.FileMonitorService;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Monitor.FileMonitorService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;

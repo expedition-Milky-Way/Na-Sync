@@ -1,4 +1,4 @@
-package cn.deystar.BaiduPan.Core.OS.OsService.CPU;
+package cn.deystar.BaiduPan.Core.Client.System.CPU;
 
 import com.sun.management.OperatingSystemMXBean;
 

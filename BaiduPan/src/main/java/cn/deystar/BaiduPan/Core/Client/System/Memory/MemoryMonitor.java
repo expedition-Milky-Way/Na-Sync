@@ -1,4 +1,4 @@
-package cn.deystar.BaiduPan.Core.OS.OsService.Memory;
+package cn.deystar.BaiduPan.Core.Client.System.Memory;
 
 import com.sun.management.OperatingSystemMXBean;
 
