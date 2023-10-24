@@ -63,4 +63,11 @@ public  class ZipCommandBuilder  {
             throw new ExecutableFileException(ExecutableFileEnums.NOT_FOUND);
         }
     }
+
+    /**
+     * Not using the built-in 7zip
+     */
+    public ZipCommandBuilder(){
+
+    }
 }
