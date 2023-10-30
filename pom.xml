@@ -9,11 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>cn.deystar</groupId>
-    <artifactId>baiduSync</artifactId>
+    <artifactId>NaSync</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>baiduSync</name>
-    <description>baiduSync</description>
+    <name>NaSync</name>
+    <description>NaSync</description>
     <modules>
         <module>BaiduPan</module>
         <module>Setting</module>
