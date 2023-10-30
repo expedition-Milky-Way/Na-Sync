@@ -50,41 +50,50 @@ public class CompressServiceImpl implements CompressService {
     {
         Thread consumer = new Thread(() -> {
             FileSetting setting = settingService.getSetting();
-            Integer taskNum = setting.getTaskNum();
+
             while (true) {
-                if (zipQueue.isEmpty()) {
+                if (setting != null && setting.isAllNotNull()) {
+                    Integer taskNum = setting.getTaskNum();
+                    if (zipQueue.isEmpty()) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        ZipAbstract zipService = zipQueue.poll();
+                        if (taskCount.get() > taskNum && taskCount.get() > MAX_COMPRESS_TASK) {
+                            synchronized (zipService) {
+                                try {
+                                    zipService.wait();
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                        if (zipService != null) {
+                            executor.execute(() -> {
+                                taskCount.incrementAndGet();
+                                FileListBean bean = this.compressAndUpload(zipService);
+                                if (bean != null) {
+                                    synchronized (compressing) {
+                                        compressing.remove(bean.getZipName());
+                                    }
+
+                                    uploadTaskService.addTask(bean);
+                                }
+                                taskCount.decrementAndGet();
+                                synchronized (zipService) {
+                                    zipService.notify();
+                                }
+                            });
+                        }
+                    }
+                }else{
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
-                    }
-                } else {
-                    ZipAbstract zipService = zipQueue.poll();
-                    if (taskCount.get() > taskNum && taskCount.get() > MAX_COMPRESS_TASK) {
-                        synchronized (zipService) {
-                            try {
-                                zipService.wait();
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-                    if (zipService != null) {
-                        executor.execute(() -> {
-                            taskCount.incrementAndGet();
-                            FileListBean bean = this.compressAndUpload(zipService);
-                            if (bean != null) {
-                                synchronized (compressing){
-                                    compressing.remove(bean.getZipName());
-                                }
-
-                                uploadTaskService.addTask(bean);
-                            }
-                            taskCount.decrementAndGet();
-                            synchronized (zipService) {
-                                zipService.notify();
-                            }
-                        });
                     }
                 }
             }
@@ -103,12 +112,12 @@ public class CompressServiceImpl implements CompressService {
         if (todoSet.add(zipAbstract.getBean().getZipName())) {
 
             zipAbstract.setStatus(CompressStatus.COMPRESSING);
-            synchronized (compressing){
+            synchronized (compressing) {
                 compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
             }
 
             bean = zipAbstract.call();
-            synchronized (compressing){
+            synchronized (compressing) {
                 compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
             }
 
@@ -129,7 +138,7 @@ public class CompressServiceImpl implements CompressService {
     public List<FileListBean> getCompressing() {
 
         if (compressing.isEmpty()) return new ArrayList<>();
-        synchronized (compressing){
+        synchronized (compressing) {
             return new ArrayList<>(compressing.values());
         }
 
