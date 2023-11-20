@@ -135,6 +135,7 @@ public class FileSettingServiceImpl implements FileSettingService {
 
     @Override
     public TokenResponse getToken() {
+        if (setting == null || !setting.isAllNotNull()) return null;
         synchronized (tokenLock) {
             return setting.getToken();
         }
