@@ -1,25 +1,24 @@
 package cn.deystar.BaiduPan.Core.Config.StartBefore;
 
-import cn.deystar.Setting.Setting.Service.FileSettingServiceImpl;
+import cn.deystar.Setting.UnSync.Entity.UnSyncEntity;
 import cn.deystar.Setting.UnSync.MappedService.impl.UnSyncMappedServiceImpl;
+import cn.deystar.Util.Util.ConfigFileTemplate;
+import com.alibaba.fastjson.JSONArray;
 import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
-import cn.deystar.Setting.Setting.Service.FileSettingService;
+import org.springframework.util.ResourceUtils;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * @author Ming Yeung Luhyun (杨名 字 露煊)
- * 加载设置到内存中
  */
-public class LoadSetting implements ApplicationListener<ApplicationContextInitializedEvent>, Ordered {
-
-    FileSettingService settingService = new FileSettingServiceImpl();
-    UnSyncMappedServiceImpl unSyncMappedService = new UnSyncMappedServiceImpl();
+public class LoadUnsync implements ApplicationListener<ApplicationContextInitializedEvent>, Ordered {
     @Override
     public void onApplicationEvent(ApplicationContextInitializedEvent event) {
-        settingService.getSetting();
 
-        unSyncMappedService.readFile();
     }
 
     @Override
