@@ -50,7 +50,7 @@ public class CompressServiceImpl implements CompressService {
     {
         Thread consumer = new Thread(() -> {
             FileSetting setting = settingService.getSetting();
-            Integer taskNum = setting.getTaskNum();
+
             while (true) {
                 if (zipQueue.isEmpty()) {
                     try {
@@ -59,6 +59,16 @@ public class CompressServiceImpl implements CompressService {
                         throw new RuntimeException(e);
                     }
                 } else {
+
+                    while (setting == null || setting.getTaskNum() == null){
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    Integer taskNum = setting.getTaskNum();
                     ZipAbstract zipService = zipQueue.poll();
                     if (taskCount.get() > taskNum && taskCount.get() > MAX_COMPRESS_TASK) {
                         synchronized (zipService) {

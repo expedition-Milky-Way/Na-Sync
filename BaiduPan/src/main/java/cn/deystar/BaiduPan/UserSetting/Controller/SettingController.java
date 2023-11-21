@@ -78,41 +78,40 @@ public class SettingController {
                 setting.getAppKey() != null && !setting.getAppKey().isEmpty() &&
                 setting.getSecretKey() != null && !setting.getSecretKey().isEmpty() &&
                 setting.getSignKey() != null && !setting.getSignKey().trim().isEmpty()) {
-            FileSetting oldSetting = fileSettingService.getSetting();
-            //对比设置
-            if (!oldSetting.getSignKey().equals(setting.getSignKey()) &&
-                    !oldSetting.getSecretKey().equals(setting.getSecretKey()) &&
-                    !oldSetting.getAppKey().equals(setting.getAppKey()) &&
-                    !oldSetting.getAppId().equals(setting.getAppId()))
-            { //按照正常逻辑重新授权
-                DeviceCodeResponse deviceCodeResponse = tokenService.deviceCode(setting.getAppKey());
 
-                if (deviceCodeResponse != null && deviceCodeResponse.isAllNotNull()) {
-                    fileSettingService.updateSetting(setting);
-                    executor.execute(() -> {
-                        tokenGetting.incrementAndGet();
-                        Thread.currentThread().setName("设置setting.json");
-                        TokenResponse tokenDetail = tokenService.getToken(
-                                deviceCodeResponse.getDeviceCode(),
-                                deviceCodeResponse.getExpires(),
-                                deviceCodeResponse.getInterval());
-                        if (tokenDetail != null && tokenDetail.getAccessToken() != null) {
-                            setting.setToken(tokenDetail);
-                        }
-                        tokenGetting.decrementAndGet();
-                        fileSettingService.updateSetting(setting);
-                    });
-                    return new Success(deviceCodeResponse);
-                }
 
-                return new Warning("请输入正确的appId appKey SecretKey SignKey");
-            }else{
-                //如果appId等关键百度网盘信息没有改变，就直接更新setting
+            DeviceCodeResponse deviceCodeResponse = tokenService.deviceCode(setting.getAppKey());
+
+            if (deviceCodeResponse != null && deviceCodeResponse.isAllNotNull()) {
                 fileSettingService.updateSetting(setting);
-                return new Success();
+                FileSetting finalSetting = setting;
+                executor.execute(() -> {
+                    while (tokenGetting.get() > 0) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    tokenGetting.incrementAndGet();
+                    Thread.currentThread().setName("设置setting.json");
+                    TokenResponse tokenDetail = tokenService.getToken(
+                            deviceCodeResponse.getDeviceCode(),
+                            deviceCodeResponse.getExpires(),
+                            deviceCodeResponse.getInterval());
+                    if (tokenDetail != null && tokenDetail.getAccessToken() != null) {
+                        finalSetting.setToken(tokenDetail);
+                    }
+                    tokenGetting.decrementAndGet();
+                    fileSettingService.updateSetting(finalSetting);
+                });
+                return new Success(deviceCodeResponse);
             }
+
+            return new Warning("请输入正确的appId appKey SecretKey SignKey");
+
         }
-        return new Warning("请填写所有内容");
+        return  new Warning("请天下所有参数");
     }
 
     /**
