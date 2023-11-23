@@ -14,10 +14,10 @@ public class UnSyncEntity {
 
     private String path;
 
-    private Boolean isDelete;
+
 
     public UnSyncEntity() {
-        this.isDelete = false;
+
     }
 
     @Override
@@ -42,11 +42,5 @@ public class UnSyncEntity {
         this.path = path;
     }
 
-    public Boolean getDelete() {
-        return isDelete;
-    }
 
-    public void setDelete(Boolean delete) {
-        isDelete = delete;
-    }
 }
