@@ -15,6 +15,19 @@
         .file_box {
             text-align: left;
             display: grid;
+
+
+        }
+
+        .file_img {
+            width: 120px;
+            position: relative;
+
+            .file_sync {
+                margin-top: -40px;
+                margin-left: 60px;
+                width: 40px;
+            }
         }
     </style>
     <script type="text/javascript">
@@ -33,12 +46,48 @@
                             id: 1
                         },
                         {
-                            title: '不同步该文件',
+                            title: '同步/不同步 该文件',
                             id: 3
                         }
                     ],
                     click: function (obj) {
-                        let e = this.elem[0]
+                        var unSync = this.elem[0].getAttribute("unSync");
+                        var path = this.elem[0].getAttribute("path");
+
+                        if (obj.id === 3) {
+                            if (!unSync || unSync === "false") {
+                                $.ajax({
+                                    url: "http://" + location.host + "/local/remove",
+                                    method: "post",
+                                    data: {
+                                        path: path
+                                    },
+                                    dataType: 'JSON',
+                                    success: function (data) {
+                                        layer.message(data.message)
+                                        if (data.success){
+                                            location.reload()
+                                        }
+                                    }
+                                })
+                            } else {
+                                $.ajax({
+                                    url: "http://" + location.host + "/local/add",
+                                    method: 'post',
+                                    dataType: 'JSON',
+                                    data: {
+                                        path: path
+                                    },
+                                    success: function (res) {
+                                        layer.msg(res.message)
+                                        if (res.success){
+                                            location.reload()
+                                        }
+                                    }
+                                })
+                            }
+
+                        }
                     }
                 })
 
@@ -50,7 +99,7 @@
             let clickPath = e.getAttribute("bPath")
             console.log(localPath)
             console.log(clickPath)
-            console.log(localPath+clickPath)
+            console.log(localPath + clickPath)
             if (localPath === clickPath) {
                 $("#path").val(localPath)
             } else {
@@ -93,14 +142,25 @@
                     <input hidden id="path" name="path" th:value="${path}"/>
                     <div class="layui-row" th:if="${hasFile}" th:each="item:${localFiles}">
                         <div class="layui-col-md1" th:each="jtem : ${item}">
-                            <a href="#" th:isDir="${jtem.isDirectory()}" th:path="${jtem.getPath()}"
-                               onclick="goToFolder(this)">
-                                <div class="file_box">
-                                    <img style="width: 96px;height: 96px" th:src="${jtem.getImg()}">
+
+                            <div class="file_box">
+                                <a href="#" th:isDir="${jtem.isDirectory()}" th:path="${jtem.getPath()}"
+                                   onclick="goToFolder(this)">
+                                    <div class="file_img">
+                                        <img style="width: 96px;height: 96px" th:src="${jtem.getImg()}">
+                                        <div class="file_sync">
+                                            <img th:if="${!jtem.isUnSync()}" style="width: 32px;height: 32px"
+                                                 src="/../static/icon/CheckMark.png">
+                                            <img th:if="${jtem.isUnSync()}" style="width: 32px;height: 32px"
+                                                 src="/../static/icon/Cross.png">
+                                        </div>
+                                    </div>
                                     <span style="width: 120px" th:text="${jtem.getName()}"></span>
-                                </div>
-                            </a>
-                            <a href="#" class="file_menu" th:path="${jtem.getPath()}">
+                                </a>
+                            </div>
+
+
+                            <a href="#" class="file_menu" th:unsync="${jtem.unSync}" th:path="${jtem.getPath()}">
                                 <i class="layui-icon layui-icon-more-vertical"></i>
                             </a>
                         </div>

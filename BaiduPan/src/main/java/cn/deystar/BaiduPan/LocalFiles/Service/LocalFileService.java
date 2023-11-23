@@ -10,4 +10,9 @@ import java.util.List;
 public interface LocalFileService {
 
     List<List<LocalFile>> listAll(String path);
+
+
+    boolean unSync(String path);
+
+    boolean canSync(String path);
 }

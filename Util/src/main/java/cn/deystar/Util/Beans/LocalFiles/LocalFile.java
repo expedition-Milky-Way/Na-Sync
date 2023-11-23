@@ -11,6 +11,8 @@ public class LocalFile {
 
     private boolean isDirectory;
 
+    private boolean unSync;
+
     private boolean hasFile;
 
     private String img;
@@ -61,5 +63,13 @@ public class LocalFile {
 
     public void setHasFile(boolean hasFile) {
         this.hasFile = hasFile;
+    }
+
+    public boolean isUnSync() {
+        return unSync;
+    }
+
+    public void setUnSync(boolean unSync) {
+        this.unSync = unSync;
     }
 }
