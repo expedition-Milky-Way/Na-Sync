@@ -50,6 +50,7 @@ public class UnSyncMappedServiceImpl implements UnSyncMapped {
 
     @Override
     public UnSyncEntity findByPath(String path) {
+        UnSyncEntity result = null;
         while (lock.get() > 0) {
             try {
                 Thread.sleep(100);
@@ -60,11 +61,12 @@ public class UnSyncMappedServiceImpl implements UnSyncMapped {
         lock.incrementAndGet();
         for (UnSyncEntity entity : cacheList) {
             if (entity.getPath().equals(path)) {
-                return entity;
+                result = entity;
+                break;
             }
         }
         lock.decrementAndGet();
-        return null;
+        return result;
     }
 
     @Override

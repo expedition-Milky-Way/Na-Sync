@@ -69,7 +69,7 @@ public class LocalFileController {
         if (localFileService.unSync(path)) {
             return new Success();
         } else {
-            return new Warning("可能是该文件不存在");
+            return new Warning("可能是该文件不存在或已经设置为不同步");
         }
 
     }
@@ -83,7 +83,7 @@ public class LocalFileController {
         if (localFileService.canSync(path)) {
             return new Success();
         } else {
-            return new Warning("可能是该文件不存在");
+            return new Warning("可能是该文件不存在或该文件已经设置为可同步");
         }
     }
 

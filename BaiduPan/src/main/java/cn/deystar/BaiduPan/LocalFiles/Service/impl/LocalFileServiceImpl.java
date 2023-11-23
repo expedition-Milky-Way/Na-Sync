@@ -63,6 +63,10 @@ public class LocalFileServiceImpl implements LocalFileService {
         if (!file.exists()) {
             return false;
         }
+        UnSyncEntity queryResult  = unSyncMapped.findByPath(path);
+        if (queryResult != null){
+            return false;
+        }
         UnSyncEntity entity = new UnSyncEntity();
         entity.setPath(path);
         entity.setName(file.getName());
@@ -75,6 +79,10 @@ public class LocalFileServiceImpl implements LocalFileService {
         File file = new File(path);
         if (!file.exists()) return false;
         try {
+            UnSyncEntity queryResult  = unSyncMapped.findByPath(path);
+            if (queryResult == null){
+                return false;
+            }
             unSyncMapped.removeByPath(path);
             return true;
         } catch (InterruptedException e) {
