@@ -19,7 +19,7 @@ public class LocalFileScan {
         if (path == null || path.trim().isEmpty()) return new ArrayList<>();
 
         File directory = new File(path);
-        if (directory == null || !directory.exists() || !directory.isDirectory())
+        if (!directory.exists() || !directory.isDirectory())
             return new ArrayList<>();
         List<File> files = new ArrayList<>(Arrays.asList(directory.listFiles()));
 

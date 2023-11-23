@@ -32,21 +32,20 @@ public class UnSyncMappedServiceImpl implements UnSyncMapped {
 
 
     @Override
-    public Long add(UnSyncEntity unsyncEntity) {
+    public boolean add(UnSyncEntity unsyncEntity) {
         while (lock.get() > 0) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                System.out.println(unsyncEntity.getPath() + "设置为不同步失败");
+                return false;
             }
         }
         lock.incrementAndGet();
-        Long id = cacheList.size() + 1L;
-        unsyncEntity.setId(id);
         cacheList.add(unsyncEntity);
         flushFile();
         lock.decrementAndGet();
-        return id;
+        return true;
     }
 
     @Override
@@ -64,53 +63,38 @@ public class UnSyncMappedServiceImpl implements UnSyncMapped {
                 return entity;
             }
         }
+        lock.decrementAndGet();
         return null;
     }
 
     @Override
     public List<UnSyncEntity> query() {
-        List<UnSyncEntity> list = new ArrayList<>();
-        list.addAll(cacheList);
-        return list;
+        return new ArrayList<>(cacheList);
     }
-
 
     @Override
-    public Boolean removeById(Long id) {
-        if (id == null || id < 1) {
-            System.out.println("id异常：：" + id);
-            return false;
-        }
+    public void removeByPath(String path) throws InterruptedException {
         while (lock.get() > 0) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            Thread.sleep(100);
+
         }
         lock.incrementAndGet();
-        UnSyncEntity entity = null;
-        int index = -1;
-        int end = cacheList.size();
-        int begin = 0;
-        while (begin <= end) {
-            int mid = (end + begin) / 2;
-            if (cacheList.get(mid).getId().compareTo(id) > 0) {
-                end = mid - 1;
-            } else if (cacheList.get(mid).getId().compareTo(id) < 0) {
-                begin = mid + 1;
-            } else {
-                index = mid;
-                entity = cacheList.get(mid);
+        for (UnSyncEntity entity : cacheList) {
+            if (entity.getPath().equals(path)) {
+                cacheList.remove(entity);
+                break;
             }
         }
-        if (entity != null) {
-            entity.setDelete(true);
-            cacheList.set(index, entity);
-            flushFile();
-        }
-        return lock.getAndDecrement() - 1 == 0;
+        flushFile();
+        lock.decrementAndGet();
     }
+
+    @Override
+    public boolean isUnSync(String path) {
+        return cacheList.stream()
+                .anyMatch(entity -> entity.getPath().equals(path));
+    }
+
 
     /**
      * Spring启动时调用
@@ -135,7 +119,7 @@ public class UnSyncMappedServiceImpl implements UnSyncMapped {
     }
 
     private void flushFile() {
-        executor.execute(() -> {
+        executor.submit(() -> {
             while (lock.get() > 0) {
                 try {
                     Thread.sleep(100);

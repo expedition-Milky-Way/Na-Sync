@@ -8,11 +8,14 @@ import java.util.List;
  * @author Ming Yeung Luhyun (杨名 字 露煊)
  */
 public interface UnSyncMapped {
-    Long add(UnSyncEntity unsyncEntity);
+    boolean add(UnSyncEntity unsyncEntity);
 
     UnSyncEntity findByPath(String path);
 
     List<UnSyncEntity> query();
 
-    Boolean removeById(Long id);
+
+    void removeByPath(String path) throws InterruptedException;
+
+    boolean isUnSync(String path);
 }
