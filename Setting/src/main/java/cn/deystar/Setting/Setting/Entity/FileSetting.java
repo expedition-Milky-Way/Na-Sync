@@ -48,6 +48,10 @@ public class FileSetting {
     private TokenResponse token;
     private Integer compressThread;
 
+    /**
+     *   0：（监听文件，如果文件触发事件就立即执行同步）
+     *   1: (定时任务)
+     */
     private Integer isListen;
 
     private Boolean pathEncryption;

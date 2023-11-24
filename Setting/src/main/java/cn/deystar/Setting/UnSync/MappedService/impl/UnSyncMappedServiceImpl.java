@@ -93,8 +93,19 @@ public class UnSyncMappedServiceImpl implements UnSyncMapped {
 
     @Override
     public boolean isUnSync(String path) {
-        return cacheList.stream()
-                .anyMatch(entity -> entity.getPath().equals(path));
+        while (lock.get() > 0) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        boolean result;
+        lock.incrementAndGet();
+        result = cacheList.stream()
+                .anyMatch(entity -> entity.getPath().equals(path) || path.contains(entity.getPath()));
+        lock.decrementAndGet();
+        return result;
     }
 
 
