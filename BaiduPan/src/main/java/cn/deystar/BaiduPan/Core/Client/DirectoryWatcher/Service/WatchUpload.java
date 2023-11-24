@@ -69,10 +69,9 @@ public class WatchUpload extends UploadModeAbstract {
                     // 文件夹筛除
                     if (!unSyncMapped.isUnSync(item.getParent())){
                         // 文件筛除
-                        List<File> fileList = item.getFileLit();
-                        fileList.forEach(fileItem ->{
+                        item.getFileLit().forEach(fileItem ->{
                             if (unSyncMapped.isUnSync(fileItem.getPath())){
-                                fileList.remove(fileItem);
+                                item.getFileLit().remove(fileItem);
                             }
                         });
 
