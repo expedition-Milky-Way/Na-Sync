@@ -1,7 +1,7 @@
 package cn.deystar.BaiduPan.Core.Config.GlobalBean;
 
 
-import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Service.impl.WatchFileServiceImpl;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.MonitorSerivce.WatchFileServiceImpl;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

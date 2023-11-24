@@ -2,7 +2,7 @@ package cn.deystar.BaiduPan.UserSetting.Controller;
 
 
 import cn.deystar.BaiduPan.Core.BaiduRequest.Token.TokenService;
-import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.Service.impl.WatchFileServiceImpl;
+import cn.deystar.BaiduPan.Core.Client.DirectoryWatcher.MonitorSerivce.WatchFileServiceImpl;
 import cn.hutool.core.util.ObjectUtil;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Controller;
