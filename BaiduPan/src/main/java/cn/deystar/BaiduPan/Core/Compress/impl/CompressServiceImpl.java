@@ -60,7 +60,7 @@ public class CompressServiceImpl implements CompressService {
                     }
                 } else {
 
-                    while (setting == null || setting.getTaskNum() == null){
+                    while (setting == null || setting.getTaskNum() == null) {
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
@@ -84,7 +84,7 @@ public class CompressServiceImpl implements CompressService {
                             taskCount.incrementAndGet();
                             FileListBean bean = this.compressAndUpload(zipService);
                             if (bean != null) {
-                                synchronized (compressing){
+                                synchronized (compressing) {
                                     compressing.remove(bean.getZipName());
                                 }
 
@@ -113,12 +113,12 @@ public class CompressServiceImpl implements CompressService {
         if (todoSet.add(zipAbstract.getBean().getZipName())) {
 
             zipAbstract.setStatus(CompressStatus.COMPRESSING);
-            synchronized (compressing){
+            synchronized (compressing) {
                 compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
             }
 
             bean = zipAbstract.call();
-            synchronized (compressing){
+            synchronized (compressing) {
                 compressing.put(zipAbstract.getBean().getZipName(), zipAbstract.getBean());
             }
 
@@ -130,16 +130,14 @@ public class CompressServiceImpl implements CompressService {
 
     @Override
     public void addTask(ZipAbstract zipService) {
-        synchronized (lock) {
-            zipQueue.offer(zipService);
-        }
+        zipQueue.offer(zipService);
     }
 
     @Override
     public List<FileListBean> getCompressing() {
 
         if (compressing.isEmpty()) return new ArrayList<>();
-        synchronized (compressing){
+        synchronized (compressing) {
             return new ArrayList<>(compressing.values());
         }
 

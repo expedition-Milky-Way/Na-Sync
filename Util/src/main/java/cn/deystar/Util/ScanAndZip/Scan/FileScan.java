@@ -21,7 +21,7 @@ public class FileScan {
     private final Map<String, Integer> parentIndex = new HashMap<>();
 
     private final Set<String> nameSet = new HashSet<>();
-
+    Integer cf = 1;
     private ZipArgument user;
 
     /**
@@ -64,8 +64,8 @@ public class FileScan {
         String[] parentStr = parent.contains("\\") ? parent.split("\\\\") : parent.split("/");
         parent = parentStr.length > 2 ? parentStr[parentStr.length - 2] + "_" + parentStr[parentStr.length - 1] : parentStr[parentStr.length - 1];
         if (!nameSet.add(parent)) {
-            int index = 1;
-            while (nameSet.add(parent + "(" + index + ")")) {
+            int index = cf;
+            while (!nameSet.add(parent + "(" + index + ")")) {
                 index++;
             }
             path += parent + "(" + index + ")";
@@ -83,13 +83,13 @@ public class FileScan {
      */
     private void appFileIntoList(File file) {
         String parent = file.getParent();
+        if (fileListBeans.size() > 1)  parent = parent + "_" + (cf + "");
         Long fileSize = file.length();
         FileListBean bean = null;
         Integer index = null;
         if (parentIndex.containsKey(parent) && (index = parentIndex.get(parent)) >= 0) {
             bean = fileListBeans.get(index);
             if (bean.getTotalSize() > user.getOneFileSize() || bean.getTotalSize() + fileSize > user.getOneFileSize()) {
-                Integer cf = 1;
                 while (parentIndex.containsKey(parent + "_" + (cf + ""))) {
                     cf++;
                 }
@@ -112,7 +112,7 @@ public class FileScan {
             fileListBeans.set(parentIndex.get(parent), bean);
         } else {
             fileListBeans.add(bean);
-            parentIndex.put(parent, fileListBeans.size() - 1);
+            parentIndex.put(parent, fileListBeans.size() -1 );
         }
     }
 
